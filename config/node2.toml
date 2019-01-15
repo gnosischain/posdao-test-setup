@@ -1,0 +1,35 @@
+[parity]
+chain = "pos-contracts/spec.json"
+base_path = "parity-data/node2"
+
+[ui]
+disable = true
+
+[network]
+port = 30302
+
+[rpc]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "traces", "rpc", "shh", "shh_pubsub"]
+port = 8542
+
+[websockets]
+disable = true
+
+[ipc]
+disable = true
+
+[secretstore]
+disable = true
+
+[ipfs]
+enable = false
+
+[account]
+unlock = ["0xeE385a1df869A468883107B0C06fA8791b28A04f", "0x71385ae87c4b93db96f02f952be1f7a63f6057a6", "0x190ec582090ae24284989af812f6b2c93f768ecd"]
+password = ["config/password"]
+
+[mining]
+force_sealing = true
+min_gas_price = 1000000000
+engine_signer = "0x71385ae87c4b93db96f02f952be1f7a63f6057a6"
+reseal_on_txs = "none"
