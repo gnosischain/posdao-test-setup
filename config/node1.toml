@@ -26,7 +26,7 @@ disable = true
 enable = false
 
 [account]
-unlock = ["0xeE385a1df869A468883107B0C06fA8791b28A04f", "0x71385ae87c4b93db96f02f952be1f7a63f6057a6", "0x190ec582090ae24284989af812f6b2c93f768ecd"]
+unlock = ["0xeE385a1df869A468883107B0C06fA8791b28A04f"]
 password = ["config/password"]
 
 [mining]
