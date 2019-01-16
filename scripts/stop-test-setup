@@ -1,13 +1,19 @@
 #!/bin/bash
 
 function kill_at_port {
-	if lsof -t -i:$1 > /dev/null
-	then
-		kill -9 $(lsof -t -i:${1})
+	PID=`lsof -t -i:${1}`
+	if [ "$PID" != "" ]; then
+        echo Killing pid $PID at port $1
+		kill -9 $PID
+    else
+        echo Nothing to kill at port $1
 	fi
 }
 
 # Kill test nodes.
-kill_at_port 8541
-kill_at_port 8542
-kill_at_port 8543
+for i in 1 2 3; do
+    kill_at_port 854$i
+done
+
+# Reset the compiled scripts to their state in the upstream pos-contracts.
+pushd ./pos-contracts && git reset --hard && popd

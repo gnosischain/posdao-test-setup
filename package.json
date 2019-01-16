@@ -8,7 +8,7 @@
     "compile-pos-contracts": "cd ./pos-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
-    "test": "echo NOT IMPLEMENTED",
+    "test": "sleep 3; echo NOT IMPLEMENTED",
     "stop-test-setup": "bash scripts/stop-test-setup"
   },
   "repository": {

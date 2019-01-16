@@ -13,7 +13,7 @@ apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub",
 port = 8542
 
 [websockets]
-disable = true
+port = 9542
 
 [ipc]
 disable = true
@@ -25,11 +25,11 @@ disable = true
 enable = false
 
 [account]
-unlock = ["0x71385ae87c4b93db96f02f952be1f7a63f6057a6"]
+unlock = ["0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441"]
 password = ["config/password"]
 
 [mining]
 force_sealing = true
 min_gas_price = 1000000000
-engine_signer = "0x71385ae87c4b93db96f02f952be1f7a63f6057a6"
+engine_signer = "0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441"
 reseal_on_txs = "none"
