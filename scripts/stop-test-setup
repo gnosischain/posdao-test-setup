@@ -16,4 +16,4 @@ for i in 1 2 3; do
 done
 
 # Reset the compiled scripts to their state in the upstream pos-contracts.
-pushd ./pos-contracts && git reset --hard && popd
+# pushd ./pos-contracts && git reset --hard && popd
