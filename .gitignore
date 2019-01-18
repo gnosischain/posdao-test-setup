@@ -16,3 +16,4 @@
 /parity-data/node[123]/network/
 /parity-data/node[123]/chains/
 /parity-data/node[123]/log
+/parity-data/reserved-peers
