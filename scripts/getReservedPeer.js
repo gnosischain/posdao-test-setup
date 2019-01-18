@@ -28,7 +28,6 @@ async function main() {
 			}
 		}
 	}
-  console.log("Registration timed out");
 }
 
 function getEnodeURL(cmd) {
