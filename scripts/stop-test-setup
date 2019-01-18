@@ -14,6 +14,3 @@ function kill_at_port {
 for i in 1 2 3; do
     kill_at_port 854$i
 done
-
-# Reset the compiled scripts to their state in the upstream pos-contracts.
-# pushd ./pos-contracts && git reset --hard && popd
