@@ -9,7 +9,7 @@
     "compile-pos-contracts": "cd ./pos-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
-    "test": "sleep 16",
+    "test": "sleep inf",
     "stop-test-setup": "bash scripts/stop-test-setup"
   },
   "repository": {
@@ -18,6 +18,5 @@
   },
   "author": "poa.network",
   "license": "ISC",
-  "dependencies": {
-  }
+  "dependencies": {}
 }
