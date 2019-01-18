@@ -8,7 +8,5 @@ NODE=`which node`
 
 for i in 1 2 3; do
     $PARITY --config ./config/node${i}.toml > ./parity-data/node${i}/log 2>&1 &
-    if [ $i -eq 1 ]; then
-        $NODE ./scripts/getReservedPeers.js
-    fi
+    $NODE ./scripts/getReservedPeer.js $i
 done
