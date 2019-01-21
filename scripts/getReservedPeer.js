@@ -6,7 +6,7 @@ var os = require("os");
 main();
 
 async function main() {
-  // assert.ok(process.argv.length > 2, "provide the index of the node that was last to start");
+  assert.ok(process.argv.length > 2, "provide the index of the node that was last to start");
 	const maxAttempts = 5;
   var node_index = process.argv[2].toString();
   console.log("Registering node " + node_index + " as reserved peer");

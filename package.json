@@ -18,5 +18,7 @@
   },
   "author": "poa.network",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {
+    "assert": "1.4.1"
+  }
 }

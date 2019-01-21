@@ -7,8 +7,6 @@ disable = true
 
 [network]
 port = 30301
-discovery = true
-reserved_peers="parity-data/reserved-peers"
 
 [rpc]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "traces", "rpc", "shh", "shh_pubsub"]
