@@ -8,9 +8,9 @@
     "get-all-submodules": "git submodule update --init --remote",
     "compile-pos-contracts": "cd ./pos-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
-    "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
+    "start-test-setup": ". scripts/network-spec && bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
     "compile-test": "node_modules/.bin/truffle compile",
-    "test": "node_modules/.bin/truffle test --network node1",
+    "test": "node_modules/.bin/truffle test --network 101",
     "stop-test-setup": "bash scripts/stop-test-setup"
   },
   "repository": {

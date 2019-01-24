@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Exit on undefined variables.
-set -u
+set -eu
 
 PARITY=$1
 NODE=`which node`
+"$NODE" ./scripts/add-validator-balances.js
 for i in $(seq 1 6); do
     rm -rf -- "./parity-data/node$i/chains"
     "$PARITY" --config "./config/node${i}.toml" > "./parity-data/node${i}/log" 2>&1 &
-    "$NODE" ./scripts/getReservedPeer.js "$i"
+    "$NODE" ./scripts/getReservedPeer.js "$i" || exit $?
 done

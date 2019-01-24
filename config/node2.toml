@@ -1,5 +1,5 @@
 [parity]
-chain = "pos-contracts/spec.json"
+chain = "./parity-data/spec.json"
 base_path = "parity-data/node2"
 
 [ui]
