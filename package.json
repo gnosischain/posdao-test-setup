@@ -3,14 +3,13 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "all": "npm install && npm run get-all-submodules && npm run cleanup && npm run compile-pos-contracts && npm run make-spec && npm run start-test-setup && npm run compile-test && npm run test && npm run stop-test-setup",
+    "all": "npm run get-all-submodules && npm run cleanup && npm run compile-pos-contracts && npm run make-spec && npm run start-test-setup && npm run test && npm run stop-test-setup",
     "cleanup": "rm -rf ./parity-data && git checkout ./parity-data",
     "get-all-submodules": "git submodule update --init --remote",
     "compile-pos-contracts": "cd ./pos-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": ". scripts/network-spec && bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
-    "compile-test": "node_modules/.bin/truffle compile",
-    "test": "node_modules/.bin/truffle test --network 101",
+    "test": "sleep inf",
     "stop-test-setup": "bash scripts/stop-test-setup"
   },
   "repository": {
@@ -20,6 +19,5 @@
   "author": "poa.network",
   "license": "ISC",
   "dependencies": {
-    "truffle": "^5.0.2"
   }
 }

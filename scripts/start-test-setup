@@ -5,6 +5,12 @@ set -eu
 
 PARITY=$1
 NODE=`which node`
+case $0 in
+   (/*) cd "${0%/*}/";;
+   (*/*) cd "./${0%/*}";;
+   (*) cd .;;
+esac
+. scripts/start-test-setup
 "$NODE" ./scripts/add-validator-balances.js
 for i in $(seq 1 6); do
     rm -rf -- "./parity-data/node$i/chains"
