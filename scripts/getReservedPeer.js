@@ -1,16 +1,11 @@
 const fs = require('fs');
 const { URL } = require('url');
-const assert = require('assert').strict;
-if (assert == null) {
-  throw new Error("Your version of Node.js is too old.  You need at least version 10.");
-}
 const process = require('process');
 var os = require("os");
 
 main();
 
 async function main() {
-  assert.ok(process.argv.length > 2, "provide the index of the node that was last to start");
   const maxAttempts = 5;
   var node_index = process.argv[2].toString();
   console.log("Registering node " + node_index + " as reserved peer");
