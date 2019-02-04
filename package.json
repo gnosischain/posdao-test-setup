@@ -19,5 +19,6 @@
   "author": "poa.network",
   "license": "ISC",
   "dependencies": {
+    "sha3": "^2.0.0"
   }
 }
