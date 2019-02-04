@@ -11,7 +11,7 @@ discovery = true
 reserved_peers="parity-data/reserved-peers"
 
 [rpc]
-apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "traces", "rpc", "shh", "shh_pubsub"]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
 port = 8543
 
 [websockets]
@@ -32,7 +32,7 @@ password = ["config/password"]
 
 [mining]
 force_sealing = true
-min_gas_price = 1000000000
+min_gas_price = 0
 engine_signer = "0x522df396ae70a058bd69778408630fdb023389b2"
 reseal_on_txs = "none"
 extra_data = "Parity"
