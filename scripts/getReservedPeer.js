@@ -4,13 +4,11 @@ const appendFile = promisify(fs.appendFile);
 const { exec } = require('child_process');
 const { URL } = require('url');
 const process = require('process');
-var os = require("os");
+const os = require("os");
 
 main();
 
 const isObject = x => x !== null && typeof x === 'object' && !Array.isArray(x);
-const process = require('process');
-const os = require("os");
 async function main() {
   inner_main().catch(e => {
     console.error(e);
