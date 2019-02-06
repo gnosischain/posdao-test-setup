@@ -9,7 +9,7 @@
     "compile-pos-contracts": "cd ./pos-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
-    "test": "./node_modules/.bin/truffle migrate --network development && sleep inf",
+    "test": "./node_modules/.bin/truffle migrate --network development && ./node_modules/.bin/truffle test --network development && sleep inf",
     "stop-test-setup": "bash scripts/stop-test-setup",
     "watcher": "node scripts/watcher.js"
   },
