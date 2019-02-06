@@ -1,5 +1,5 @@
 [parity]
-chain = "pos-contracts/spec.json"
+chain = "posdao-contracts/spec.json"
 base_path = "parity-data/node3"
 
 [ui]
