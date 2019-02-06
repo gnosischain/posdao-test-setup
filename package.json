@@ -10,7 +10,8 @@
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
     "test": "sleep inf",
-    "stop-test-setup": "bash scripts/stop-test-setup"
+    "stop-test-setup": "bash scripts/stop-test-setup",
+    "watcher": "node scripts/watcher.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   "author": "poa.network",
   "license": "ISC",
   "dependencies": {
-    "sha3": "^2.0.0"
+    "sha3": "^2.0.0",
+    "web3": "1.0.0-beta.34"
   }
 }
