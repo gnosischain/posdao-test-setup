@@ -5,7 +5,7 @@ const fs = require('fs');
 const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:9541'));
 
-const artifactsPath = '../pos-contracts/build/contracts/';
+const artifactsPath = '../posdao-contracts/build/contracts/';
 const validatorSetContract = new web3.eth.Contract(
   require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
   '0x1000000000000000000000000000000000000001'
