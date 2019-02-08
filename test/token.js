@@ -1,6 +1,6 @@
 const Token = artifacts.require('ERC677BridgeTokenRewardableMock')
 
-const ValidatorSetContract = require("../utils/getContract")("ValidatorSetBase", web3);
+const ValidatorSetContract = require("../utils/getContract")("ValidatorSetAuRa", web3);
 
 contract('TestToken', _accounts => {
   it('should have 0 initial supply', async () => {

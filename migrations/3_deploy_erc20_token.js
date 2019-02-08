@@ -1,6 +1,6 @@
 var Token = artifacts.require("./ERC677BridgeTokenRewardableMock.sol");
 const constants = require("../utils/constants");
-const ValidatorSetContract = require("../utils/getContract")("ValidatorSetBase", web3);
+const ValidatorSetContract = require("../utils/getContract")("ValidatorSetAuRa", web3);
 
 module.exports = async function(deployer) {
   if (!Token.isDeployed()) {
