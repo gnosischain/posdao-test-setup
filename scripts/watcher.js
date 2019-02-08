@@ -29,6 +29,7 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
 
     console.log(`Block ${blockHeader.number}`);
     console.log(`  Gas used:  ${blockHeader.gasUsed} [${block.transactions.length} txs]`);
+    console.log(`  Gas limit: ${blockHeader.gasLimit}`);
     console.log(`  Validator: ${blockHeader.miner}`);
     console.log('');
 
@@ -86,7 +87,7 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     for (let i = 0; i < block.transactions.length; i++) {
       const tx = block.transactions[i];
       const txReceipt = await web3.eth.getTransactionReceipt(tx.hash);
-      const txObject = {from: tx.from, to: tx.to, receipt: txReceipt};
+      const txObject = {from: tx.from, to: tx.to, gasPrice: tx.gasPrice, receipt: txReceipt};
       if (txReceipt.status) {
         txSuccess.push(txObject);
       } else {
@@ -97,12 +98,12 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     if (txSuccess.length > 0) {
       console.log('SUCCESS transactions:');
       txSuccess.forEach((tx) => {
-        let contractName = 'unknown';
+        let contractName = tx.to;
         if (contractNameByAddress.hasOwnProperty(tx.to)) {
           contractName = contractNameByAddress[tx.to]
         }
         console.log(`  ${tx.from} => ${contractName}`);
-        console.log(`    gas used: ${tx.receipt.gasUsed}`);
+        console.log(`    gas used: ${tx.receipt.gasUsed}, gas price: ${tx.gasPrice}`);
       });
       console.log('');
     }
@@ -110,12 +111,12 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     if (txFail.length > 0) {
       console.log('FAILED transactions:');
       txFail.forEach((tx) => {
-        let contractName = 'unknown';
+        let contractName = tx.to;
         if (contractNameByAddress.hasOwnProperty(tx.to)) {
           contractName = contractNameByAddress[tx.to]
         }
         console.log(`  ${tx.from} => ${contractName}`);
-        console.log(`    gas used: ${tx.receipt.gasUsed}`);
+        console.log(`    gas used: ${tx.receipt.gasUsed}, gas price: ${tx.gasPrice}`);
       });
       console.log('');
     }
