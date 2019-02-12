@@ -1,6 +1,9 @@
-const BN = require('bn.js');
+const BN = web3.utils.BN;
+require('chai')
+  .use(require('chai-as-promised'))
+  .use(require('chai-bn')(BN))
+  .should();
 const Token = artifacts.require('ERC677BridgeTokenRewardableMock')
-
 const ValidatorSetContract = require("../utils/getContract")("ValidatorSetAuRa", web3);
 
 contract('TestToken', async accounts => {
@@ -25,16 +28,14 @@ contract('TestToken', async accounts => {
   it('should mint tokens', async () => {
     assert(accounts.length > 0, 'no accounts to carry on the test');
     let instance = await Token.deployed();
-    const increment = 1;
-    const incrementBN = new BN(increment.toString()); // web3.utils.toWei('1');
+    const increment = new BN(1);
     for (var i = 0; i < accounts.length; i++) {
       const addr = accounts[i];
       console.log('   *** Minting tokens for account ' + addr.toString());
-      const balanceBefore = await instance.balanceOf.call(addr);
-      await instance.mint.call(addr, incrementBN);
-      const balanceAfter = await instance.balanceOf.call(addr);
-      assert.equal(balanceBefore.valueOf().add(incrementBN), balanceAfter.valueOf(),
-                   'balances before minting and after do not differ by the minted amount.');
+      const balanceBefore = await instance.balanceOf(addr);
+      await instance.mint(addr, increment).should.be.fulfilled;
+      const balanceAfter = await instance.balanceOf(addr);
+      balanceAfter.should.be.bignumber.equal(balanceBefore.add(increment));
     }
   });
 })
