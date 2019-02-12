@@ -1,0 +1,41 @@
+[parity]
+chain = "posdao-contracts/spec.json"
+base_path = "parity-data/node7"
+
+[ui]
+disable = true
+
+[network]
+port = 30307
+discovery = true
+reserved_peers="parity-data/reserved-peers"
+
+[rpc]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
+port = 8547
+
+[websockets]
+port = 9547
+
+[ipc]
+disable = true
+
+[secretstore]
+disable = true
+
+[ipfs]
+enable = false
+
+[account]
+unlock = ["0xf67cc5231c5858ad6cc87b105217426e17b824bb"]
+password = ["config/password"]
+
+[mining]
+force_sealing = true
+min_gas_price = 1000000000
+engine_signer = "0xf67cc5231c5858ad6cc87b105217426e17b824bb"
+reseal_on_txs = "none"
+extra_data = "Parity"
+
+[misc]
+logging = "engine=trace,miner=trace,reward=trace"
