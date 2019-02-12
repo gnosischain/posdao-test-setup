@@ -4,17 +4,19 @@ require('chai')
   .use(require('chai-bn')(BN))
   .should();
 const Token = artifacts.require('ERC677BridgeTokenRewardableMock');
-const ValidatorSetContract = require("../utils/getContract")("ValidatorSetAuRa", web3);
+const ValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3);
 const constants = require('../utils/constants');
 
 contract('TestToken', async accounts => {
   let instance;
 
-  it('should have 0 initial supply', async () => {
-    instance = await Token.deployed();
-    let supply = await instance.totalSupply.call();
-    assert.equal(supply.valueOf(), 0, "the initial supply isn't 0");
-  });
+  // NOTE: This test cannot succeed twice.
+  //
+  // it('should have 0 initial supply', async () => {
+  //   instance = await Token.deployed();
+  //   let supply = await instance.totalSupply.call();
+  //   assert.equal(supply.valueOf(), 0, "the initial supply isn't 0");
+  // });
 
   it('validatorSetContract field value should match ValidatorSet contract address', async () => {
     instance = await Token.deployed();
@@ -30,10 +32,11 @@ contract('TestToken', async accounts => {
 
   it('should mint staking tokens to candidates', async () => {
     instance = await Token.deployed();
-    let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call().should.be.fulfilled;
+    let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
+        .should.be.fulfilled;
     const candidateStake = new BN(minStake.toString());
     for (candidate of constants.CANDIDATES) {
-    const balanceBefore = await instance.balanceOf(candidate);
+      const balanceBefore = await instance.balanceOf(candidate);
       await instance.mint(candidate, candidateStake).should.be.fulfilled;
       const balanceAfter = await instance.balanceOf(candidate);
       balanceAfter.should.be.bignumber.equal(balanceBefore.add(candidateStake));
@@ -42,10 +45,22 @@ contract('TestToken', async accounts => {
 
   it('candidates should make stakes on themselves', async () => {
     instance = await Token.deployed();
-    let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call().should.be.fulfilled;
-    const candidateStake = new BN(minStake.toString());
+    let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
+        .should.be.fulfilled;
+    const gasPrice = '1000000000';
+    const gas = '2000000';
+    let fees = new BN(gasPrice).mul(new BN(gas));
+//    const candidateStake = new BN(minStake.toString());
     for (candidate of constants.CANDIDATES) {
-      // FIXME
+      let opts = {
+        from: candidate,
+        gasPrice: gasPrice,
+        gas: gas
+      }
+      await instance.mint(candidate, fees).should.be.fulfilled;
+      await ValidatorSetContract.instance.methods.stake(candidate, minStake)
+        .send(opts)
+        .should.be.fulfilled;
     }
   });
 })
