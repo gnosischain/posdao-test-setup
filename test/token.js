@@ -30,12 +30,22 @@ contract('TestToken', async accounts => {
 
   it('should mint staking tokens to candidates', async () => {
     instance = await Token.deployed();
-    const candidateStake = new BN(web3.utils.toWei('1', 'ether').toString());
+    let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call().should.be.fulfilled;
+    const candidateStake = new BN(minStake.toString());
     for (candidate of constants.CANDIDATES) {
     const balanceBefore = await instance.balanceOf(candidate);
       await instance.mint(candidate, candidateStake).should.be.fulfilled;
       const balanceAfter = await instance.balanceOf(candidate);
       balanceAfter.should.be.bignumber.equal(balanceBefore.add(candidateStake));
+    }
+  });
+
+  it('candidates should make stakes on themselves', async () => {
+    instance = await Token.deployed();
+    let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call().should.be.fulfilled;
+    const candidateStake = new BN(minStake.toString());
+    for (candidate of constants.CANDIDATES) {
+      // FIXME
     }
   });
 })
