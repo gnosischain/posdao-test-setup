@@ -20,6 +20,9 @@
   "author": "poa.network",
   "license": "ISC",
   "dependencies": {
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-bn": "^0.1.1",
     "truffle": "^5.0.2",
     "web3": "1.0.0-beta.37"
   }
