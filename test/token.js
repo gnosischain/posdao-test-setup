@@ -50,7 +50,6 @@ contract('TestToken', async accounts => {
     const gasPrice = '1000000000';
     const gas = '2000000';
     let fees = new BN(gasPrice).mul(new BN(gas));
-//    const candidateStake = new BN(minStake.toString());
     for (candidate of constants.CANDIDATES) {
       let opts = {
         from: candidate,
