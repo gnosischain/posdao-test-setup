@@ -5,6 +5,7 @@ set -u
 
 PARITY=$1
 NODE=`which node`
+$NODE ./scripts/addCandidateBalances.js
 for i in $(seq 1 9); do
     rm -rf -- "./parity-data/node$i/chains"
     "$PARITY" --config "./config/node${i}.toml" > "./parity-data/node${i}/log" 2>&1 &

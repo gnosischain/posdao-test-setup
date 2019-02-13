@@ -56,7 +56,6 @@ contract('TestToken', async accounts => {
         gasPrice: gasPrice,
         gas: gas
       }
-      await instance.mint(candidate, fees).should.be.fulfilled;
       await ValidatorSetContract.instance.methods.stake(candidate, minStake)
         .send(opts)
         .should.be.fulfilled;
