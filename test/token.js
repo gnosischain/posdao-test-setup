@@ -6,6 +6,7 @@ require('chai')
 const Token = artifacts.require('ERC677BridgeTokenRewardableMock');
 const ValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3);
 const constants = require('../utils/constants');
+const SnS = require('../utils/signAndSendTx.js');
 
 contract('TestToken', async accounts => {
   let instance;
@@ -47,18 +48,38 @@ contract('TestToken', async accounts => {
     instance = await Token.deployed();
     let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
         .should.be.fulfilled;
-    const gasPrice = '1000000000';
-    const gas = '2000000';
-    let fees = new BN(gasPrice).mul(new BN(gas));
-    for (candidate of constants.CANDIDATES) {
-      let opts = {
-        from: candidate,
-        gasPrice: gasPrice,
-        gas: gas
-      }
-      await ValidatorSetContract.instance.methods.stake(candidate, minStake)
-        .send(opts)
-        .should.be.fulfilled;
+    console.log('  **** minStake =', minStake);
+    let minStakeBN = new BN(minStake.toString());
+
+    for (var i = 0; i < constants.CANDIDATES.length; i++) {
+      let candidate = constants.CANDIDATES[i];
+      console.log('  **** candidate =', candidate);
+
+      let ibalance = await instance.balanceOf(candidate);
+      let istakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
+      let istakeAmountBN = new BN(istakeAmount.toString());
+      console.log('  ****** initial balance = ' + ibalance);
+      console.log('  ****** initial stakeAmount = ' + istakeAmount);
+
+      let tx_details = {
+          from:     candidate,
+	  to:       ValidatorSetContract.address,
+	  method:   ValidatorSetContract.instance.methods.stake(candidate, minStake),
+          gasLimit: '1000000',
+          gasPrice: '1000000000',
+      };
+      let tx = await SnS(web3, tx_details, null);
+      console.log('  ****** tx: status =', tx.status, ' hash =', tx.transactionHash, ' block number=', tx.blockNumber);
+      // console.log('  **** tx :', tx);
+      tx.status.should.be.equal(true);
+
+      let fbalance = await instance.balanceOf(candidate);
+      let fstakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
+      console.log('  **** final balance =', fbalance);
+      console.log('  **** final stakeAmount =', fstakeAmount);
+      let fstakeAmountBN = new BN(fstakeAmount.toString());
+
+      fstakeAmountBN.should.be.bignumber.equal(istakeAmountBN.add(minStakeBN));
     }
   });
 })
