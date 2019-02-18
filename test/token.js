@@ -53,6 +53,12 @@ contract('TestToken', async accounts => {
     let minStakeBN = new BN(minStake.toString());
     console.log('  **** ValidatorSetContract.address =', ValidatorSetContract.address);
 
+    // Skip the period of disallowed staking or withdrawal.
+    while (!(await ValidatorSetContract.instance.methods.areStakeAndWithdrawAllowed().call())) {
+      // Sleep for 0.5 s.
+      await new Promise(r => setTimeout(r, 500));
+    }
+
     for (candidate of constants.CANDIDATES) {
       console.log('  **** candidate =', candidate);
       let ibalance = await instance.balanceOf(candidate.staking);
@@ -63,10 +69,10 @@ contract('TestToken', async accounts => {
 
       console.log('  **** add pool. linking staking address ' + candidate.staking + ' with mining address ' + candidate.mining);
       let pool_tx = await SnS(web3, {
-          from: candidate.staking,
-          to: ValidatorSetContract.address,
-          method: ValidatorSetContract.instance.methods.addPool(minStake, candidate.mining),
-          gasPrice: '1000000000',
+        from: candidate.staking,
+        to: ValidatorSetContract.address,
+        method: ValidatorSetContract.instance.methods.addPool(minStake, candidate.mining),
+        gasPrice: '1000000000',
       });
       console.log('  ****** pool_tx: status =', pool_tx.status, 'hash =', pool_tx.transactionHash, 'block number=', pool_tx.blockNumber);
       // console.log('  ***** pool_tx =', pool_tx);
@@ -74,10 +80,10 @@ contract('TestToken', async accounts => {
 
 
       let tx_details = {
-          from:     candidate.staking,
-	  to:       ValidatorSetContract.address,
-	  method:   ValidatorSetContract.instance.methods.stake(candidate.staking, minStake),
-          gasPrice: '1000000000',
+        from:     candidate.staking,
+        to:       ValidatorSetContract.address,
+        method:   ValidatorSetContract.instance.methods.stake(candidate.staking, minStake),
+        gasPrice: '1000000000',
       };
       let tx = await SnS(web3, tx_details, null);
       console.log('  ****** tx: status =', tx.status, ' hash =', tx.transactionHash, ' block number=', tx.blockNumber);
