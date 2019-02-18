@@ -6,10 +6,10 @@ const constants = require('../utils/constants');
 
 async function main() {
   let specFile = await readFile(__dirname + '/../posdao-contracts/spec.json', 'UTF-8');
-  assert.ok(typeof specFile === 'string');
+  assert(typeof specFile === 'string');
   specFile = JSON.parse(specFile);
   const accounts = specFile.accounts;
-  assert.ok(accounts != null && Object.getPrototypeOf(accounts) === Object.prototype);
+  assert(accounts != null && Object.getPrototypeOf(accounts) === Object.prototype);
   for (const candidate of constants.CANDIDATES) {
     assert(!Object.prototype.hasOwnProperty.call(accounts, candidate.staking));
     accounts[candidate.staking] = { balance: '0x100000000000000000' };
