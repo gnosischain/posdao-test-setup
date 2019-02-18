@@ -54,7 +54,7 @@ module.exports = async function (web3, tx_details, privateKey) {
     data = tx_details.method.encodeABI();
   }
   if (tx_details.gasLimit == null && tx_details.method != null) {
-    egas = await tx_details.method.estimateGas({ from });
+    egas = await tx_details.method.estimateGas({ from, gasPrice });
   }
   else {
     egas = tx_details.gasLimit;

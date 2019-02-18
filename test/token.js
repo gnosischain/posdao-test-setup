@@ -63,9 +63,8 @@ contract('TestToken', async accounts => {
 
       let tx_details = {
           from:     candidate,
-	  to:       ValidatorSetContract.address,
-	  method:   ValidatorSetContract.instance.methods.stake(candidate, minStake),
-          gasLimit: '1000000',
+          to:       ValidatorSetContract.address,
+          method:   ValidatorSetContract.instance.methods.stake(candidate, minStake),
           gasPrice: '1000000000',
       };
       let tx = await SnS(web3, tx_details, null);
