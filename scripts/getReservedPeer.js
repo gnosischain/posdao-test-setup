@@ -6,7 +6,7 @@ var os = require("os");
 main();
 
 async function main() {
-  const maxAttempts = 5;
+  const maxAttempts = 50;
   var node_index = process.argv[2].toString();
   console.log("Registering node " + node_index + " as reserved peer");
   const cmd = `curl --data '{"method":"parity_enode","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:854`
@@ -21,7 +21,7 @@ async function main() {
       break;
     } catch(e) {
       if (i <= maxAttempts) {
-        await sleep(5000);
+        await sleep(500);
       } else {
         console.log(e.message);
       }

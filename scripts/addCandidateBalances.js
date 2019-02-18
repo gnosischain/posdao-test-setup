@@ -11,8 +11,8 @@ async function main() {
   const accounts = specFile.accounts;
   assert.ok(accounts != null && Object.getPrototypeOf(accounts) === Object.prototype);
   for (const candidate of constants.CANDIDATES) {
-    assert(!Object.prototype.hasOwnProperty.call(accounts, candidate));
-    accounts[candidate] = { balance: '0x100000000000000000' };
+    assert(!Object.prototype.hasOwnProperty.call(accounts, candidate.staking));
+    accounts[candidate.staking] = { balance: '0x100000000000000000' };
   }
   await promisify(fs.writeFile)(__dirname + '/../parity-data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }

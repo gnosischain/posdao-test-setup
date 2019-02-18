@@ -5,7 +5,7 @@
   "scripts": {
     "all": "npm i && npm run get-all-submodules && npm run cleanup && npm run compile-posdao-contracts && npm run make-spec && npm run start-test-setup && npm run test && npm run stop-test-setup",
     "cleanup": "rm -rf ./build ./parity-data && git checkout ./parity-data",
-    "get-all-submodules": "git submodule update --init --remote && cd posdao-contracts && git checkout 7f0d8d04d44831bc5bbfeb685628c21edff308c2 && cd ..",
+    "get-all-submodules": "git submodule update --init --remote",
     "compile-posdao-contracts": "cd ./posdao-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
