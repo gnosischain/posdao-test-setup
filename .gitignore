@@ -17,6 +17,7 @@
 /parity-data/node[0-9]*/chains/
 /parity-data/node[0-9]*/log
 /parity-data/reserved-peers
+/parity-data/spec.json
 
 # NPM files
 /node_modules/
