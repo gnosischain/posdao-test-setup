@@ -20,7 +20,6 @@ let tokenSymbol = 'POS';
 let tokenDecimals = 18;
 
 function compileContract() {
-    const web3 = new Web3('http://localhost:8541');
     let input = {
         language: 'Solidity',
         sources: {
