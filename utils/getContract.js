@@ -11,7 +11,7 @@ module.exports = function (contractName, web3) {
             };
 
         case 'StakingToken':
-            const info = require('../runtime-data/StakingToken');
+            const info = require('../parity-data/StakingToken');
             return {
                 address: info.address,
                 abi: info.abi,

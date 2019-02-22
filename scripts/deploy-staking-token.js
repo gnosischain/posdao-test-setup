@@ -61,7 +61,7 @@ async function main() {
 
     console.log('**** Saving output to runtime-data');
     let runtimeData = { abi, address };
-    fs.writeFileSync(path.join(__dirname, '../runtime-data/StakingToken.json'), JSON.stringify(runtimeData, null, 4));
+    fs.writeFileSync(path.join(__dirname, '../parity-data/StakingToken.json'), JSON.stringify(runtimeData, null, 4));
 
     console.log('**** Set ValidatorSetContract address in StakingToken contract');
     let tx1 = await SnS(web3, {

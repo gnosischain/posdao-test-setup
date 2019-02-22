@@ -18,6 +18,7 @@
 /parity-data/node[0-9]*/log
 /parity-data/reserved-peers
 /parity-data/spec.json
+/parity-data/StakingToken.json
 
 # NPM files
 /node_modules/
