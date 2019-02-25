@@ -4,6 +4,14 @@ module.exports = function (contractName, web3) {
     var abi;
     var info;
     switch (contractName) {
+        case 'BlockRewardAuRa':
+            abi = require('../posdao-contracts/build/contracts/BlockRewardAuRa').abi;
+            return {
+                address: constants.BLOCK_REWARD_CONTRACT,
+                abi: abi,
+                instance: new web3.eth.Contract(abi, constants.BLOCK_REWARD_CONTRACT),
+            };
+
         case 'ValidatorSetAuRa':
             abi = require('../posdao-contracts/build/contracts/ValidatorSetAuRa').abi;
             return {
@@ -27,7 +35,6 @@ module.exports = function (contractName, web3) {
                 abi: info.abi,
                 instance: new web3.eth.Contract(info.abi, info.address),
             };
-
         default:
             throw new Error('Unknown contract ' + contractName);
     }

@@ -3,10 +3,12 @@
 const RETRY_INTERVAL_MS = 2499;
 
 async function getCurrentBlockNumber(web3) {
+    'use strict';
     return parseInt((await web3.eth.getBlock('latest')).number);
 }
 
 module.exports = async function (web3, sendTx) {
+    'use strict';
     let StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
     // `6` is to account for possible period of validator set change
     let stakeWithdrawDisallowPeriod = parseInt(await StakingAuRa.instance.methods.stakeWithdrawDisallowPeriod().call());
@@ -31,6 +33,7 @@ module.exports = async function (web3, sendTx) {
             exc = e;
             let blocksPassed = (await getCurrentBlockNumber(web3)) - currentBlock;
             if (blocksPassed <= stakeWithdrawDisallowPeriod && !!(await StakingAuRa.instance.methods.areStakeAndWithdrawAllowed().call())) {
+                console.error(exc);
                 throw new Error(`Tx failed yet it seems to be in the staking window, exception: ${exc}`);
             }
             else {

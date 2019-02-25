@@ -34,9 +34,8 @@ function getPrivateKey(address) {
 }
 
 module.exports = async function (web3, tx_details, privateKey) {
-  let from = tx_details.from;
-  let to = tx_details.to;
-  let value = web3.utils.toHex(tx_details.value || 0);
+  const { from, to } = tx_details;
+  const value = web3.utils.toHex(tx_details.value || 0);
   dbg('  **** from =', from);
   dbg('  **** to =', to);
   dbg('  **** value =', value);

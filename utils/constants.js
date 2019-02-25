@@ -1,5 +1,5 @@
 'use strict';
-const VALIDATOR_SET_ADDRESS = require("../posdao-contracts/spec").engine.authorityRound.params.validators.multi[0].contract;
+const params = require("../posdao-contracts/spec").engine.authorityRound.params;
 const STAKING_CONTRACT_ADDRESS = "0x1100000000000000000000000000000000000001";
 
 module.exports = {
@@ -9,6 +9,7 @@ module.exports = {
     { mining: "0xbe69eb0968226a1808975e1a1f2127667f2bffb3", staking: "0xdb9cb2478d917719c53862008672166808258577" },
     { mining: "0x720e118ab1006cc97ed2ef6b4b49ac04bb3aa6d9", staking: "0xb6695f5c2e3f5eff8036b5f5f3a9d83a5310e51e" }
   ],
-  VALIDATOR_SET_ADDRESS,
   STAKING_CONTRACT_ADDRESS,
+  VALIDATOR_SET_ADDRESS: params.validators.multi[0].contract,
+  BLOCK_REWARD_CONTRACT: params.blockRewardContractAddress,
 };

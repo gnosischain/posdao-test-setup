@@ -1,3 +1,4 @@
+'use strict';
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
@@ -10,14 +11,17 @@ const expect = require('chai')
     .use(require('chai-bn')(BN))
     .use(require('chai-as-promised'))
     .expect;
-const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3);
-const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
-const StakingTokenContract = require('../utils/getContract')('StakingToken', web3);
+const getContract = (((getContractInner, w) => name => getContractInner(name, w))(require('../utils/getContract'), web3));
+const StakingAuRa = getContract('StakingAuRa');
+const ValidatorSetContract = getContract('ValidatorSetAuRa');
+const StakingTokenContract = getContract('StakingToken');
+const BlockRewardContract = getContract('BlockRewardAuRa');
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 
-describe('Candidates make stakes on themselves', () => {
+describe('Candidates make stakes on themselves', async () => {
+    'use strict';
     var minStake;
     var minStakeBN;
     before(async () => {
@@ -25,9 +29,35 @@ describe('Candidates make stakes on themselves', () => {
         minStakeBN = new BN(minStake.toString());
     });
 
+    it('makes the owner the ERC20 to Native Bridge', async () => {
+        const tx = await SnS(web3, {
+            from: OWNER,
+            to: BlockRewardContract.address,
+            method: BlockRewardContract.instance.methods.setErcToNativeBridgesAllowed([OWNER]),
+            gasPrice: '0x0',
+        });
+        pp.tx(tx);
+        expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+    });
+
+    it('Owner issues initial balances to candidates', async () => {
+        for (const candidate of constants.CANDIDATES) {
+            console.log('**** candidate =', JSON.stringify(candidate));
+            const tx = await SnS(web3, {
+                from: OWNER,
+                to: BlockRewardContract.address,
+                method: BlockRewardContract.instance.methods.addExtraReceiver('0x100000000000000000',
+                                                                              candidate.staking),
+                gasPrice: '0x0',
+            });
+            pp.tx(tx);
+            expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+        }
+    });
+
     it('Owner mints (2x minStake) tokens to candidates', async () => {
         let candidateTokensBN = minStakeBN.mul(new BN('2'));
-        for (candidate of constants.CANDIDATES) {
+        for (const candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
@@ -48,7 +78,7 @@ describe('Candidates make stakes on themselves', () => {
     it('Candidates add pools for themselves', async () => {
         let stakeBN = minStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
-        for (candidate of constants.CANDIDATES) {
+        for (const candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
@@ -71,7 +101,7 @@ describe('Candidates make stakes on themselves', () => {
     it('Candidates make stakes on themselves', async () => {
         let stakeBN = minStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
-        for (candidate of constants.CANDIDATES) {
+        for (const candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
