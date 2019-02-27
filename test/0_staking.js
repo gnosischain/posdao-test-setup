@@ -12,7 +12,7 @@ const expect = require('chai')
     .expect;
 const ValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3);
 const StakingTokenContract = require('../utils/getContract')('StakingToken', web3);
-const canStakeAndWithdraw = require('../utils/canStakeAndWithdraw');
+const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const pp = require('../utils/prettyPrint');
 
 describe('Candidates make stakes on themselves', () => {
@@ -47,15 +47,16 @@ describe('Candidates make stakes on themselves', () => {
         let stakeBN = minStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
-            await canStakeAndWithdraw(web3);
             console.log('**** candidate =', JSON.stringify(candidate));
             let iStake = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
-            let tx = await SnS(web3, {
-                from: candidate.staking,
-                to: ValidatorSetContract.address,
-                method: ValidatorSetContract.instance.methods.addPool(stakeBN.toString(), candidate.mining),
-                gasPrice: '1000000000',
+            let tx = await sendInStakingWindow(web3, async () => {
+                return SnS(web3, {
+                    from: candidate.staking,
+                    to: ValidatorSetContract.address,
+                    method: ValidatorSetContract.instance.methods.addPool(stakeBN.toString(), candidate.mining),
+                    gasPrice: '1000000000',
+                });
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -69,15 +70,16 @@ describe('Candidates make stakes on themselves', () => {
         let stakeBN = minStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
-            await canStakeAndWithdraw(web3);
             console.log('**** candidate =', JSON.stringify(candidate));
             let iStake = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
-            let tx = await SnS(web3, {
-                from: candidate.staking,
-                to: ValidatorSetContract.address,
-                method: ValidatorSetContract.instance.methods.stake(candidate.staking, stakeBN.toString()),
-                gasPrice: '1000000000',
+            let tx = await sendInStakingWindow(web3, async () => {
+                return SnS(web3, {
+                    from: candidate.staking,
+                    to: ValidatorSetContract.address,
+                    method: ValidatorSetContract.instance.methods.stake(candidate.staking, stakeBN.toString()),
+                    gasPrice: '1000000000',
+                });
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
