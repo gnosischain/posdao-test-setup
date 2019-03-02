@@ -25,7 +25,7 @@ describe('Candidates make stakes on themselves', () => {
 
     it('Owner mints (2x minStake) tokens to candidates', async () => {
         let candidateTokensBN = minStakeBN.mul(new BN('2'));
-        for (candidate of constants.CANDIDATES) {
+        for (const candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
