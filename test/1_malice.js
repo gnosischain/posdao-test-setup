@@ -14,6 +14,7 @@ const expect = require('chai')
 const getContract = (((getContractInner, w) => name => getContractInner(name, w))
     (require('../utils/getContract'), web3));
 const ValidatorSetContract = getContract('ValidatorSetAuRa');
+const StakingAuRa = getContract('StakingAuRa');
 const StakingTokenContract = getContract('StakingToken');
 const pp = require('../utils/prettyPrint');
 
@@ -55,5 +56,13 @@ describe('Reported validators cannot withdraw their stakes',() => {
                 expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
             });
         }
+        const miningAddress = await ValidatorSetContract.instance.methods.stakingByMiningAddress(validators[0]).call();
+        await expect(SnS(web3, {
+            from: miningAddress,
+            to: StakingAuRa.address,
+            method: StakingAuRa.instance.methods.withdraw(miningAddress, 1),
+            gasPrice: '0',
+        })).to.be.rejected;
+        console.log('Transaction sent and rejected');
     });
 });
