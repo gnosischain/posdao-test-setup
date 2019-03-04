@@ -21,34 +21,39 @@ describe('Reported validators cannot withdraw their stakes',() => {
     'use strict';
     it('reports a validator as malicious', async () => {
         let i = 0;
-        for (;;) {
-            const validators = await ValidatorSetContract.instance.methods.getValidators().call();
-            for (const candidate of validators) {
-                ++i;
-                if (candidate === BAD_VALIDATOR.mining) {
-                    console.error('bad validator!');
-                }
-                console.log(i);
-                console.log('### sending transaction');
-                const can_report = await expect(ValidatorSetContract.instance.methods.reportMaliciousCallable(candidate, BAD_VALIDATOR.mining, 1).call()).to.be.fulfilled;
-                console.log(can_report);
-                expect(Array.isArray(can_report)).to.be.equal(true);
-                expect(can_report.length).to.be.equal(2);
-                expect(Object.getPrototypeOf(can_report)).to.be.equal(true);
-                if (!can_report[0] || can_report[1])
-                    continue;
-                SnS(web3, {
-                    from: candidate,
-                    to: ValidatorSetContract.address,
-                    method: ValidatorSetContract.instance.methods.reportMalicious(BAD_VALIDATOR.mining, 1, '0x'),
-                    gasPrice: '0',
-                }).then(tx => {
-                    console.log('### transaction sent');
-                    pp.tx(tx);
-                    expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-                }).catch(() => void 0);
-            }
-            console.log('end of loop');
+        let old_block = 0;
+        const validators = await ValidatorSetContract.instance.methods.getValidators().call();
+        expect(Array.isArray(validators)).to.be.equal(true);
+        expect(validators.length).to.be.not.equal(0);
+        const bad_validator = validators[0];
+        console.log(bad_validator);
+        while (!await expect(ValidatorSetContract.instance.methods.isReportValidatorValid(bad_validator).call()).to.be.fulfilled)
+            await new Promise(s => setTimeout(s, 500));
+        console.log('Success!');
+        const blockNum = await expect(web3.eth.getBlockNumber()).to.be.fulfilled;
+        if (blockNum > old_block) {
+            console.log((old_block = blockNum));
+        }
+        for (i = 1; i < validators.length; ++i) {
+            const candidate = validators[i];
+            const isValid = await expect(ValidatorSetContract.instance.methods.isReportValidatorValid(candidate).call()).to.be.fulfilled;
+            expect(isValid).to.be.equal(true);
+            const can_report = await expect(ValidatorSetContract.instance.methods.reportMaliciousCallable(candidate, bad_validator, blockNum).call()).to.be.fulfilled;
+            console.log(can_report);
+            expect(Array.isArray(can_report)).to.be.equal(false);
+            expect(Object.getPrototypeOf(can_report)).to.not.be.equal(Object.prototype);
+            if (!can_report[0])
+                continue;
+            console.log('### transaction sent');
+            await SnS(web3, {
+                from: candidate,
+                to: ValidatorSetContract.address,
+                method: ValidatorSetContract.instance.methods.reportMalicious(bad_validator, 1, '0x'),
+                gasPrice: '0',
+            }).then(tx => {
+                pp.tx(tx);
+                expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+            });
         }
     });
 });
