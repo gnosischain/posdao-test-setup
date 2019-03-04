@@ -8,7 +8,7 @@
     "get-all-submodules": "git submodule update --init --remote",
     "compile-posdao-contracts": "cd ./posdao-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js",
-    "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity && node scripts/deploy-staking-token.js",
+    "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/release/parity && node scripts/deploy-staking-token.js",
     "test": "node_modules/.bin/mocha --bail --timeout 300000 && npm run watcher",
     "stop-test-setup": "bash scripts/stop-test-setup",
     "watcher": "node scripts/watcher.js"
@@ -24,7 +24,9 @@
     "chai-as-promised": "^7.1.1",
     "chai-bn": "^0.1.1",
     "ethereumjs-tx": "^1.3.7",
+    "fs-extra": "^7.0.1",
     "keythereum": "^1.0.4",
+    "klaw": "^3.0.0",
     "mocha": "^6.0.0",
     "solc": "0.5.2",
     "web3": "1.0.0-beta.37"

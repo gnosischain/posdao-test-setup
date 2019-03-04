@@ -54,6 +54,7 @@ module.exports = async function (web3, tx_details, privateKey) {
     data = tx_details.method.encodeABI();
   }
   if (tx_details.gasLimit == null && tx_details.method != null) {
+    console.log('estimating gas');
     egas = await tx_details.method.estimateGas({ from, gasPrice });
   }
   else {
@@ -64,6 +65,7 @@ module.exports = async function (web3, tx_details, privateKey) {
 
   let nonce;
   if (tx_details.nonce == null) {
+    console.log('getting transaction count');
     nonce = await web3.eth.getTransactionCount(from);
   }
   else {
@@ -71,8 +73,9 @@ module.exports = async function (web3, tx_details, privateKey) {
   }
   dbg('  **** nonce =', nonce);
 
+  console.log('getting a chain ID');
   let chainId = await web3.eth.net.getId();
-  dbg('  **** chainId =', chainId);
+  console.log('  **** chainId =', chainId);
 
   if (privateKey == null) {
     privateKey = getPrivateKey(from);
@@ -93,6 +96,7 @@ module.exports = async function (web3, tx_details, privateKey) {
   dbg('  **** tx =', tx);
   tx.sign(privateKey);
   let serializedTx = tx.serialize();
+  dbg('  **** tx =', serializedTx);
 
   return web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
 }
