@@ -39,7 +39,7 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     console.log('');
 
     const stakingEpoch = await stakingContract.methods.stakingEpoch().call();
-    const stakingSetEpochStartBlock = await stakingContract.methods.stakingEpochStartBlock().call();
+    const stakingEpochStartBlock = await stakingContract.methods.stakingEpochStartBlock().call();
     const validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
     console.log(`stakingEpoch ${stakingEpoch}`);
     console.log(`  startBlock ${stakingEpochStartBlock}`);
