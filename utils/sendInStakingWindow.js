@@ -7,9 +7,9 @@ async function getCurrentBlockNumber(web3) {
 }
 
 module.exports = async function (web3, sendTx) {
-    let ValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3);
+    let StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
     // `6` is to account for possible period of validator set change
-    let stakeWithdrawDisallowPeriod = parseInt(await ValidatorSetContract.instance.methods.stakeWithdrawDisallowPeriod().call());
+    let stakeWithdrawDisallowPeriod = parseInt(await StakingAuRa.instance.methods.stakeWithdrawDisallowPeriod().call());
     let maxRetriesBlocks = 6 + stakeWithdrawDisallowPeriod;
 
     let startBlock = await getCurrentBlockNumber(web3);
@@ -18,7 +18,7 @@ module.exports = async function (web3, sendTx) {
 
     while (currentBlock <= startBlock + maxRetriesBlocks) {
         currentBlock = await getCurrentBlockNumber(web3);
-        if ( !(await ValidatorSetContract.instance.methods.areStakeAndWithdrawAllowed().call()) ) {
+        if ( !(await StakingAuRa.instance.methods.areStakeAndWithdrawAllowed().call()) ) {
             console.log(`***** stake/withdraw not allowed now (block ${currentBlock})`);
             await new Promise(r => setTimeout(r, RETRY_INTERVAL_MS));
             continue;
@@ -30,7 +30,7 @@ module.exports = async function (web3, sendTx) {
         catch (e) {
             exc = e;
             let blocksPassed = (await getCurrentBlockNumber(web3)) - currentBlock;
-            if (blocksPassed <= stakeWithdrawDisallowPeriod && !!(await ValidatorSetContract.instance.methods.areStakeAndWithdrawAllowed().call())) {
+            if (blocksPassed <= stakeWithdrawDisallowPeriod && !!(await StakingAuRa.instance.methods.areStakeAndWithdrawAllowed().call())) {
                 throw new Error(`Tx failed yet it seems to be in the staking window, exception: ${exc}`);
             }
             else {

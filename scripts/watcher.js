@@ -10,6 +10,10 @@ const validatorSetContract = new web3.eth.Contract(
   require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
   '0x1000000000000000000000000000000000000001'
 );
+const stakingContract = new web3.eth.Contract(
+  require(`${artifactsPath}StakingAuRa.json`).abi,
+  '0x1100000000000000000000000000000000000001'
+);
 const randomContract = new web3.eth.Contract(
   require(`${artifactsPath}RandomAuRa.json`).abi,
   '0x3000000000000000000000000000000000000001'
@@ -17,6 +21,7 @@ const randomContract = new web3.eth.Contract(
 
 const contractNameByAddress = {};
 contractNameByAddress[validatorSetContract.options.address] = 'ValidatorSetAuRa';
+contractNameByAddress[stakingContract.options.address] = 'StakingAuRa';
 contractNameByAddress[randomContract.options.address] = 'RandomAuRa';
 
 web3.eth.subscribe('newBlockHeaders', function(error, result){
@@ -33,12 +38,12 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     console.log(`  Validator: ${blockHeader.miner}`);
     console.log('');
 
-    const stakingEpoch = await validatorSetContract.methods.stakingEpoch().call();
-    const stakingEpochStartBlock = await validatorSetContract.methods.stakingEpochStartBlock().call();
+    const stakingEpoch = await stakingContract.methods.stakingEpoch().call();
+    const stakingSetEpochStartBlock = await stakingContract.methods.stakingEpochStartBlock().call();
     const validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
     console.log(`stakingEpoch ${stakingEpoch}`);
     console.log(`  startBlock ${stakingEpochStartBlock}`);
-    console.log(`  applyBlock ${validatorSetApplyBlock > 0 ? validatorSetApplyBlock : '-'}`);
+    console.log(`  applyBlock ${stakingApplyBlock > 0 ? stakingApplyBlock : '-'}`);
     console.log('');
 
     const collectionRound = await randomContract.methods.currentCollectRound().call();
