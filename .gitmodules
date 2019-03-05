@@ -1,3 +1,4 @@
 [submodule "posdao-contracts"]
 	path = posdao-contracts
 	url = git@github.com:poanetwork/posdao-contracts.git
+	branch = ValidatorSet-splitting
