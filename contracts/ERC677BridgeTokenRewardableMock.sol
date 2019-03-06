@@ -1,10 +1,10 @@
 pragma solidity 0.5.2;
 
-// Since `ERC677BridgeTokenRewardable` requires solc v0.4.24 but truffle
-// doesn't allow using different versions of compiler, this flat source file
-// for `ERC677BridgeTokenRewardable` was taken from
+// Since the source `ERC677BridgeTokenRewardable` requires solc v0.4.24 but truffle
+// doesn't allow using different versions of compiler at the same time, this flat
+// source file for `ERC677BridgeTokenRewardable` was taken from
 // https://github.com/poanetwork/poa-bridge-contracts/tree/8a7cf85bfbf47f0e2ab6c5b2149873a7e48dc206
-// and was adapted for solc v0.5.2.
+// and adapted for solc v0.5.2.
 
 // File: contracts/ERC677Receiver.sol
 
@@ -448,113 +448,113 @@ contract ERC677BridgeToken is
   BurnableToken,
   MintableToken
 {
-    address public bridgeContract;
+  address public bridgeContract;
 
-    event ContractFallbackCallFailed(address from, address to, uint value);
+  event ContractFallbackCallFailed(address from, address to, uint value);
 
-    constructor(
-      string memory _name,
-      string memory _symbol,
-      uint8 _decimals
-    ) public DetailedERC20(
-      _name,
-      _symbol,
-      _decimals
-    ) {}
+  constructor(
+    string memory _name,
+    string memory _symbol,
+    uint8 _decimals
+  ) public DetailedERC20(
+    _name,
+    _symbol,
+    _decimals
+  ) {}
 
-    function setBridgeContract(address _bridgeContract) onlyOwner public {
-      require(_bridgeContract != address(0) && isContract(_bridgeContract));
-      bridgeContract = _bridgeContract;
+  function setBridgeContract(address _bridgeContract) onlyOwner public {
+    require(_bridgeContract != address(0) && isContract(_bridgeContract));
+    bridgeContract = _bridgeContract;
+  }
+
+  modifier validRecipient(address _recipient) {
+    require(_recipient != address(0) && _recipient != address(this));
+    _;
+  }
+
+  function transferAndCall(
+    address _to,
+    uint _value,
+    bytes calldata _data
+  )
+    external
+    validRecipient(_to)
+    returns(bool)
+  {
+    require(superTransfer(_to, _value));
+    emit Transfer(msg.sender, _to, _value, _data);
+
+    if (isContract(_to)) {
+      require(contractFallback(_to, _value, _data));
     }
+    return true;
+  }
 
-    modifier validRecipient(address _recipient) {
-      require(_recipient != address(0) && _recipient != address(this));
-      _;
-    }
+  function getTokenInterfacesVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
+    return (2, 0, 0);
+  }
 
-    function transferAndCall(
-      address _to,
-      uint _value,
-      bytes calldata _data
-    )
-      external
-      validRecipient(_to)
-      returns(bool)
-    {
-      require(superTransfer(_to, _value));
-      emit Transfer(msg.sender, _to, _value, _data);
+  function superTransfer(address _to, uint256 _value) internal returns(bool)
+  {
+    return super.transfer(_to, _value);
+  }
 
-      if (isContract(_to)) {
-        require(contractFallback(_to, _value, _data));
+  function transfer(address _to, uint256 _value) public returns (bool)
+  {
+    require(superTransfer(_to, _value));
+    if (isContract(_to) && !contractFallback(_to, _value, new bytes(0))) {
+      if (_to == bridgeContract) {
+        revert();
+      } else {
+        emit ContractFallbackCallFailed(msg.sender, _to, _value);
       }
-      return true;
+    }
+    return true;
+  }
+
+  function contractFallback(
+    address _to,
+    uint _value,
+    bytes memory _data
+  )
+    private
+    returns(bool)
+  {
+    (bool success,) = _to.call(
+      abi.encodeWithSignature("onTokenTransfer(address,uint256,bytes)", msg.sender, _value, _data)
+    );
+    return success;
+  }
+
+  function isContract(address _addr)
+    internal
+    view
+    returns (bool)
+  {
+    uint length;
+    assembly { length := extcodesize(_addr) }
+    return length > 0;
+  }
+
+  function finishMinting() public returns (bool) {
+    revert();
+  }
+
+  function renounceOwnership() public onlyOwner {
+    revert();
+  }
+
+  function claimTokens(address _token, address payable _to) public onlyOwner {
+    require(_to != address(0));
+    if (_token == address(0)) {
+      _to.transfer(address(this).balance);
+      return;
     }
 
-    function getTokenInterfacesVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
-      return (2, 0, 0);
-    }
-
-    function superTransfer(address _to, uint256 _value) internal returns(bool)
-    {
-      return super.transfer(_to, _value);
-    }
-
-    function transfer(address _to, uint256 _value) public returns (bool)
-    {
-      require(superTransfer(_to, _value));
-      if (isContract(_to) && !contractFallback(_to, _value, new bytes(0))) {
-        if (_to == bridgeContract) {
-          revert();
-        } else {
-          emit ContractFallbackCallFailed(msg.sender, _to, _value);
-        }
-      }
-      return true;
-    }
-
-    function contractFallback(
-      address _to,
-      uint _value,
-      bytes memory _data
-    )
-      private
-      returns(bool)
-    {
-      (bool success,) = _to.call(
-        abi.encodeWithSignature("onTokenTransfer(address,uint256,bytes)", msg.sender, _value, _data)
-      );
-      return success;
-    }
-
-    function isContract(address _addr)
-      internal
-      view
-      returns (bool)
-    {
-      uint length;
-      assembly { length := extcodesize(_addr) }
-      return length > 0;
-    }
-
-    function finishMinting() public returns (bool) {
-      revert();
-    }
-
-    function renounceOwnership() public onlyOwner {
-      revert();
-    }
-
-    function claimTokens(address _token, address payable _to) public onlyOwner {
-      require(_to != address(0));
-      if (_token == address(0)) {
-        _to.transfer(address(this).balance);
-        return;
-      }
-
-      DetailedERC20 token = DetailedERC20(_token);
-      uint256 balance = token.balanceOf(address(this));
-      require(token.transfer(_to, balance));
-    }
+    DetailedERC20 token = DetailedERC20(_token);
+    uint256 balance = token.balanceOf(address(this));
+    require(token.transfer(_to, balance));
+  }
 
 }
 
@@ -562,67 +562,77 @@ contract ERC677BridgeToken is
 
 contract ERC677BridgeTokenRewardable is ERC677BridgeToken {
 
-    address public blockRewardContract;
-    address public validatorSetContract;
+  address public blockRewardContract;
+  address public stakingContract;
 
-    constructor(
-      string memory _name,
-      string memory _symbol,
-      uint8 _decimals
-    ) public ERC677BridgeToken(
-      _name,
-      _symbol,
-      _decimals
-    ) {}
+  constructor(
+    string memory _name,
+    string memory _symbol,
+    uint8 _decimals
+  ) public ERC677BridgeToken(
+    _name,
+    _symbol,
+    _decimals
+  ) {}
 
-    function setBlockRewardContract(address _blockRewardContract) onlyOwner public {
-      require(_blockRewardContract != address(0) && isContract(_blockRewardContract));
-      blockRewardContract = _blockRewardContract;
+  modifier onlyBlockRewardContract() {
+    require(msg.sender == blockRewardContract);
+    _;
+  }
+
+  modifier onlyStakingContract() {
+    require(msg.sender == stakingContract);
+    _;
+  }
+
+  function setBlockRewardContract(address _blockRewardContract) onlyOwner public {
+    require(_blockRewardContract != address(0) && isContract(_blockRewardContract));
+    blockRewardContract = _blockRewardContract;
+  }
+
+  function setStakingContract(address _stakingContract) onlyOwner public {
+    require(_stakingContract != address(0) && isContract(_stakingContract));
+    stakingContract = _stakingContract;
+  }
+
+  function mintReward(address[] calldata _receivers, uint256[] calldata _rewards) external onlyBlockRewardContract {
+    for (uint256 i = 0; i < _receivers.length; i++) {
+      address to = _receivers[i];
+      uint256 amount = _rewards[i];
+
+      // Mint `amount` for `to`
+      totalSupply_ = totalSupply_.add(amount);
+      balances[to] = balances[to].add(amount);
+      emit Mint(to, amount);
+      emit Transfer(address(0), to, amount);
     }
+  }
 
-    function setValidatorSetContract(address _validatorSetContract) onlyOwner public {
-      require(_validatorSetContract != address(0) && isContract(_validatorSetContract));
-      validatorSetContract = _validatorSetContract;
-    }
+  function stake(address _staker, uint256 _amount) external onlyStakingContract {
+    // Transfer `_amount` from `_staker` to `stakingContract`
+    require(_amount <= balances[_staker]);
+    balances[_staker] = balances[_staker].sub(_amount);
+    balances[stakingContract] = balances[stakingContract].add(_amount);
+    emit Transfer(_staker, stakingContract, _amount);
+  }
 
-    modifier onlyBlockRewardContract() {
-      require(msg.sender == blockRewardContract);
-      _;
-    }
+  function withdraw(address _staker, uint256 _amount) external onlyStakingContract {
+    // Transfer `_amount` from `stakingContract` to `_staker`
+    require(_amount <= balances[stakingContract]);
+    balances[stakingContract] = balances[stakingContract].sub(_amount);
+    balances[_staker] = balances[_staker].add(_amount);
+    emit Transfer(stakingContract, _staker, _amount);
+  }
 
-    modifier onlyValidatorSetContract() {
-      require(msg.sender == validatorSetContract);
-      _;
-    }
+  function transfer(address _to, uint256 _value) public returns(bool) {
+    require(_to != stakingContract);
+    return super.transfer(_to, _value);
+  }
 
-    function mintReward(address[] calldata _receivers, uint256[] calldata _rewards) external onlyBlockRewardContract {
-      for (uint256 i = 0; i < _receivers.length; i++) {
-        address to = _receivers[i];
-        uint256 amount = _rewards[i];
-
-        // Mint `amount` for `to`
-        totalSupply_ = totalSupply_.add(amount);
-        balances[to] = balances[to].add(amount);
-        emit Mint(to, amount);
-        emit Transfer(address(0), to, amount);
-      }
-    }
-
-    function stake(address _staker, uint256 _amount) external onlyValidatorSetContract {
-      // Transfer `_amount` from `_staker` to `validatorSetContract`
-      require(_amount <= balances[_staker]);
-      balances[_staker] = balances[_staker].sub(_amount);
-      balances[validatorSetContract] = balances[validatorSetContract].add(_amount);
-      emit Transfer(_staker, validatorSetContract, _amount);
-    }
-
-    function withdraw(address _staker, uint256 _amount) external onlyValidatorSetContract {
-      // Transfer `_amount` from `validatorSetContract` to `_staker`
-      require(_amount <= balances[validatorSetContract]);
-      balances[validatorSetContract] = balances[validatorSetContract].sub(_amount);
-      balances[_staker] = balances[_staker].add(_amount);
-      emit Transfer(validatorSetContract, _staker, _amount);
-    }
+  function transferFrom(address _from, address _to, uint256 _value) public returns(bool) {
+    require(_to != stakingContract);
+    return super.transferFrom(_from, _to, _value);
+  }
 
 }
 

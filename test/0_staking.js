@@ -10,7 +10,7 @@ const expect = require('chai')
     .use(require('chai-bn')(BN))
     .use(require('chai-as-promised'))
     .expect;
-const ValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3);
+const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const StakingTokenContract = require('../utils/getContract')('StakingToken', web3);
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const pp = require('../utils/prettyPrint');
@@ -19,7 +19,7 @@ describe('Candidates make stakes on themselves', () => {
     var minStake;
     var minStakeBN;
     before(async () => {
-        minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call();
+        minStake = await StakingAuRa.instance.methods.getCandidateMinStake().call();
         minStakeBN = new BN(minStake.toString());
     });
 
@@ -48,19 +48,19 @@ describe('Candidates make stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
                     from: candidate.staking,
-                    to: ValidatorSetContract.address,
-                    method: ValidatorSetContract.instance.methods.addPool(stakeBN.toString(), candidate.mining),
+                    to: StakingAuRa.address,
+                    method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining),
                     gasPrice: '1000000000',
                 });
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
@@ -71,19 +71,19 @@ describe('Candidates make stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
                     from: candidate.staking,
-                    to: ValidatorSetContract.address,
-                    method: ValidatorSetContract.instance.methods.stake(candidate.staking, stakeBN.toString()),
+                    to: StakingAuRa.address,
+                    method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
                     gasPrice: '1000000000',
                 });
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
