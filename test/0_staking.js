@@ -12,9 +12,9 @@ const expect = require('chai')
     .use(require('chai-as-promised'))
     .expect;
 const getContract = (((getContractInner, w) => name => getContractInner(name, w))(require('../utils/getContract'), web3));
-const StakingAuRa = getContract('StakingAuRa');
-const ValidatorSetContract = getContract('ValidatorSetAuRa');
+const StakingAuRaContract = getContract('StakingAuRa');
 const StakingTokenContract = getContract('StakingToken');
+const ValidatorSetContract = getContract('ValidatorSetAuRa');
 const BlockRewardContract = getContract('BlockRewardAuRa');
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
@@ -25,7 +25,7 @@ describe('Candidates make stakes on themselves', async () => {
     var minStake;
     var minStakeBN;
     before(async () => {
-        minStake = await StakingAuRa.instance.methods.getCandidateMinStake().call();
+        minStake = await StakingAuRaContract.instance.methods.getCandidateMinStake().call();
         minStakeBN = new BN(minStake.toString());
     });
 
@@ -80,19 +80,19 @@ describe('Candidates make stakes on themselves', async () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (const candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let iStake = await StakingAuRaContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
                     from: candidate.staking,
-                    to: StakingAuRa.address,
-                    method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining),
+                    to: StakingAuRaContract.address,
+                    method: StakingAuRaContract.instance.methods.addPool(stakeBN.toString(), candidate.mining),
                     gasPrice: '1000000000',
                 });
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let fStake = await StakingAuRaContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
@@ -103,19 +103,19 @@ describe('Candidates make stakes on themselves', async () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (const candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let iStake = await StakingAuRaContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
                     from: candidate.staking,
-                    to: StakingAuRa.address,
-                    method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
+                    to: StakingAuRaContract.address,
+                    method: StakingAuRaContract.instance.methods.stake(candidate.staking, stakeBN.toString()),
                     gasPrice: '1000000000',
                 });
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let fStake = await StakingAuRaContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
