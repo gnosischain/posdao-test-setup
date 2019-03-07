@@ -10,9 +10,11 @@ const expect = require('chai')
     .use(require('chai-bn')(BN))
     .use(require('chai-as-promised'))
     .expect;
+const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3);
 const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const StakingTokenContract = require('../utils/getContract')('StakingToken', web3);
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
+const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 
 describe('Candidates make stakes on themselves', () => {
@@ -86,6 +88,19 @@ describe('Candidates make stakes on themselves', () => {
             let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
+        }
+    });
+
+    it('Candidates are in validator set in the new staking epoch', async() => {
+        console.log('***** Wait for staking epoch to change');
+        await waitForValidatorSetChange(web3);
+        let validators = await ValidatorSetAuRa.instance.methods.getValidators().call();
+        console.log('***** New validator set = ' + JSON.stringify(validators));
+        for (candidate of constants.CANDIDATES) {
+            let validatorIndex = validators.indexOf(candidate.mining);
+            expect(validatorIndex, `Candidate ${JSON.stringify(candidate)}
+                is not in the validator set in the new epoch`)
+                .to.equal(-1);
         }
     });
 });
