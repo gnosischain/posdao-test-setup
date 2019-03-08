@@ -8,7 +8,9 @@ const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
 const BN = web3.utils.BN;
-const StakingAuRa = require(path.join(__dirname, '../utils/getContract'))('StakingAuRa', web3);
+const getContract = (((getContractInner, w) => name => getContractInner(name, w))(require('../utils/getContract'), web3));
+const StakingAuRa = getContract('StakingAuRa');
+const BlockRewardContract = getContract('BlockRewardAuRa');
 const OWNER = constants.OWNER;
 const expect = require('chai')
     .use(require('chai-bn')(BN))
@@ -90,6 +92,29 @@ async function main() {
     console.log('**** Check that StakingToken address in StakingAuRa is correct');
     let vsc_token = await StakingAuRa.instance.methods.erc20TokenContract().call();
     expect(vsc_token).to.equal(address);
+
+    console.log('**** Make the owner the ERC20 to Native Bridge');
+    const tx = await SnS(web3, {
+        from: OWNER,
+        to: BlockRewardContract.address,
+        method: BlockRewardContract.instance.methods.setErcToNativeBridgesAllowed([OWNER]),
+        gasPrice: '0x0',
+    });
+    pp.tx(tx);
+    expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+    console.log('**** Owner issues initial balances to candidates');
+    for (const candidate of constants.CANDIDATES) {
+        console.log('**** candidate =', JSON.stringify(candidate));
+        const tx = await SnS(web3, {
+            from: OWNER,
+            to: BlockRewardContract.address,
+            method: BlockRewardContract.instance.methods.addExtraReceiver('0x100000000000000000',
+                                                                          candidate.staking),
+            gasPrice: '0x0',
+        });
+        pp.tx(tx);
+        expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+    }
 }
 
 main();

@@ -29,32 +29,6 @@ describe('Candidates make stakes on themselves', async () => {
         minStakeBN = new BN(minStake.toString());
     });
 
-    it('makes the owner the ERC20 to Native Bridge', async () => {
-        const tx = await SnS(web3, {
-            from: OWNER,
-            to: BlockRewardContract.address,
-            method: BlockRewardContract.instance.methods.setErcToNativeBridgesAllowed([OWNER]),
-            gasPrice: '0x0',
-        });
-        pp.tx(tx);
-        expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-    });
-
-    it('Owner issues initial balances to candidates', async () => {
-        for (const candidate of constants.CANDIDATES) {
-            console.log('**** candidate =', JSON.stringify(candidate));
-            const tx = await SnS(web3, {
-                from: OWNER,
-                to: BlockRewardContract.address,
-                method: BlockRewardContract.instance.methods.addExtraReceiver('0x100000000000000000',
-                                                                              candidate.staking),
-                gasPrice: '0x0',
-            });
-            pp.tx(tx);
-            expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-        }
-    });
-
     it('Owner mints (2x minStake) tokens to candidates', async () => {
         let candidateTokensBN = minStakeBN.mul(new BN('2'));
         for (const candidate of constants.CANDIDATES) {
