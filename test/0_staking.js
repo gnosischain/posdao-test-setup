@@ -94,8 +94,7 @@ describe('Candidates make stakes on themselves', () => {
     it('Candidates are in validator set in the new staking epoch', async() => {
         console.log('***** Wait for staking epoch to change');
         await waitForValidatorSetChange(web3);
-        let validators = await ValidatorSetAuRa.instance.methods.getValidators().call();
-        console.log('***** New validator set = ' + JSON.stringify(validators));
+        let validators = await waitForValidatorSetChange(web3);
         for (candidate of constants.CANDIDATES) {
             let validatorIndex = validators.indexOf(candidate.mining);
             expect(validatorIndex, `Candidate ${JSON.stringify(candidate)}

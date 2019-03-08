@@ -44,9 +44,7 @@ describe('Pool removal and validator set change', () => {
 
     it('Validator is not present in the validator set in the next stacking epoch', async () => {
         console.log('***** Wait for staking epoch to change');
-        await waitForValidatorSetChange(web3);
-        let validators = await ValidatorSetAuRa.instance.methods.getValidators().call();
-        console.log('***** New validator set = ' + JSON.stringify(validators));
+        let validators = await waitForValidatorSetChange(web3);
         let validatorIndex = validators.indexOf(tiredValidator.mining);
         expect(validatorIndex, `Validator ${JSON.stringify(tiredValidator)}
             removed his pool but still is in validator set`)
