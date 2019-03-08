@@ -93,13 +93,12 @@ describe('Candidates make stakes on themselves', () => {
 
     it('Candidates are in validator set in the new staking epoch', async() => {
         console.log('***** Wait for staking epoch to change');
-        await waitForValidatorSetChange(web3);
-        let validators = await waitForValidatorSetChange(web3);
+        let validators = (await waitForValidatorSetChange(web3)).map(v => v.toLowerCase());
         for (candidate of constants.CANDIDATES) {
-            let validatorIndex = validators.indexOf(candidate.mining);
+            let validatorIndex = validators.indexOf(candidate.mining.toLowerCase());
             expect(validatorIndex, `Candidate ${JSON.stringify(candidate)}
                 is not in the validator set in the new epoch`)
-                .to.equal(-1);
+                .to.not.equal(-1);
         }
     });
 });
