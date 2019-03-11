@@ -8,6 +8,7 @@ const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
 const BN = web3.utils.BN;
+const BlockRewardAuRa = require(path.join(__dirname, '../utils/getContract'))('BlockRewardAuRa', web3);
 const StakingAuRa = require(path.join(__dirname, '../utils/getContract'))('StakingAuRa', web3);
 const OWNER = constants.OWNER;
 const expect = require('chai')
@@ -63,33 +64,51 @@ async function main() {
     let runtimeData = { abi, address };
     fs.writeFileSync(path.join(__dirname, '../parity-data/StakingToken.json'), JSON.stringify(runtimeData, null, 4));
 
+    let tx;
+
     console.log('**** Set StakingAuRa address in StakingToken contract');
-    let tx1 = await SnS(web3, {
+    tx = await SnS(web3, {
         from: OWNER,
         to: address,
         method: StakingTokenInstance.methods.setStakingContract(StakingAuRa.address),
         gasPrice: '0',
     });
-    pp.tx(tx1);
-    expect(tx1.status).to.equal(true);
+    pp.tx(tx);
+    expect(tx.status).to.equal(true);
 
-    console.log('**** Set StakingToken address in StakingAuRa: ' + StakingAuRa);
-    let tx2 = await SnS(web3, {
+    console.log('**** Set BlockRewardAuRa address in StakingToken contract');
+    tx = await SnS(web3, {
+        from: OWNER,
+        to: address,
+        method: StakingTokenInstance.methods.setBlockRewardContract(BlockRewardAuRa.address),
+        gasPrice: '0',
+    });
+    pp.tx(tx);
+    expect(tx.status).to.equal(true);
+
+    console.log('**** Set StakingToken address in StakingAuRa');
+    tx = await SnS(web3, {
         from: OWNER,
         to: StakingAuRa.address,
         method: StakingAuRa.instance.methods.setErc20TokenContract(address),
         gasPrice: '0',
     });
-    pp.tx(tx2);
-    expect(tx2.status).to.equal(true);
+    pp.tx(tx);
+    expect(tx.status).to.equal(true);
+
+    let contractAddress;
 
     console.log('**** Check that StakingAuRa address in StakingToken contract is correct');
-    let token_vsc = await StakingTokenInstance.methods.stakingContract().call();
-    expect(token_vsc).to.equal(StakingAuRa.address);
+    contractAddress = await StakingTokenInstance.methods.stakingContract().call();
+    expect(contractAddress).to.equal(StakingAuRa.address);
+
+    console.log('**** Check that BlockRewardAuRa address in StakingToken contract is correct');
+    contractAddress = await StakingTokenInstance.methods.blockRewardContract().call();
+    expect(contractAddress).to.equal(BlockRewardAuRa.address);
 
     console.log('**** Check that StakingToken address in StakingAuRa is correct');
-    let vsc_token = await StakingAuRa.instance.methods.erc20TokenContract().call();
-    expect(vsc_token).to.equal(address);
+    contractAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
+    expect(contractAddress).to.equal(address);
 }
 
 main();

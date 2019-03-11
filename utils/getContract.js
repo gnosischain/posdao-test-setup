@@ -4,6 +4,14 @@ module.exports = function (contractName, web3) {
     var abi;
     var info;
     switch (contractName) {
+        case 'BlockRewardAuRa':
+            abi = require('../posdao-contracts/build/contracts/BlockRewardAuRa').abi;
+            return {
+                address: constants.BLOCK_REWARD_ADDRESS,
+                abi: abi,
+                instance: new web3.eth.Contract(abi, constants.BLOCK_REWARD_ADDRESS),
+            };
+
         case 'ValidatorSetAuRa':
             abi = require('../posdao-contracts/build/contracts/ValidatorSetAuRa').abi;
             return {
