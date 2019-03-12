@@ -101,4 +101,25 @@ describe('Candidates make stakes on themselves', () => {
                 .to.not.equal(-1);
         }
     });
+
+    it('New tokens are minted and deposited in the validators\' staking addresses', async () => {
+        let mining_addrs = await ValidatorSetAuRa.instance.methods.getValidators().call();
+        let validators = {};
+        for (mining of mining_addrs) {
+            let staking = await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call();
+            let balance = await StakingTokenContract.instance.methods.balanceOf(staking).call();
+            validators[mining] = {
+                staking: staking,
+                balance: new BN(balance.toString()),
+            };
+        }
+        console.log('***** Wait for a few blocks');
+        await new Promise(r => setTimeout(r, 30000));
+        for (mining in validators) {
+            let new_balance = new BN(await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call().toString());
+            expect(new_balance, `Validator ${JSON.stringify(mining)} did not receive minted tokens`)
+                .to.be.bignumber.above(validators[mining].balance);
+            console.log(`**** validator ${JSON.stringify(mining)} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
+        }
+    });
 });
