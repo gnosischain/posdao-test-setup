@@ -103,23 +103,30 @@ describe('Candidates make stakes on themselves', () => {
     });
 
     it('New tokens are minted and deposited in the validators\' staking addresses', async () => {
-        let mining_addrs = await ValidatorSetAuRa.instance.methods.getValidators().call();
-        let validators = {};
-        for (mining of mining_addrs) {
-            let staking = await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call();
-            let balance = await StakingTokenContract.instance.methods.balanceOf(staking).call();
-            validators[mining] = {
-                staking: staking,
-                balance: new BN(balance.toString()),
-            };
-        }
-        console.log('***** Wait for a few blocks');
-        await new Promise(r => setTimeout(r, 30000));
-        for (mining in validators) {
-            let new_balance = new BN(await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call().toString());
-            expect(new_balance, `Validator ${JSON.stringify(mining)} did not receive minted tokens`)
-                .to.be.bignumber.above(validators[mining].balance);
-            console.log(`**** validator ${JSON.stringify(mining)} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
+        const mining_addrs = await ValidatorSetAuRa.instance.methods.getValidators().call();
+        const unremovableValidator = (await ValidatorSetAuRa.instance.methods.unremovableValidator().call()).toLowerCase();
+        for (let i = 0; i < 3; i++) {
+            let validators = {};
+            for (mining of mining_addrs) {
+                const staking = (await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call()).toLowerCase();
+                const balance = await StakingTokenContract.instance.methods.balanceOf(staking).call();
+                if (staking == unremovableValidator) {
+                    // don't check unremovable validator because they didn't stake
+                    continue;
+                }
+                validators[mining] = {
+                    staking: staking,
+                    balance: new BN(balance)
+                };
+            }
+            console.log('***** Wait a bit');
+            await new Promise(r => setTimeout(r, 10000));
+            for (mining in validators) {
+                const new_balance = new BN(await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call());
+                expect(new_balance, `Validator ${mining} did not receive minted tokens`)
+                    .to.be.bignumber.above(validators[mining].balance);
+                console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
+            }
         }
     });
 });
