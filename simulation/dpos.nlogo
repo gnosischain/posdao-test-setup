@@ -34,7 +34,6 @@ globals [
 to setup
   clear-all
   set staking-epoch# 0
-  ; set num-validators num-initial-validators
   set #candidates 0
 
   set-default-shape turtles "triangle"
@@ -175,14 +174,6 @@ to select-validators
   ask n-of (min (list max-#validators (count candidates))) candidates [
     become-validator
   ]
-  ;let the-ordered-candidates ordered-candidates
-  ;let now-#validators (min (list max-#validators (length the-ordered-candidates)))
-  ;foreach (sublist the-ordered-candidates 0 now-#validators) [the-candidate ->
-  ;  ask the-candidate [
-  ;    set validator? true
-  ;    set color red
-  ;  ]
-  ;]
 end
 
 to add-delegators
@@ -195,9 +186,6 @@ end
 to make-stakes
   let the-ordered-candidates ordered-candidates
   ;; variance in the choice of the staking target
-  ; let #choices (count candidates / 2)
-  ; let bigger-candidates (max-n-of #choices candidates [staking-pool-tokens])
-  ; let smaller-candidates (min-n-of #choices candidates [staking-pool-tokens])
   ask turtles [
     if random (rm-stake-chance-reciprocal + 1) = 0 [
       ifelse any? my-out-stakes [
