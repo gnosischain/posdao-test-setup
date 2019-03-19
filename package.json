@@ -24,6 +24,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-bn": "^0.1.1",
     "ethereumjs-tx": "^1.3.7",
+    "ethers": "^4.0.27",
     "keythereum": "^1.0.4",
     "mocha": "^6.1.4",
     "solc": "0.5.2",
