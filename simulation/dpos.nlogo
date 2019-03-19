@@ -43,7 +43,7 @@ to setup
   ;; Video setup.
   if record-video [
     vid:start-recorder
-    vid:record-view
+    vid:record-interface
   ]
 end
 
@@ -64,7 +64,7 @@ to go
   tick
   ;; Capture video.
   if record-video [
-    vid:record-view
+    vid:record-interface
   ]
 end
 
@@ -607,7 +607,7 @@ The network view is an X-Y graph with the staking pool size increasing to the ri
 
 The graph output is trimmed at the maximum coordinates and the participants whose staking pool or rewards exceed the maximum displayable limit are pinned to the maximum coordinate instead of disappearing from view.
 
-There is an optional video recording feature that allows recording the network without any charts. To use it, turn **record-video** on before clicking **Setup**. After the simulation stops, click **save-video** to save the recording into a file. The file name is fixed as `dpos.mp4`.
+There is an optional video recording feature that allows recording the whole interface window including the charts. To use it, turn **record-video** on before clicking **Setup**. After the simulation stops, click **save-video** to save the recording into a file. The file name is fixed as `dpos.mp4`.
 
 ## THINGS TO NOTICE
 
