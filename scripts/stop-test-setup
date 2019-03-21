@@ -1,16 +1,28 @@
 #!/bin/bash
 
 function kill_at_port {
-	PID=`lsof -t -i:${1}`
-	if [ "$PID" != "" ]; then
+    PID=`lsof -t -i:${1}`
+    if [ "$PID" != "" ]; then
         echo Killing pid $PID at port $1
-		kill -9 $PID
+	kill -9 $PID
     else
         echo Nothing to kill at port $1
-	fi
+    fi
+}
+
+function kill_at_file {
+    PID=`lsof -t ${1}`
+    if [ "$PID" != "" ]; then
+        echo Killing pid $PID at file $1
+	kill -9 $PID
+    else
+        echo Nothing to kill at file $1
+    fi
 }
 
 # Kill test nodes.
 for i in 1 2 3 6 7 8 9; do
     kill_at_port 854$i
 done
+
+kill_at_file "./parity-data/watchBackedUpNode.out"

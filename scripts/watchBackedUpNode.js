@@ -59,10 +59,20 @@ async function stopSecondarySigning() {
 }
 
 async function startScan() {
-    let secondaryListening = await web3_2.eth.net.isListening();
+    var secondaryListening = false;
+    try {
+        secondaryListening = await web3_2.eth.net.isListening();
+    } catch(e) {
+        console.log("Disconnected from secondary");
+    }
     assert(typeof secondaryListening === "boolean");
     if (secondaryListening) {
-        let primaryListening = await web3_1.eth.net.isListening();
+        var primaryListening = false;
+        try {
+            primaryListening = await web3_1.eth.net.isListening();
+        } catch(e) {
+            console.log("Disconnected from primary");
+        }
         assert(typeof primaryListening === "boolean");
         if (!primaryListening) {
             let signed = await scanBlocks();
@@ -81,7 +91,7 @@ async function startScan() {
             }
         }
     } else {
-        console.log(`Not connected to the secondary; retry in ${RETRY_TIMEOUT_SECONDS}s`);
+        console.log(`Disconnected from secondary; retry in ${RETRY_TIMEOUT_SECONDS}s`);
         return setTimeout(startScan, RETRY_TIMEOUT_SECONDS * 1000);
     }
     setTimeout(startScan, SCAN_INTERVAL_SECONDS * 1000);
