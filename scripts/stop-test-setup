@@ -11,6 +11,11 @@ function kill_at_port {
 }
 
 function kill_at_file {
+    if [[ ! -a $1 ]]; then
+        echo "No such file: "$1
+        return
+    fi
+
     PID=`lsof -t ${1}`
     if [ "$PID" != "" ]; then
         echo Killing pid $PID at file $1
