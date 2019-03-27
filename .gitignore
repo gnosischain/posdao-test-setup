@@ -19,6 +19,7 @@
 /parity-data/reserved-peers
 /parity-data/spec.json
 /parity-data/StakingToken.json
+/parity-data/watchBackedUpNode.*
 
 # NPM files
 /node_modules/
