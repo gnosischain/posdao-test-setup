@@ -10,6 +10,7 @@
 var assert = require("assert");
 var fs = require("fs");
 var { promisify } = require("util");
+var path = require("path");
 var readFile = promisify(fs.readFile);
 var ethers = require("ethers");
 
@@ -17,10 +18,8 @@ const PORT1 = "8543";
 const PORT2 = "8546";
 const RETRY_TIMEOUT_SECONDS = 2;
 const SCAN_INTERVAL_SECONDS = 5;
-const ARTIFACTS_PATH = "../posdao-contracts/build/contracts/";
 const PASSWORD_PATH = "/../config/password"
-const SIGNER_ADDRESS1 = "0x522df396ae70a058bd69778408630fdb023389b2";
-const SIGNER_ADDRESS2 = "0x522df396ae70a058bd69778408630fdb023389b2";
+const SIGNER_ADDRESS = "0x522df396ae70a058bd69778408630fdb023389b2";
 const DUMMY_SIGNER_ADDRESS = "0x69103d3decf4a462e7f95b36684b04f86a950028";
 
 var Web3 = require("web3");
@@ -29,10 +28,7 @@ var web3_2 = new Web3(new Web3.providers.HttpProvider(`http://localhost:${PORT2}
 var provider = new ethers.providers.JsonRpcProvider(`http://localhost:${PORT2}`);
 // `true` if the primary is required to sign and `false` if the secondary does.
 var primaryHasToSign = true;
-var validatorSetContract = new web3_2.eth.Contract(
-  require(`${ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
-  '0x1000000000000000000000000000000000000001'
-);
+var validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3_2).instance;
 
 async function scanBlocks(depth) {
     assert(typeof depth === "number");
@@ -59,11 +55,11 @@ async function scanBlocks(depth) {
 async function startSecondarySigning() {
     console.log(`Reserve node at port ${PORT2} starts signing`);
 
-    let password = await readFile(`__dirname${PASSWORD_PATH}`, "UTF-8");
+    let password = await readFile(path.join(__dirname, PASSWORD_PATH), "UTF-8");
     assert(typeof password === "string");
     await provider.send(
         "parity_setEngineSigner",
-        [ SIGNER_ADDRESS2, password.trim() ]
+        [ SIGNER_ADDRESS, password.trim() ]
     );
 }
 
@@ -71,7 +67,7 @@ async function startSecondarySigning() {
 async function stopSecondarySigning() {
     console.log(`Reserve node at port ${PORT2} stops signing`);
 
-    let password = await readFile(`__dirname${PASSWORD_PATH}`, "UTF-8");
+    let password = await readFile(path.join(__dirname, PASSWORD_PATH), "UTF-8");
     assert(typeof password === "string");
     await provider.send(
         "parity_setEngineSigner",
@@ -89,8 +85,9 @@ async function startScan() {
     assert(typeof secondaryListening === "boolean");
     if (secondaryListening) {
         let validators = await validatorSetContract.methods.getValidators().call();
+        validators = validators.map(v => v.toLowerCase());
         // Perform failover checks only if the primary is currently a validator.
-        if (validators.indexOf(SIGNER_ADDRESS1) != -1) {
+        if (validators.indexOf(SIGNER_ADDRESS.toLowerCase()) != -1) {
             var primaryListening = false;
             try {
                 primaryListening = await web3_1.eth.net.isListening();

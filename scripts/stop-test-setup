@@ -4,7 +4,7 @@ function kill_at_port {
     PID=`lsof -t -i:${1}`
     if [ "$PID" != "" ]; then
         echo Killing pid $PID at port $1
-	kill -9 $PID
+        kill -9 $PID
     else
         echo Nothing to kill at port $1
     fi
@@ -19,7 +19,7 @@ function kill_at_file {
     PID=`lsof -t ${1}`
     if [ "$PID" != "" ]; then
         echo Killing pid $PID at file $1
-	kill -9 $PID
+        kill -9 $PID
     else
         echo Nothing to kill at file $1
     fi
