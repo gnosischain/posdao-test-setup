@@ -103,30 +103,52 @@ describe('Candidates make stakes on themselves', () => {
     });
 
     it('New tokens are minted and deposited in the validators\' staking addresses', async () => {
+        async function waitForAuthorityRound(mining_addrs) {
+            while (true) {
+                if ((await web3.eth.getBlock('latest')).miner.toLowerCase() == mining_addrs[0].toLowerCase()) {
+                    break;
+                } else {
+                    await new Promise(r => setTimeout(r, 2499));
+                }
+            }
+            while (true) {
+                if ((await web3.eth.getBlock('latest')).miner.toLowerCase() == mining_addrs[mining_addrs.length - 1].toLowerCase()) {
+                    break;
+                } else {
+                    await new Promise(r => setTimeout(r, 2499));
+                }
+            }
+        }
+
         const mining_addrs = await ValidatorSetAuRa.instance.methods.getValidators().call();
         const unremovableValidator = (await ValidatorSetAuRa.instance.methods.unremovableValidator().call()).toLowerCase();
-        for (let i = 0; i < 3; i++) {
-            let validators = {};
-            for (mining of mining_addrs) {
-                const staking = (await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call()).toLowerCase();
-                const balance = await StakingTokenContract.instance.methods.balanceOf(staking).call();
-                if (staking == unremovableValidator) {
-                    // don't check unremovable validator because they didn't stake
-                    continue;
-                }
-                validators[mining] = {
-                    staking: staking,
-                    balance: new BN(balance)
-                };
+
+        console.log('***** Wait for the first Authority Round');
+        await waitForAuthorityRound(mining_addrs);
+
+        let validators = {};
+        for (mining of mining_addrs) {
+            const staking = (await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call()).toLowerCase();
+            const balance = await StakingTokenContract.instance.methods.balanceOf(staking).call();
+            if (staking == unremovableValidator) {
+                // don't check unremovable validator because they didn't stake
+                continue;
             }
-            console.log('***** Wait a bit');
-            await new Promise(r => setTimeout(r, 10000));
-            for (mining in validators) {
-                const new_balance = new BN(await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call());
-                expect(new_balance, `Validator ${mining} did not receive minted tokens`)
-                    .to.be.bignumber.above(validators[mining].balance);
-                console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
-            }
+            validators[mining] = {
+                staking: staking,
+                balance: new BN(balance)
+            };
+        }
+
+        console.log('***** Wait for the second Authority Round');
+        await waitForAuthorityRound(mining_addrs);
+
+        console.log('***** Check balances changing');
+        for (mining in validators) {
+            const new_balance = new BN(await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call());
+            expect(new_balance, `Validator ${mining} did not receive minted tokens`)
+                .to.be.bignumber.above(validators[mining].balance);
+            console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
         }
     });
 });
