@@ -635,7 +635,7 @@ TBD
 
 ## CREDITS AND REFERENCES
 
-For details about the DPoS, refer to the _POA Network DPoS whitepaper_.
+For details about the DPoS, refer to the [POA Network DPoS whitepaper](https://forum.poa.network/t/posdao-white-paper/2208).
 @#$#@#$#@
 default
 true
