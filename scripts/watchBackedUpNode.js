@@ -20,7 +20,6 @@ const RETRY_TIMEOUT_SECONDS = 2;
 const SCAN_INTERVAL_SECONDS = 5;
 const PASSWORD_PATH = "/../config/password"
 const SIGNER_ADDRESS = "0x522df396ae70a058bd69778408630fdb023389b2";
-const DUMMY_SIGNER_ADDRESS = "0x69103d3decf4a462e7f95b36684b04f86a950028";
 
 var Web3 = require("web3");
 var web3_1 = new Web3(new Web3.providers.HttpProvider(`http://localhost:${PORT1}`));
@@ -66,13 +65,7 @@ async function startSecondarySigning() {
 // Stops signing at the secondary node by setting the dummy signer address.
 async function stopSecondarySigning() {
     console.log(`Reserve node at port ${PORT2} stops signing`);
-
-    let password = await readFile(path.join(__dirname, PASSWORD_PATH), "UTF-8");
-    assert(typeof password === "string");
-    await provider.send(
-        "parity_setEngineSigner",
-        [ DUMMY_SIGNER_ADDRESS, password.trim() ]
-    );
+    await provider.send("parity_clearEngineSigner", []);
 }
 
 async function startScan() {
