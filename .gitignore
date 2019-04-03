@@ -20,6 +20,7 @@
 /parity-data/spec.json
 /parity-data/StakingToken.json
 /parity-data/watchBackedUpNode.*
+/parity-data/isMining.*
 
 # NPM files
 /node_modules/

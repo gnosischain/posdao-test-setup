@@ -1,30 +1,29 @@
 // Validator node failover script
 //
-// The script should be run on the secondary (failover) node that backs up a
-// primary node. The secondary node has signing disabled by default. It starts
-// signing blocks when the primary node is a validator but has not produced a
-// block when it was its turn and this script cannot connect to it by HTTP. The
-// secondary node stops sigining blocks as soon as the HTTP connection to the
+// The script should be run on the secondary (failover) node that backs up a primary node. The
+// secondary node has signing disabled by default. It starts signing blocks when the primary node is
+// a validator but has not produced a block when it was its turn and this script cannot connect to
+// it by HTTP. The secondary node stops sigining blocks as soon as the HTTP connection to the
 // primary node re-establishes.
 
 var assert = require("assert");
 var fs = require("fs");
+const got = require("got");
 var { promisify } = require("util");
 var path = require("path");
 var readFile = promisify(fs.readFile);
 var ethers = require("ethers");
 
-const PORT1 = "8543";
-const PORT2 = "8546";
+const URL1 = "http://localhost:15116";  // remote address of the primary (replace in production)
+const URL2 = "http://localhost:8546";   // local address of the secondary
 const RETRY_TIMEOUT_SECONDS = 2;
 const SCAN_INTERVAL_SECONDS = 5;
 const PASSWORD_PATH = "/../config/password"
 const SIGNER_ADDRESS = "0x522df396ae70a058bd69778408630fdb023389b2";
 
 var Web3 = require("web3");
-var web3_1 = new Web3(new Web3.providers.HttpProvider(`http://localhost:${PORT1}`));
-var web3_2 = new Web3(new Web3.providers.HttpProvider(`http://localhost:${PORT2}`));
-var provider = new ethers.providers.JsonRpcProvider(`http://localhost:${PORT2}`);
+var web3_2 = new Web3(new Web3.providers.HttpProvider(URL2));
+var provider = new ethers.providers.JsonRpcProvider(URL2);
 // `true` if the primary is required to sign and `false` if the secondary does.
 var primaryHasToSign = true;
 var validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3_2).instance;
@@ -52,7 +51,7 @@ async function scanBlocks(depth) {
 
 // Starts signing at the secondary node by setting the secondary signer address.
 async function startSecondarySigning() {
-    console.log(`Reserve node at port ${PORT2} starts signing`);
+    console.log(`Reserve node starts signing`);
 
     let password = await readFile(path.join(__dirname, PASSWORD_PATH), "UTF-8");
     assert(typeof password === "string");
@@ -64,7 +63,7 @@ async function startSecondarySigning() {
 
 // Stops signing at the secondary node by setting the dummy signer address.
 async function stopSecondarySigning() {
-    console.log(`Reserve node at port ${PORT2} stops signing`);
+    console.log(`Reserve node stops signing`);
     await provider.send("parity_clearEngineSigner", []);
 }
 
@@ -81,26 +80,40 @@ async function startScan() {
         validators = validators.map(v => v.toLowerCase());
         // Perform failover checks only if the primary is currently a validator.
         if (validators.indexOf(SIGNER_ADDRESS.toLowerCase()) != -1) {
-            var primaryListening = false;
+            var primarySigning = false;
+            var connected = true;
             try {
-                primaryListening = await web3_1.eth.net.isListening();
+                let response = await got(URL1, { json: false });
+                if (response.body.trim() === "true") {
+                    primarySigning = true;
+                }
             } catch(e) {
                 console.log("Disconnected from primary");
+                primarySigning = true;
+                // For the start, assume that the primary is still mining even though the secondary
+                // cannot check that.
+                connected = false;
             }
-            assert(typeof primaryListening === "boolean");
-            if (!primaryListening) {
-                // Ensure that we (the secondary mode) are still connected to the
-                // network by checking that other validators continued to sign
-                // blocks.
+            if (!connected) {
+                // Ensure that we (the secondary mode) are still connected to the network by
+                // checking that other validators continued to sign blocks.
                 let signed = await scanBlocks(validators.length);
                 if (!signed) {
+                    // Since there is a gap in signed blocks, it follows that, if the primary is the
+                    // current signer (primaryHasToSign == true), that it is has become disconnected
+                    // from the rest of the network, while the secondary node (us) is still
+                    // connected.
                     console.log(`Failed to find a block authored by ${SIGNER_ADDRESS}`);
-                    if (primaryHasToSign) {
-                        primaryHasToSign = false;
-                        await startSecondarySigning();
-                    }
+                    primarySigning = false;
                 }
-            } else {
+            }
+            if (!primarySigning) {
+                if (primaryHasToSign) {
+                    console.log("Primary has stopped signing; making the secondary sign");
+                    primaryHasToSign = false;
+                    await startSecondarySigning();
+                }
+            } else if (connected) {
                 if (!primaryHasToSign) {
                     console.log("Primary has come back up; moving the secondary to reserve");
                     primaryHasToSign = true;
