@@ -6,13 +6,14 @@
 // it by HTTP. The secondary node stops sigining blocks as soon as the HTTP connection to the
 // primary node re-establishes.
 
-var assert = require("assert");
-var fs = require("fs");
+const assert = require("assert");
+const fs = require("fs");
+const findSignedBlock = require('../utils/findSignedBlock.js');
 const got = require("got");
-var { promisify } = require("util");
-var path = require("path");
-var readFile = promisify(fs.readFile);
-var ethers = require("ethers");
+const { promisify } = require("util");
+const path = require("path");
+const readFile = promisify(fs.readFile);
+const ethers = require("ethers");
 
 const URL1 = "http://localhost:15116";  // remote address of the primary (replace in production)
 const URL2 = "http://localhost:8544";   // local address of the secondary
@@ -27,27 +28,6 @@ var provider = new ethers.providers.JsonRpcProvider(URL2);
 // `true` if the primary is required to sign and `false` if the secondary does.
 var primaryHasToSign = true;
 var validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3).instance;
-
-async function scanBlocks(depth) {
-    assert(typeof depth === "number");
-    var lastBlock = await web3.eth.getBlock("latest");
-    var lastBlockNum = lastBlock.number;
-    assert(typeof lastBlockNum === "number");
-    if (lastBlockNum < depth) {
-        return true;
-    }
-    var startBlockNum = lastBlockNum - depth;
-
-    console.log(`Scanning blocks from ${startBlockNum} to ${lastBlockNum}`);
-
-    for (var i = startBlockNum;  i <= lastBlockNum; i++) {
-        let block = await web3.eth.getBlock(i);
-        if (block.author === SIGNER_ADDRESS) {
-            return true;
-        }
-    }
-    return false;
-}
 
 // Starts signing at the secondary node by setting the secondary signer address.
 async function startSecondarySigning() {
@@ -97,7 +77,7 @@ async function startScan() {
             if (!connected) {
                 // Ensure that we (the secondary mode) are still connected to the network by
                 // checking that other validators continued to sign blocks.
-                let signed = await scanBlocks(validators.length);
+                let signed = await findSignedBlock(web3, SIGNER_ADDRESS, validators.length);
                 if (!signed) {
                     // Since there is a gap in signed blocks, it follows that, if the primary is the
                     // current signer (primaryHasToSign == true), that it is has become disconnected
