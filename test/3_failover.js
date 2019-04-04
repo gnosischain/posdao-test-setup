@@ -1,6 +1,6 @@
 const { promisify } = require("util");
 const exec = promisify(require('child_process').exec);
-const spawn = promisify(require('child_process').spawn);
+const spawn = require('child_process').spawn;
 const fs = require("fs");
 const ethers = require("ethers");
 const Web3 = require('web3');
@@ -28,7 +28,7 @@ describe('Node 1 is backed up by node 4', () => {
         await new Promise(r => setTimeout(r, 6000));
         var signing2 = false;
         // Wait until the secondary starts to sign.
-        while (signing2 != true) {
+        while (!signing2) {
             await new Promise(r => setTimeout(r, 3999));
             signing2 = await rpc2.send("eth_mining", []);
             assert.typeOf(signing2, 'boolean');
@@ -37,11 +37,11 @@ describe('Node 1 is backed up by node 4', () => {
         var out = fs.openSync('./parity-data/node1/log', 'a');
         var err = fs.openSync('./parity-data/node1/log', 'a');
         console.log(`***** Restarting Node 1`);
-        await spawn(PARITY, ['--config', './config/node1.toml'], {
+        spawn(PARITY, ['--config', './config/node1.toml'], {
             detached: true,
             stdio: ['ignore', out, err]
-        });
-        while (signing2 != false) {
+        }).unref();
+        while (signing2) {
             await new Promise(r => setTimeout(r, 3999));
             signing2 = await rpc2.send("eth_mining", []);
             assert.typeOf(signing2, 'boolean');
