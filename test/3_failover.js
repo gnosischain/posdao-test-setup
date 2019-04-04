@@ -21,15 +21,14 @@ const PARITY = '../parity-ethereum/target/debug/parity';
 
 describe('Node 1 is backed up by node 4', () => {
     it('Node 1 disconnects and reconnects with the engine signer set', async () => {
-        let cmd = 'kill -9 $(lsof -t ./parity-data/node1/log)';
+        let cmd = 'kill -9 $(lsof -t -i:30301)';
         console.log(`***** Command: ${cmd}`);
         var execOutput = await exec(cmd);
         expect(execOutput.stderr, `Error when killing Node 1: ${execOutput.stderr}`).to.be.empty;
-        await new Promise(r => setTimeout(r, 6000));
         var signing2 = false;
         // Wait until the secondary starts to sign.
         while (!signing2) {
-            await new Promise(r => setTimeout(r, 3999));
+            await new Promise(r => setTimeout(r, 1999));
             signing2 = await rpc2.send("eth_mining", []);
             assert.typeOf(signing2, 'boolean');
         };
@@ -42,7 +41,7 @@ describe('Node 1 is backed up by node 4', () => {
             stdio: ['ignore', out, err]
         }).unref();
         while (signing2) {
-            await new Promise(r => setTimeout(r, 3999));
+            await new Promise(r => setTimeout(r, 1999));
             signing2 = await rpc2.send("eth_mining", []);
             assert.typeOf(signing2, 'boolean');
         };
