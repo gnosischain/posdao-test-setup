@@ -15,22 +15,22 @@ var readFile = promisify(fs.readFile);
 var ethers = require("ethers");
 
 const URL1 = "http://localhost:15116";  // remote address of the primary (replace in production)
-const URL2 = "http://localhost:8546";   // local address of the secondary
+const URL2 = "http://localhost:8544";   // local address of the secondary
 const RETRY_TIMEOUT_SECONDS = 2;
 const SCAN_INTERVAL_SECONDS = 5;
 const PASSWORD_PATH = "/../config/password"
-const SIGNER_ADDRESS = "0x522df396ae70a058bd69778408630fdb023389b2";
+const SIGNER_ADDRESS = "0xbbcaa8d48289bb1ffcf9808d9aa4b1d215054c78";
 
 var Web3 = require("web3");
-var web3_2 = new Web3(new Web3.providers.HttpProvider(URL2));
+var web3 = new Web3(new Web3.providers.HttpProvider(URL2));
 var provider = new ethers.providers.JsonRpcProvider(URL2);
 // `true` if the primary is required to sign and `false` if the secondary does.
 var primaryHasToSign = true;
-var validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3_2).instance;
+var validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3).instance;
 
 async function scanBlocks(depth) {
     assert(typeof depth === "number");
-    var lastBlock = await web3_2.eth.getBlock("latest");
+    var lastBlock = await web3.eth.getBlock("latest");
     var lastBlockNum = lastBlock.number;
     assert(typeof lastBlockNum === "number");
     if (lastBlockNum < depth) {
@@ -41,7 +41,7 @@ async function scanBlocks(depth) {
     console.log(`Scanning blocks from ${startBlockNum} to ${lastBlockNum}`);
 
     for (var i = startBlockNum;  i <= lastBlockNum; i++) {
-        let block = await web3_2.eth.getBlock(i);
+        let block = await web3.eth.getBlock(i);
         if (block.author === SIGNER_ADDRESS) {
             return true;
         }
@@ -70,7 +70,7 @@ async function stopSecondarySigning() {
 async function startScan() {
     var secondaryListening = false;
     try {
-        secondaryListening = await web3_2.eth.net.isListening();
+        secondaryListening = await web3.eth.net.isListening();
     } catch(e) {
         console.log("Disconnected from secondary");
     }
@@ -89,9 +89,9 @@ async function startScan() {
                 }
             } catch(e) {
                 console.log("Disconnected from primary");
-                primarySigning = true;
                 // For the start, assume that the primary is still mining even though the secondary
                 // cannot check that.
+                primarySigning = true;
                 connected = false;
             }
             if (!connected) {
@@ -131,5 +131,5 @@ async function startScan() {
 try {
     startScan();
 } catch(e) {
-    console.log("startScan: " + e);
+    console.log("startScan ERROR: " + e);
 }

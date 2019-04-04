@@ -7,7 +7,7 @@ const http = require("http");
 const ethers = require("ethers");
 
 // Local Parity RPC port.
-const RPC_PORT = "8543";
+const RPC_PORT = "8541";
 // isMining server port open for remote connections.
 const SERVER_PORT = "15116";
 
