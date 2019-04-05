@@ -8,9 +8,9 @@ async function getCurrentBlockNumber(web3) {
 
 module.exports = async function (web3, sendTx) {
     let StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
-    // `6` is to account for possible period of validator set change
+    // `8` is to account for possible period of snapshotting
     let stakeWithdrawDisallowPeriod = parseInt(await StakingAuRa.instance.methods.stakeWithdrawDisallowPeriod().call());
-    let maxRetriesBlocks = 6 + stakeWithdrawDisallowPeriod;
+    let maxRetriesBlocks = 8 + stakeWithdrawDisallowPeriod;
 
     let startBlock = await getCurrentBlockNumber(web3);
     let currentBlock = startBlock;

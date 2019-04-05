@@ -102,17 +102,10 @@ describe('Candidates make stakes on themselves', () => {
         }
     });
 
-    it('New tokens are minted and deposited in the validators\' staking addresses', async () => {
-        async function waitForAuthorityRound(mining_addrs) {
+    it('New tokens are minted and deposited to the validators staking addresses', async () => {
+        async function waitForTheLatestBlockOfEpoch(latestBlock) {
             while (true) {
-                if ((await web3.eth.getBlock('latest')).miner.toLowerCase() == mining_addrs[0].toLowerCase()) {
-                    break;
-                } else {
-                    await new Promise(r => setTimeout(r, 2499));
-                }
-            }
-            while (true) {
-                if ((await web3.eth.getBlock('latest')).miner.toLowerCase() == mining_addrs[mining_addrs.length - 1].toLowerCase()) {
+                if (await web3.eth.getBlockNumber() >= latestBlock) {
                     break;
                 } else {
                     await new Promise(r => setTimeout(r, 2499));
@@ -122,9 +115,6 @@ describe('Candidates make stakes on themselves', () => {
 
         const mining_addrs = await ValidatorSetAuRa.instance.methods.getValidators().call();
         const unremovableValidator = (await ValidatorSetAuRa.instance.methods.unremovableValidator().call()).toLowerCase();
-
-        console.log('***** Wait for the first Authority Round');
-        await waitForAuthorityRound(mining_addrs);
 
         let validators = {};
         for (mining of mining_addrs) {
@@ -140,8 +130,9 @@ describe('Candidates make stakes on themselves', () => {
             };
         }
 
-        console.log('***** Wait for the second Authority Round');
-        await waitForAuthorityRound(mining_addrs);
+        console.log('***** Wait for the last block of the current staking epoch');
+        const latestBlock = await StakingAuRa.instance.methods.stakingEpochEndBlock().call();
+        await waitForTheLatestBlockOfEpoch(latestBlock);
 
         console.log('***** Check balances changing');
         for (mining in validators) {
