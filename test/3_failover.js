@@ -58,6 +58,36 @@ function startIsMining() {
 }
 
 describe('Node 1 is backed up by node 4', () => {
+    it('isMining.js is down, Node 1 still signs, Node 4 stays in reserve', async () => {
+        killIsMining();
+        var validators = await validatorSetContract.methods.getValidators().call();
+        await new Promise(r => setTimeout(r, 2 * (validators.length + 1) * 5000));
+        var signing1 = await rpc2.send('eth_mining', []);
+        expect(signing1, 'Node 1 should remain being the signer').to.be.true;
+        var signing2 = await rpc2.send('eth_mining', []);
+        expect(signing2, 'Node 4 should remain being in reserve').to.be.false;
+    });
+
+    it('isMining.js is down, Node 1 is down, Node 4 signs', async () => {
+        killNode1();
+        var validators = await validatorSetContract.methods.getValidators().call();
+        await new Promise(r => setTimeout(r, 2 * (validators.length + 1) * 5000));
+        var signing2 = await rpc2.send('eth_mining', []);
+        expect(signing2, 'Node 4 should start signing').to.be.true;
+    });
+
+    it('isMining.js is up, Node 1 is up and starts to sign', async () => {
+        startIsMining();
+        startNode1('./config/node1.toml');
+        var signing2 = true;
+        while (signing2) {
+            await new Promise(r => setTimeout(r, 999));
+            signing2 = await rpc2.send('eth_mining', []);
+            assert.typeOf(signing2, 'boolean');
+        }
+        console.log('***** Node 4 stopped signing OK');
+    });
+
     it('Node 1 disconnects and reconnects with the engine signer not set', async () => {
         await killNode1();
         var signing2 = false;
@@ -70,7 +100,7 @@ describe('Node 1 is backed up by node 4', () => {
         console.log('***** Node 4 is now signing instead of Node 1');
         startNode1('./config/node1-no-signer.toml');
         var validators = await validatorSetContract.methods.getValidators().call();
-        await new Promise(r => setTimeout(r, 2 * validators.length * 5000));
+        await new Promise(r => setTimeout(r, 2 * (validators.length + 1) * 5000));
         signing2 = await rpc2.send('eth_mining', []);
         expect(signing2, 'Node 4 should remain being the signer').to.be.true;
     });
@@ -110,36 +140,6 @@ describe('Node 1 is backed up by node 4', () => {
             signing2 = await rpc2.send('eth_mining', []);
             assert.typeOf(signing2, 'boolean');
         };
-        console.log('***** Node 4 has stopped signing OK');
-    });
-
-    it('isMining.js is down, Node 1 still signs, Node 4 stays in reserve', async () => {
-        killIsMining();
-        var validators = await validatorSetContract.methods.getValidators().call();
-        await new Promise(r => setTimeout(r, 2 * validators.length * 5000));
-        var signing1 = await rpc2.send('eth_mining', []);
-        expect(signing1, 'Node 1 should remain being the signer').to.be.true;
-        var signing2 = await rpc2.send('eth_mining', []);
-        expect(signing2, 'Node 4 should remain being in reserve').to.be.false;
-    });
-
-    it('isMining.js is down, Node 1 is down, Node 4 signs', async () => {
-        killNode1();
-        var validators = await validatorSetContract.methods.getValidators().call();
-        await new Promise(r => setTimeout(r, 2 * validators.length * 5000));
-        var signing2 = await rpc2.send('eth_mining', []);
-        expect(signing2, 'Node 4 should start signing').to.be.true;
-    });
-
-    it('isMining.js is up, Node 1 is up and starts to sign', async () => {
-        startIsMining();
-        startNode1('./config/node1.toml');
-        var signing2 = true;
-        while (signing2) {
-            await new Promise(r => setTimeout(r, 999));
-            signing2 = await rpc2.send('eth_mining', []);
-            assert.typeOf(signing2, 'boolean');
-        }
         console.log('***** Node 4 stopped signing OK');
     });
 });

@@ -16,7 +16,7 @@ module.exports = async function (web3, signer_address, depth) {
 
     for (var i = startBlockNum;  i <= lastBlockNum; i++) {
         let block = await web3.eth.getBlock(i);
-        if (block.author === signer_address) {
+        if (block.author.toLowerCase() === signer_address.toLowerCase()) {
             return true;
         }
     }
