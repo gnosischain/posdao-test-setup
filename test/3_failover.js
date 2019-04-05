@@ -4,6 +4,7 @@ const spawn = require('child_process').spawn;
 const fs = require("fs");
 const readFile = promisify(fs.readFile);
 const ethers = require("ethers");
+const path = require("path");
 const Web3 = require('web3');
 const URL1 = "http://localhost:8541";   // primary address
 const URL2 = "http://localhost:8544";   // secondary address
@@ -17,7 +18,6 @@ const expect = require('chai')
 const rpc1 = new ethers.providers.JsonRpcProvider(URL1);
 const rpc2 = new ethers.providers.JsonRpcProvider(URL2);
 const validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3).instance;
-const findSignedBlock = require('../utils/findSignedBlock.js');
 
 const PASSWORD_PATH = "/../config/password"
 const SIGNER_ADDRESS = '0xbbcaa8d48289bb1ffcf9808d9aa4b1d215054c78';
@@ -47,18 +47,18 @@ function startNode1(configToml) {
     }).unref();
 }
 
-function startIsMining(configToml) {
-    var out = fs.openSync('./parity-data/node1/log', 'a');
-    var err = fs.openSync('./parity-data/node1/log', 'a');
-    console.log('***** Restarting Node 1');
-    spawn(PARITY, ['--config', configToml], {
+function startIsMining() {
+    var out = fs.openSync('./parity-data/isMining.out', 'a');
+    var err = fs.openSync('./parity-data/isMining.err', 'a');
+    console.log('***** Restarting isMining.js');
+    spawn('node', ['./scripts/isMining.js'], {
         detached: true,
         stdio: ['ignore', out, err]
     }).unref();
 }
 
 describe('Node 1 is backed up by node 4', () => {
-    if('Node 1 disconnects and reconnects with the engine signer not set', async () => {
+    it('Node 1 disconnects and reconnects with the engine signer not set', async () => {
         await killNode1();
         var signing2 = false;
         // Wait until the secondary starts to sign.
@@ -113,7 +113,7 @@ describe('Node 1 is backed up by node 4', () => {
         console.log('***** Node 4 has stopped signing OK');
     });
 
-    if('isMining.js is down, Node 1 still signs, Node 4 stays in reserve', async () => {
+    it('isMining.js is down, Node 1 still signs, Node 4 stays in reserve', async () => {
         killIsMining();
         var validators = await validatorSetContract.methods.getValidators().call();
         await new Promise(r => setTimeout(r, 2 * validators.length * 5000));
@@ -123,11 +123,23 @@ describe('Node 1 is backed up by node 4', () => {
         expect(signing2, 'Node 4 should remain being in reserve').to.be.false;
     });
 
-    if('isMining.js is down, Node 1 is down, Node 4 signs', async () => {
+    it('isMining.js is down, Node 1 is down, Node 4 signs', async () => {
         killNode1();
         var validators = await validatorSetContract.methods.getValidators().call();
         await new Promise(r => setTimeout(r, 2 * validators.length * 5000));
         var signing2 = await rpc2.send("eth_mining", []);
-        expect(signing2, 'Node 4 should remain being in reserve').to.be.true;
+        expect(signing2, 'Node 4 should start signing').to.be.true;
+    });
+
+    it('isMining.js is up, Node 1 is up and starts to sign', async () => {
+        startIsMining();
+        startNode1('./config/node1.toml');
+        var signing2 = true;
+        while (signing2) {
+            await new Promise(r => setTimeout(r, 999));
+            signing2 = await rpc2.send("eth_mining", []);
+            assert.typeOf(signing2, 'boolean');
+        }
+        console.log('***** Node 4 stopped signing OK');
     });
 });
