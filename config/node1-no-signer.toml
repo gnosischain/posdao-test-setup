@@ -1,0 +1,39 @@
+[parity]
+chain = "./parity-data/spec.json"
+base_path = "parity-data/node1"
+
+[ui]
+disable = true
+
+[network]
+port = 30301
+nat = "none"
+
+[rpc]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
+port = 8541
+
+[websockets]
+port = 9541
+
+[ipc]
+disable = true
+
+[secretstore]
+disable = true
+
+[ipfs]
+enable = false
+
+[account]
+unlock = ["0xbbcaa8d48289bb1ffcf9808d9aa4b1d215054c78", "0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24"]
+password = ["config/password"]
+
+[mining]
+force_sealing = true
+min_gas_price = 1000000000
+reseal_on_txs = "none"
+extra_data = "Parity"
+
+[misc]
+logging = "engine=trace,miner=trace,reward=trace"
