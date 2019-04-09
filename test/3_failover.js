@@ -24,7 +24,7 @@ const SIGNER_ADDRESS = '0xbbcaa8d48289bb1ffcf9808d9aa4b1d215054c78';
 const PARITY = '../parity-ethereum/target/debug/parity';
 
 async function killPrimary() {
-    let cmd = 'kill -9 $(lsof -t -i:30301)';
+    let cmd = 'kill -9 $(lsof -t -i:9541)';
     console.log('***** Killing primary node');
     var execOutput = await exec(cmd);
     expect(execOutput.stderr, `Error when killing primary node: ${execOutput.stderr}`).to.be.empty;
@@ -61,11 +61,12 @@ describe('Primary node is backed up by secondary node', () => {
         var signing2 = await rpc2.send('eth_mining', []);
         expect(signing2, 'Secondary node should start in reserve').to.be.false;
     });
-    it('isMining.js is down, primary still signs, secondary stays in reserve', async () => {
+
+    it('isMining.js goes down, primary still signs, secondary stays in reserve', async () => {
         killIsMining();
         var validators = await validatorSetContract.methods.getValidators().call();
         await new Promise(r => setTimeout(r, 2 * (validators.length + 1) * 5000));
-        var signing1 = await rpc2.send('eth_mining', []);
+        var signing1 = await rpc1.send('eth_mining', []);
         expect(signing1, 'Primary node should stay being the signer').to.be.true;
         var signing2 = await rpc2.send('eth_mining', []);
         expect(signing2, 'Secondary node should stay in reserve').to.be.false;
