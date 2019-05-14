@@ -1,16 +1,34 @@
 #!/bin/bash
 
 function kill_at_port {
-	PID=`lsof -t -i:${1}`
-	if [ "$PID" != "" ]; then
+    PID=`lsof -t -i:${1}`
+    if [ "$PID" != "" ]; then
         echo Killing pid $PID at port $1
-		kill -9 $PID
+        kill -9 $PID
     else
         echo Nothing to kill at port $1
-	fi
+    fi
+}
+
+function kill_at_file {
+    if [[ ! -a $1 ]]; then
+        echo "No such file: "$1
+        return
+    fi
+
+    PID=`lsof -t ${1}`
+    if [ "$PID" != "" ]; then
+        echo Killing pid $PID at file $1
+        kill -9 $PID
+    else
+        echo Nothing to kill at file $1
+    fi
 }
 
 # Kill test nodes.
-for i in $(seq 1 9); do
+for i in 1 2 3 4 7 8 9; do
     kill_at_port 854$i
 done
+
+kill_at_file "./parity-data/isMining.out"
+kill_at_file "./parity-data/watchBackedUpNode.out"
