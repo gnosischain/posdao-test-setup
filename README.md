@@ -11,7 +11,7 @@ To configure the repository and run tests, execute `npm run all`.
 ## Requirements
 
 The `aura-pos` branch should be checked out in `../parity-ethereum` and built in
-debug mode.
+release mode.
 
 
 ## Development
