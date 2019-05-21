@@ -6,7 +6,7 @@ const os = require('os');
 // ordinary node
 const web3Ord = new Web3('http://localhost:8540');
 // reference validator node
-const web3Val = new Web3('http://localhost:8531');
+const web3Val = new Web3('http://localhost:8541');
 // block time
 const blockTimeMS = 2539;
 
