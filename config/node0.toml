@@ -1,0 +1,30 @@
+[parity]
+chain = "./parity-data/spec.json"
+base_path = "parity-data/node0"
+
+[ui]
+disable = true
+
+[network]
+port = 30300
+discovery = true
+nat = "none"
+
+[rpc]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
+port = 8540
+
+[websockets]
+port = 9540
+
+[ipc]
+disable = true
+
+[secretstore]
+disable = true
+
+[ipfs]
+enable = false
+
+[misc]
+logging = "engine=trace,miner=trace,reward=trace"
