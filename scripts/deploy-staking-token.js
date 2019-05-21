@@ -8,8 +8,8 @@ const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
 const BN = web3.utils.BN;
-const BlockRewardAuRa = require(path.join(__dirname, '../utils/getContract'))('BlockRewardAuRa', web3);
-const StakingAuRa = require(path.join(__dirname, '../utils/getContract'))('StakingAuRa', web3);
+//const BlockRewardAuRa = require(path.join(__dirname, '../utils/getContract'))('BlockRewardAuRa', web3);
+//const StakingAuRa = require(path.join(__dirname, '../utils/getContract'))('StakingAuRa', web3);
 const OWNER = constants.OWNER;
 const expect = require('chai')
     .use(require('chai-bn')(BN))
@@ -60,6 +60,7 @@ async function main() {
     let address = StakingTokenInstance.options.address;
     console.log('**** StakingToken deployed at:', address);
 
+    /*
     console.log('**** Saving output to parity-data');
     let runtimeData = { abi, address };
     fs.writeFileSync(path.join(__dirname, '../parity-data/StakingToken.json'), JSON.stringify(runtimeData, null, 4));
@@ -109,6 +110,7 @@ async function main() {
     console.log('**** Check that StakingToken address in StakingAuRa is correct');
     contractAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
     expect(contractAddress).to.equal(address);
+    */
 }
 
 main();

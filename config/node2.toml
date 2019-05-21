@@ -39,4 +39,4 @@ reseal_on_txs = "none"
 extra_data = "Parity"
 
 [misc]
-logging = "engine=trace,miner=trace,reward=trace"
+#logging = "engine=trace,miner=trace,reward=trace"
