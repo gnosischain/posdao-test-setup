@@ -10,7 +10,11 @@ const web3Val = new Web3('http://localhost:8541');
 // block time
 const blockTimeMS = 2539;
 
-const checkLogFileName = path.join(__dirname, '../parity-data/node0/check.log');
+const node0Path = '../parity-data/node0/';
+const blocksLogFileName = path.join(__dirname, `${node0Path}blocks.log`);
+const checkLogFileName = path.join(__dirname, `${node0Path}check.log`);
+
+fs.writeFileSync(blocksLogFileName, '', 'utf8');
 fs.writeFileSync(checkLogFileName, '', 'utf8');
 
 function getLatestBlock(web3) {
@@ -40,6 +44,8 @@ function doCheck() {
     ]).then(blocks => {
         let blockOrd = blocks[0];
         let blockVal = blocks[1];
+
+        fs.appendFileSync(blocksLogFileName, `${blockOrd.number} (${blockOrd.hash}) - ${blockVal.number} (${blockVal.hash})\n`, 'utf8');
 
         if (Math.abs(blockOrd.number - blockVal.number) > 1) {
             reportBad(blockOrd, blockVal, 'Block numbers too far apart: ' + (blockOrd.number - blockVal.number));
