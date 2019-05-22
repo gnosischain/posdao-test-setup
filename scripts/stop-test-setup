@@ -11,6 +11,6 @@ function kill_at_port {
 }
 
 # Kill test nodes.
-for i in $(seq 0 9); do
+for i in 0 1 2 3 7 8 9; do
     kill_at_port 854$i
 done
