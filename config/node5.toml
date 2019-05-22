@@ -1,22 +1,22 @@
 [parity]
 chain = "./parity-data/spec.json"
-base_path = "parity-data/node8"
+base_path = "parity-data/node5"
 
 [ui]
 disable = true
 
 [network]
-port = 30308
+port = 30305
 discovery = true
 reserved_peers="parity-data/reserved-peers"
 nat = "none"
 
 [rpc]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
-port = 8548
+port = 8545
 
 [websockets]
-port = 9548
+port = 9545
 
 [ipc]
 disable = true
