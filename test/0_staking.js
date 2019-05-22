@@ -4,6 +4,7 @@ const path = require('path');
 const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
+web3.eth.transactionConfirmationBlocks = 1;
 const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
 const expect = require('chai')
@@ -126,7 +127,7 @@ describe('Candidates make stakes on themselves', () => {
             }
             validators[mining] = {
                 staking: staking,
-                balance: new BN(balance)
+                balance: new BN(balance.toString())
             };
         }
 
@@ -136,7 +137,7 @@ describe('Candidates make stakes on themselves', () => {
 
         console.log('***** Check balances changing');
         for (mining in validators) {
-            const new_balance = new BN(await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call());
+            const new_balance = new BN((await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call()).toString());
             expect(new_balance, `Validator ${mining} did not receive minted tokens`)
                 .to.be.bignumber.above(validators[mining].balance);
             console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);

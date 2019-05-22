@@ -4,6 +4,7 @@ const path = require('path');
 const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
+web3.eth.transactionConfirmationBlocks = 1;
 const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
 const expect = require('chai')
