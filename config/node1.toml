@@ -10,6 +10,8 @@ port = 30301
 nat = "none"
 
 [rpc]
+cors = ["all"]
+hosts = ["all"]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
 port = 8541
 
