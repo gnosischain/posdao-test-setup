@@ -1,22 +1,21 @@
 [parity]
 chain = "./parity-data/spec.json"
-base_path = "parity-data/node9"
+base_path = "parity-data/node0"
 
 [ui]
 disable = true
 
 [network]
-port = 30309
+port = 30300
 discovery = true
-reserved_peers="parity-data/reserved-peers"
 nat = "none"
 
 [rpc]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
-port = 8549
+port = 8540
 
 [websockets]
-port = 9549
+port = 9540
 
 [ipc]
 disable = true
@@ -26,17 +25,6 @@ disable = true
 
 [ipfs]
 enable = false
-
-[account]
-unlock = ["0x720e118ab1006cc97ed2ef6b4b49ac04bb3aa6d9"]
-password = ["config/password"]
-
-[mining]
-force_sealing = true
-min_gas_price = 1000000000
-engine_signer = "0x720e118ab1006cc97ed2ef6b4b49ac04bb3aa6d9"
-reseal_on_txs = "none"
-extra_data = "Parity"
 
 [misc]
 logging = "engine=trace,miner=trace,reward=trace"
