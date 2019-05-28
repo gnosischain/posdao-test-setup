@@ -92,7 +92,7 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     for (let i = 0; i < block.transactions.length; i++) {
       const tx = block.transactions[i];
       const txReceipt = await web3.eth.getTransactionReceipt(tx.hash);
-      const txObject = {from: tx.from, to: tx.to, gasPrice: tx.gasPrice, receipt: txReceipt};
+      const txObject = {from: tx.from, to: tx.to, gasPrice: tx.gasPrice, gasLimit: tx.gas, nonce: tx.nonce, receipt: txReceipt};
       if (txReceipt.status) {
         txSuccess.push(txObject);
       } else {
@@ -108,7 +108,7 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
           contractName = contractNameByAddress[tx.to]
         }
         console.log(`  ${tx.from} => ${contractName}`);
-        console.log(`    gas used: ${tx.receipt.gasUsed}, gas price: ${tx.gasPrice}`);
+        console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}`);
       });
       console.log('');
     }
@@ -121,7 +121,7 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
           contractName = contractNameByAddress[tx.to]
         }
         console.log(`  ${tx.from} => ${contractName}`);
-        console.log(`    gas used: ${tx.receipt.gasUsed}, gas price: ${tx.gasPrice}`);
+        console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}`);
       });
       console.log('');
     }
