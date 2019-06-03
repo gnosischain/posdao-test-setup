@@ -35,7 +35,7 @@ describe('Pool removal and validator set change', () => {
             return SnS(web3, {
                 from: tiredValidator.staking,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.removePool(),
+                method: StakingAuRa.instance.methods.removeMyPool(),
                 gasPrice: '1000000000',
             });
         });
