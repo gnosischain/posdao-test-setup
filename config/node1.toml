@@ -8,6 +8,7 @@ disable = true
 [network]
 port = 30301
 nat = "none"
+interface = "local"
 reserved_peers="parity-data/reserved-peers"
 
 [rpc]
