@@ -214,7 +214,7 @@ describe('Candidates make stakes on themselves', () => {
         // initial stake on the initial candidate
         let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
         let iStakeBN = new BN(iStake.toString());
-        // initial stake on the second candidate
+        // initial stake on the target candidate
         let iStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
         let iStake_recBN = new BN(iStake_rec.toString());
 
@@ -232,18 +232,18 @@ describe('Candidates make stakes on themselves', () => {
         let dStakeBN = fStakeBN.sub(iStakeBN);
         expect(dStakeBN, `Stake on initial candidate ${candidate} didn't decrease`).to.be.bignumber.equal(minStakeBN.neg()); // x.neg() == -x
 
-        // final stake on the second candidate (should have increased)
+        // final stake on the target candidate (should have increased)
         let fStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
         let fStake_recBN = new BN(fStake_rec.toString());
         let dStake_recBN = fStake_recBN.sub(iStake_recBN);
-        expect(dStake_recBN, `Stake on second candidate ${candidate_rec} didn't increase`).to.be.bignumber.equal(minStakeBN);
+        expect(dStake_recBN, `Stake on target candidate ${candidate_rec} didn't increase`).to.be.bignumber.equal(minStakeBN);
 
         console.log('**** Moving stake must fail if delegator tries to move stake to the same candidate');
         try {
             let tx2 = await SnS(web3, {
                 from: delegator,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.moveStake(candidate, candidate, minStakeBN.toString()),
+                method: StakingAuRa.instance.methods.moveStake(candidate_rec, candidate_rec, minStakeBN.toString()),
                 gasPrice: '1000000000'
             });
             expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
@@ -257,7 +257,7 @@ describe('Candidates make stakes on themselves', () => {
             let tx3 = await SnS(web3, {
                 from: delegator,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, ((new BN(newNativeBalance)).add(new BN('1'))).toString()),
+                method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minStakeBN.toString()),
                 gasPrice: '1000000000'
             });
             expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
