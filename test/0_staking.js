@@ -19,6 +19,7 @@ const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 const keythereum = require('keythereum');
+const REVERT_EXCEPTION_MSG = 'Error: Node error: {"code":-32016,"message":"The execution failed due to an exception."}';
 
 describe('Candidates make stakes on themselves', () => {
     var minStake;
@@ -203,6 +204,66 @@ describe('Candidates make stakes on themselves', () => {
             const fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegators[i]).call();
             const fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate} didn't increase`).to.be.bignumber.equal(minStakeBN);
+        }
+
+        // Test moving of stakes
+        console.log('**** One of delegators moves stakes to another candidate');
+        let candidate_rec = constants.CANDIDATES[2].staking;
+        let delegator = delegators[0];
+
+        // initial stake on the initial candidate
+        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let iStakeBN = new BN(iStake.toString());
+        // initial stake on the target candidate
+        let iStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
+        let iStake_recBN = new BN(iStake_rec.toString());
+
+        let tx = await SnS(web3, {
+            from: delegator,
+            to: StakingAuRa.address,
+            method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minStakeBN.toString()),
+            gasPrice: '1000000000'
+        });
+        expect(tx.status, `Tx to move stake failed: ${tx.transactionHash}`).to.equal(true);
+
+        // final stake on the initial candidate (should have decreased)
+        let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let fStakeBN = new BN(fStake.toString());
+        let dStakeBN = fStakeBN.sub(iStakeBN);
+        expect(dStakeBN, `Stake on initial candidate ${candidate} didn't decrease`).to.be.bignumber.equal(minStakeBN.neg()); // x.neg() == -x
+
+        // final stake on the target candidate (should have increased)
+        let fStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
+        let fStake_recBN = new BN(fStake_rec.toString());
+        let dStake_recBN = fStake_recBN.sub(iStake_recBN);
+        expect(dStake_recBN, `Stake on target candidate ${candidate_rec} didn't increase`).to.be.bignumber.equal(minStakeBN);
+
+        console.log('**** Moving stake must fail if delegator tries to move stake to the same candidate');
+        try {
+            let tx2 = await SnS(web3, {
+                from: delegator,
+                to: StakingAuRa.address,
+                method: StakingAuRa.instance.methods.moveStake(candidate_rec, candidate_rec, minStakeBN.toString()),
+                gasPrice: '1000000000'
+            });
+            expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
+        }
+        catch (e) {
+            expect(e && e.toString() == REVERT_EXCEPTION_MSG, `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
+        }
+
+        console.log('**** Delegator can\'t move more staking tokens than one has');
+        try {
+            let tx3 = await SnS(web3, {
+                from: delegator,
+                to: StakingAuRa.address,
+                method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minStakeBN.toString()),
+                gasPrice: '1000000000'
+            });
+            expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
+        }
+        catch (e) {
+            expect(e && e.toString() == REVERT_EXCEPTION_MSG, `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
         }
     });
 
