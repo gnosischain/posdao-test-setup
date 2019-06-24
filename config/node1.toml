@@ -18,6 +18,8 @@ apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub",
 port = 8541
 
 [websockets]
+interface = "all"
+origins = ["all"]
 port = 9541
 
 [ipc]
