@@ -20,13 +20,33 @@ const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 const keythereum = require('keythereum');
 const REVERT_EXCEPTION_MSG = 'Error: Node error: {"code":-32016,"message":"The execution failed due to an exception."}';
+const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
 describe('Candidates make stakes on themselves', () => {
     var minStake;
     var minStakeBN;
+    const delegatorsNumber = 10;
+    var delegators = [];
     before(async () => {
+        // this is min stake per a CANDIDATE
         minStake = await StakingAuRa.instance.methods.getCandidateMinStake().call();
         minStakeBN = new BN(minStake.toString());
+
+        console.log('**** Delegator addresses are generated');
+
+        for (let i = 0; i < delegatorsNumber; i++) {
+            keythereum.create({}, function (dk) {
+                keythereum.dump("testnetpoa", dk.privateKey, dk.salt, dk.iv, {}, function (keyObject) {
+                    keythereum.exportToFile(keyObject, "./accounts/keystore", function(keyFile) {
+                        delegators.push(keyObject.address);
+                    });
+                });
+            });
+        }
+
+        while (delegators.length < delegatorsNumber) {
+            await new Promise(r => setTimeout(r, 100));
+        }
     });
 
     it('Owner mints (2x minStake) tokens to candidates', async () => {
@@ -97,26 +117,6 @@ describe('Candidates make stakes on themselves', () => {
 
     it('Delegators place stakes into the second candidate\'s pool', async () => {
         const candidate = constants.CANDIDATES[1].staking;
-
-        console.log('**** Delegator addresses are generated');
-
-        const delegatorsNumber = 10;
-        let delegators = [];
-
-        for (let i = 0; i < delegatorsNumber; i++) {
-            keythereum.create({}, function (dk) {
-                keythereum.dump("testnetpoa", dk.privateKey, dk.salt, dk.iv, {}, function (keyObject) {
-                    keythereum.exportToFile(keyObject, "./accounts/keystore", function(keyFile) {
-                        delegators.push(keyObject.address);
-                    });
-                });
-            });
-        }
-
-        while (delegators.length < delegatorsNumber) {
-            await new Promise(r => setTimeout(r, 100));
-        }
-
         const minStake = await StakingAuRa.instance.methods.getDelegatorMinStake().call();
         const minStakeBN = new BN(minStake.toString());
 
@@ -317,5 +317,46 @@ describe('Candidates make stakes on themselves', () => {
                 .to.be.bignumber.above(validators[mining].balance);
             console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
         }
+    });
+
+    it('Delegator withdraws stake', async () => {
+        let delegator = delegators[0];
+        let candidate = constants.CANDIDATES[2].staking;
+
+        // initial stake on the candidate
+        const withdrawAmountBN = (new BN(minStake.toString()));
+        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let iStakeBN = new BN(iStake.toString());
+        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}`);
+
+        console.log('***** Ordering a withdrawal');
+        let tx = await sendInStakingWindow(web3, async () => {
+            return SnS(web3, {
+                from: delegator,
+                to: StakingAuRa.address,
+                method: StakingAuRa.instance.methods.orderWithdraw(candidate, withdrawAmountBN.toString()),
+                gasPrice: '1000000000'
+            });
+        });
+        pp.tx(tx);
+        expect(tx.status, `Tx to order stake withdrawal failed: ${tx.transactionHash}`).to.equal(true);
+
+        await waitForNextStakingEpoch(web3);
+        console.log('**** Claiming ordered withdrawal');
+        let tx2 = await sendInStakingWindow(web3, async () => {
+            return SnS(web3, {
+                from: delegator,
+                to: StakingAuRa.address,
+                method: StakingAuRa.instance.methods.claimOrderedWithdraw(candidate),
+                gasPrice: '1000000000'
+            });
+        });
+        pp.tx(tx2);
+        let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let fStakeBN = new BN(fStake.toString());
+
+        expect(fStakeBN, `Candidate\'s (${candidate}) stake didn\'t decrease correctly after delegator (${delegator}) claimed the withdrawal: ` +
+                        `initial = ${iStakeBN.toString()}, final = ${fStakeBN.toString()}, withdraw amount = ${withdrawAmountBN.toString()}`
+                ).to.be.bignumber.equal(iStakeBN.sub(withdrawAmountBN));
     });
 });
