@@ -323,13 +323,12 @@ describe('Candidates make stakes on themselves', () => {
         let delegator = delegators[0];
         let candidate = constants.CANDIDATES[2].staking;
 
-        // initial stake on the candidate
         const withdrawAmountBN = (new BN(minStake.toString()));
+        // initial stake on the candidate
         let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
         let iStakeBN = new BN(iStake.toString());
-        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}`);
 
-        console.log('***** Ordering a withdrawal');
+        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}, going to order withdrawal of ${withdrawAmountBN.toString()}`);
         let tx = await sendInStakingWindow(web3, async () => {
             return SnS(web3, {
                 from: delegator,
@@ -339,7 +338,7 @@ describe('Candidates make stakes on themselves', () => {
             });
         });
         pp.tx(tx);
-        expect(tx.status, `Tx to order stake withdrawal failed: ${tx.transactionHash}`).to.equal(true);
+        expect(tx.status, `Tx to order withdrawal failed: ${tx.transactionHash}`).to.equal(true);
 
         await waitForNextStakingEpoch(web3);
         console.log('**** Claiming ordered withdrawal');
