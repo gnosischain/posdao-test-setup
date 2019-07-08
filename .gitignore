@@ -29,3 +29,6 @@ accounts/keystore/UTC*
 /node_modules/
 
 build
+
+#Mac OS specific
+.DS_Store
