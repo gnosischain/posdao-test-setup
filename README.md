@@ -10,8 +10,44 @@ To configure the repository and run tests, execute `npm run all`.
 
 ## Requirements
 
-The `aura-pos` branch should be checked out in `../parity-ethereum` and built in
-release mode.
+To integrate with [parity-ethereum](https://github.com/poanetwork/parity-ethereum), the following structure of folders is assumed:
+```
+.
+├── parity-ethereum
+├── posdao-test-setup
+```
+So there should be two folders on the same level and `posdao-test-setup` will use parity binary from the `parity-ethereum` folder, namely the binary is assumed to be at `../parity-ethereum/target/release/parity` relative to `posdao-test-setup` root.
+
+If you are working on modifications of `parity-ethereum` or want to compile specific branch/version, you can clone it directly and build the binary
+```
+# move up from posdao-test-setup root
+cd ..
+# clone over https
+git clone https://github.com/poanetwork/parity-ethereum.git
+# OR over ssh
+git clone git@github.com:poanetwork/parity-ethereum.git
+cd parity-ethereum
+# assumes you have Rust (>= 1.34) and Cargo installed
+cargo build --release --features final
+```
+(_note that default branch is correctly set to **aura-pos** which contains the posdao features, not to master_)
+
+Otherwise, to save time, you can download one of pre-compiled binaries for Ubuntu or Mac OS X from the [releases page](https://github.com/poanetwork/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
+```
+# move up from posdao-test-setup root
+cd ..
+mkdir -p parity-ethereum/target/release/
+# replace the links below with the specific release version you want to test against
+# select either Ubuntu 18.04
+curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/download/parity-v2.4.5-posdao-v0.1.0/parity-ubuntu-18.04.zip' -o parity.zip
+# OR Mac OS X
+curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/download/parity-v2.4.5-posdao-v0.1.0/parity-macos.zip' -o parity.zip
+unzip parity.zip -d parity-ethereum/target/release
+chmod +x parity-ethereum/target/release/parity
+# check that it works and version is correct (compare commit hash from the binary with hash on the release page)
+parity-ethereum/target/release/parity --version
+rm parity.zip
+```
 
 
 ## Development
