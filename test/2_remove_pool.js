@@ -43,7 +43,7 @@ describe('Pool removal and validator set change', () => {
         expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
     });
 
-    it('Validator is not present in the validator set in the next stacking epoch', async () => {
+    it('Validator is not present in the validator set in the next staking epoch', async () => {
         console.log('***** Wait for staking epoch to change');
         let validators = (await waitForValidatorSetChange(web3)).map(v => v.toLowerCase());
         let validatorIndex = validators.indexOf(tiredValidator.mining.toLowerCase());

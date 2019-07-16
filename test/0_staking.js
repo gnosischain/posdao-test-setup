@@ -22,15 +22,20 @@ const keythereum = require('keythereum');
 const REVERT_EXCEPTION_MSG = 'Error: Node error: {"code":-32016,"message":"The execution failed due to an exception."}';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
-describe('Candidates make stakes on themselves', () => {
-    var minStake;
-    var minStakeBN;
+describe('Candidates place stakes on themselves', () => {
+    var minCandidateStake;
+    var minCandidateStakeBN;
+    var minDelegatorStake;
+    var minDelegatorStakeBN;
     const delegatorsNumber = 10;
     var delegators = [];
+
     before(async () => {
         // this is min stake per a CANDIDATE
-        minStake = await StakingAuRa.instance.methods.getCandidateMinStake().call();
-        minStakeBN = new BN(minStake.toString());
+        minCandidateStake = await StakingAuRa.instance.methods.getCandidateMinStake().call();
+        minDelegatorStake = await StakingAuRa.instance.methods.getDelegatorMinStake().call();
+        minCandidateStakeBN = new BN(minCandidateStake.toString());
+        minDelegatorStakeBN = new BN(minDelegatorStake.toString());
 
         console.log('**** Delegator addresses are generated');
 
@@ -50,7 +55,7 @@ describe('Candidates make stakes on themselves', () => {
     });
 
     it('Owner mints (2x minStake) tokens to candidates', async () => {
-        let candidateTokensBN = minStakeBN.mul(new BN('2'));
+        let candidateTokensBN = minCandidateStakeBN.mul(new BN('2'));
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
@@ -70,7 +75,7 @@ describe('Candidates make stakes on themselves', () => {
     });
 
     it('Candidates add pools for themselves', async () => {
-        let stakeBN = minStakeBN.clone();
+        let stakeBN = minCandidateStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
@@ -92,8 +97,8 @@ describe('Candidates make stakes on themselves', () => {
         }
     });
 
-    it('Candidates make stakes on themselves', async () => {
-        let stakeBN = minStakeBN.clone();
+    it('Candidates place stakes on themselves', async () => {
+        let stakeBN = minCandidateStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
@@ -117,8 +122,6 @@ describe('Candidates make stakes on themselves', () => {
 
     it('Delegators place stakes into the second candidate\'s pool', async () => {
         const candidate = constants.CANDIDATES[1].staking;
-        const minStake = await StakingAuRa.instance.methods.getDelegatorMinStake().call();
-        const minStakeBN = new BN(minStake.toString());
 
         let promises;
         let nonce;
@@ -126,7 +129,7 @@ describe('Candidates make stakes on themselves', () => {
 
         console.log('**** Owner mints (3x minStake) tokens to delegators');
 
-        const delegatorTokensBN = minStakeBN.mul(new BN('3'));
+        const delegatorTokensBN = minDelegatorStakeBN.mul(new BN('3'));
 
         promises = [];
         nonce = await web3.eth.getTransactionCount(OWNER);
@@ -189,7 +192,7 @@ describe('Candidates make stakes on themselves', () => {
             const prm = SnS(web3, {
                 from: delegator,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.stake(candidate, minStakeBN.toString()),
+                method: StakingAuRa.instance.methods.stake(candidate, minDelegatorStakeBN.toString()),
                 gasPrice: '1000000000',
                 gasLimit: '200000'
             });
@@ -203,7 +206,7 @@ describe('Candidates make stakes on themselves', () => {
         for (let i = 0; i < delegatorsNumber; i++) {
             const fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegators[i]).call();
             const fStakeBN = new BN(fStake.toString());
-            expect(fStakeBN, `Stake on candidate ${candidate} didn't increase`).to.be.bignumber.equal(minStakeBN);
+            expect(fStakeBN, `Stake on candidate ${candidate} didn't increase`).to.be.bignumber.equal(minDelegatorStakeBN);
         }
 
         // Test moving of stakes
@@ -214,6 +217,7 @@ describe('Candidates make stakes on themselves', () => {
         // initial stake on the initial candidate
         let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
         let iStakeBN = new BN(iStake.toString());
+
         // initial stake on the target candidate
         let iStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
         let iStake_recBN = new BN(iStake_rec.toString());
@@ -221,7 +225,7 @@ describe('Candidates make stakes on themselves', () => {
         let tx = await SnS(web3, {
             from: delegator,
             to: StakingAuRa.address,
-            method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minStakeBN.toString()),
+            method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minDelegatorStakeBN.toString()),
             gasPrice: '1000000000'
         });
         expect(tx.status, `Tx to move stake failed: ${tx.transactionHash}`).to.equal(true);
@@ -230,20 +234,20 @@ describe('Candidates make stakes on themselves', () => {
         let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
         let fStakeBN = new BN(fStake.toString());
         let dStakeBN = fStakeBN.sub(iStakeBN);
-        expect(dStakeBN, `Stake on initial candidate ${candidate} didn't decrease`).to.be.bignumber.equal(minStakeBN.neg()); // x.neg() == -x
+        expect(dStakeBN, `Stake on initial candidate ${candidate} didn't decrease`).to.be.bignumber.equal(minDelegatorStakeBN.neg()); // x.neg() == -x
 
         // final stake on the target candidate (should have increased)
         let fStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
         let fStake_recBN = new BN(fStake_rec.toString());
         let dStake_recBN = fStake_recBN.sub(iStake_recBN);
-        expect(dStake_recBN, `Stake on target candidate ${candidate_rec} didn't increase`).to.be.bignumber.equal(minStakeBN);
+        expect(dStake_recBN, `Stake on target candidate ${candidate_rec} didn't increase`).to.be.bignumber.equal(minDelegatorStakeBN);
 
         console.log('**** Moving stake must fail if delegator tries to move stake to the same candidate');
         try {
             let tx2 = await SnS(web3, {
                 from: delegator,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.moveStake(candidate_rec, candidate_rec, minStakeBN.toString()),
+                method: StakingAuRa.instance.methods.moveStake(candidate_rec, candidate_rec, minDelegatorStakeBN.toString()),
                 gasPrice: '1000000000'
             });
             expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
@@ -257,7 +261,7 @@ describe('Candidates make stakes on themselves', () => {
             let tx3 = await SnS(web3, {
                 from: delegator,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minStakeBN.toString()),
+                method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minDelegatorStakeBN.toString()),
                 gasPrice: '1000000000'
             });
             expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
@@ -278,22 +282,14 @@ describe('Candidates make stakes on themselves', () => {
         }
     });
 
-    it('New tokens are minted and deposited to the validators staking addresses', async () => {
-        async function waitForTheLatestBlockOfEpoch(latestBlock) {
-            while (true) {
-                if (await web3.eth.getBlockNumber() >= latestBlock) {
-                    break;
-                } else {
-                    await new Promise(r => setTimeout(r, 2499));
-                }
-            }
-        }
-
-        const mining_addrs = await ValidatorSetAuRa.instance.methods.getValidators().call();
+    it('New tokens are minted and deposited to the validators staking addresses; delegator claims ordered withdrawal', async () => {
+        const miningAddresses = await ValidatorSetAuRa.instance.methods.getValidators().call();
         const unremovableValidator = (await ValidatorSetAuRa.instance.methods.unremovableValidator().call()).toLowerCase();
+        const candidate = constants.CANDIDATES[2].staking;
+        const delegator = delegators[0];
 
         let validators = {};
-        for (mining of mining_addrs) {
+        for (mining of miningAddresses) {
             const staking = (await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call()).toLowerCase();
             const balance = await StakingTokenContract.instance.methods.balanceOf(staking).call();
             if (staking == unremovableValidator) {
@@ -306,34 +302,15 @@ describe('Candidates make stakes on themselves', () => {
             };
         }
 
-        console.log('***** Wait for the last block of the current staking epoch');
-        const latestBlock = await StakingAuRa.instance.methods.stakingEpochEndBlock().call();
-        await waitForTheLatestBlockOfEpoch(latestBlock);
-
-        console.log('***** Check balances changing');
-        for (mining in validators) {
-            const new_balance = new BN((await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call()).toString());
-            expect(new_balance, `Validator ${mining} did not receive minted tokens`)
-                .to.be.bignumber.above(validators[mining].balance);
-            console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
-        }
-    });
-
-    it('Delegator withdraws stake', async () => {
-        let delegator = delegators[0];
-        let candidate = constants.CANDIDATES[2].staking;
-
-        const withdrawAmountBN = (new BN(minStake.toString()));
         // initial stake on the candidate
-        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
-        let iStakeBN = new BN(iStake.toString());
-
-        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}, going to order withdrawal of ${withdrawAmountBN.toString()}`);
-        let tx = await sendInStakingWindow(web3, async () => {
+        const iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        const iStakeBN = new BN(iStake.toString());
+        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}, going to order withdrawal of ${minDelegatorStakeBN.toString()}`);
+        const tx = await sendInStakingWindow(web3, async () => {
             return SnS(web3, {
                 from: delegator,
                 to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.orderWithdraw(candidate, withdrawAmountBN.toString()),
+                method: StakingAuRa.instance.methods.orderWithdraw(candidate, minDelegatorStakeBN.toString()),
                 gasPrice: '1000000000'
             });
         });
@@ -341,6 +318,56 @@ describe('Candidates make stakes on themselves', () => {
         expect(tx.status, `Tx to order withdrawal failed: ${tx.transactionHash}`).to.equal(true);
 
         await waitForNextStakingEpoch(web3);
+
+        console.log('***** Check validator balances changing');
+        for (mining in validators) {
+            const new_balance = new BN((await StakingTokenContract.instance.methods.balanceOf(validators[mining].staking).call()).toString());
+            expect(new_balance, `Validator ${mining} did not receive minted tokens`)
+                .to.be.bignumber.above(validators[mining].balance);
+            console.log(`**** validator ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
+        }
+
+        console.log('***** Claiming ordered withdrawal');
+        const tx2 = await sendInStakingWindow(web3, async () => {
+            return SnS(web3, {
+                from: delegator,
+                to: StakingAuRa.address,
+                method: StakingAuRa.instance.methods.claimOrderedWithdraw(candidate),
+                gasPrice: '1000000000'
+            });
+        });
+        pp.tx(tx2);
+        const fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        const fStakeBN = new BN(fStake.toString());
+
+        expect(fStakeBN, `Candidate\'s (${candidate}) stake didn\'t decrease correctly after delegator (${delegator}) claimed the withdrawal: ` +
+                        `initial = ${iStakeBN.toString()}, final = ${fStakeBN.toString()}, withdraw amount = ${minDelegatorStakeBN.toString()}`
+                ).to.be.bignumber.equal(iStakeBN.sub(minDelegatorStakeBN));
+    });
+
+    /*
+    it('Delegator withdraws stake', async () => {
+        let delegator = delegators[0];
+        let candidate = constants.CANDIDATES[2].staking;
+
+        // initial stake on the candidate
+        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let iStakeBN = new BN(iStake.toString());
+
+        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}, going to order withdrawal of ${minDelegatorStakeBN.toString()}`);
+        let tx = await sendInStakingWindow(web3, async () => {
+            return SnS(web3, {
+                from: delegator,
+                to: StakingAuRa.address,
+                method: StakingAuRa.instance.methods.orderWithdraw(candidate, minDelegatorStakeBN.toString()),
+                gasPrice: '1000000000'
+            });
+        });
+        pp.tx(tx);
+        expect(tx.status, `Tx to order withdrawal failed: ${tx.transactionHash}`).to.equal(true);
+
+        await waitForNextStakingEpoch(web3);
+
         console.log('**** Claiming ordered withdrawal');
         let tx2 = await sendInStakingWindow(web3, async () => {
             return SnS(web3, {
@@ -355,7 +382,8 @@ describe('Candidates make stakes on themselves', () => {
         let fStakeBN = new BN(fStake.toString());
 
         expect(fStakeBN, `Candidate\'s (${candidate}) stake didn\'t decrease correctly after delegator (${delegator}) claimed the withdrawal: ` +
-                        `initial = ${iStakeBN.toString()}, final = ${fStakeBN.toString()}, withdraw amount = ${withdrawAmountBN.toString()}`
-                ).to.be.bignumber.equal(iStakeBN.sub(withdrawAmountBN));
+                        `initial = ${iStakeBN.toString()}, final = ${fStakeBN.toString()}, withdraw amount = ${minDelegatorStakeBN.toString()}`
+                ).to.be.bignumber.equal(iStakeBN.sub(minDelegatorStakeBN));
     });
+    */
 });
