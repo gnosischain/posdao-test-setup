@@ -41,9 +41,11 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
     const stakingEpoch = await stakingContract.methods.stakingEpoch().call();
     const stakingEpochStartBlock = await stakingContract.methods.stakingEpochStartBlock().call();
     const validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
+    const stakingEpochEndBlock = await stakingContract.methods.stakingEpochEndBlock().call();
     console.log(`stakingEpoch ${stakingEpoch}`);
     console.log(`  startBlock ${stakingEpochStartBlock}`);
     console.log(`  applyBlock ${validatorSetApplyBlock > 0 ? validatorSetApplyBlock : '-'}`);
+    console.log(`  endBlock   ${stakingEpochEndBlock}`);
     console.log('');
 
     const collectionRound = await randomContract.methods.currentCollectRound().call();
