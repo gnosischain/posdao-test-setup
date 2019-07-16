@@ -344,46 +344,4 @@ describe('Candidates place stakes on themselves', () => {
                         `initial = ${iStakeBN.toString()}, final = ${fStakeBN.toString()}, withdraw amount = ${minDelegatorStakeBN.toString()}`
                 ).to.be.bignumber.equal(iStakeBN.sub(minDelegatorStakeBN));
     });
-
-    /*
-    it('Delegator withdraws stake', async () => {
-        let delegator = delegators[0];
-        let candidate = constants.CANDIDATES[2].staking;
-
-        // initial stake on the candidate
-        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
-        let iStakeBN = new BN(iStake.toString());
-
-        console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}, going to order withdrawal of ${minDelegatorStakeBN.toString()}`);
-        let tx = await sendInStakingWindow(web3, async () => {
-            return SnS(web3, {
-                from: delegator,
-                to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.orderWithdraw(candidate, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000'
-            });
-        });
-        pp.tx(tx);
-        expect(tx.status, `Tx to order withdrawal failed: ${tx.transactionHash}`).to.equal(true);
-
-        await waitForNextStakingEpoch(web3);
-
-        console.log('**** Claiming ordered withdrawal');
-        let tx2 = await sendInStakingWindow(web3, async () => {
-            return SnS(web3, {
-                from: delegator,
-                to: StakingAuRa.address,
-                method: StakingAuRa.instance.methods.claimOrderedWithdraw(candidate),
-                gasPrice: '1000000000'
-            });
-        });
-        pp.tx(tx2);
-        let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
-        let fStakeBN = new BN(fStake.toString());
-
-        expect(fStakeBN, `Candidate\'s (${candidate}) stake didn\'t decrease correctly after delegator (${delegator}) claimed the withdrawal: ` +
-                        `initial = ${iStakeBN.toString()}, final = ${fStakeBN.toString()}, withdraw amount = ${minDelegatorStakeBN.toString()}`
-                ).to.be.bignumber.equal(iStakeBN.sub(minDelegatorStakeBN));
-    });
-    */
 });
