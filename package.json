@@ -4,10 +4,10 @@
   "description": "",
   "scripts": {
     "all": "npm i && npm run get-all-submodules && npm run cleanup && npm run compile-posdao-contracts && npm run make-spec && npm run start-test-setup && npm run test && npm run stop-test-setup",
-    "cleanup": "rm -rf ./build ./parity-data ./accounts && git checkout ./parity-data && git checkout ./accounts",
+    "cleanup": "bash scripts/stop-test-setup && rm -rf ./build ./parity-data ./accounts && git checkout ./parity-data && git checkout ./accounts",
     "get-all-submodules": "git submodule update --init --remote",
     "compile-posdao-contracts": "cd ./posdao-contracts && npm i && npm run compile",
-    "make-spec": ". ./scripts/network-spec && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js",
+    "make-spec": ". ./scripts/network-spec && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js && node ../scripts/addCandidateBalances.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/release/parity && (node scripts/watchOrdinaryNode.js &) && node scripts/deploy-staking-token.js",
     "test": "node_modules/.bin/mocha --bail --timeout 1200000 && npm run watcher",
     "stop-test-setup": "bash scripts/stop-test-setup",

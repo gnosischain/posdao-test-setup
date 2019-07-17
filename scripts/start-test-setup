@@ -2,12 +2,10 @@
 
 # Exit on undefined variables.
 set -u
+set -e
 
 PARITY=$1
-NODE=`which node`
-$NODE ./scripts/addCandidateBalances.js
 for i in $(seq 0 6); do
-    rm -rf -- "./parity-data/node$i/chains"
-    "$PARITY" --config "./config/node${i}.toml" > "./parity-data/node${i}/log" 2>&1 &
-    "$NODE" ./scripts/getReservedPeer.js "$i"
+    "$PARITY" --config "./config/node${i}.toml" >> "./parity-data/node${i}/log" 2>&1 &
+    node ./scripts/getReservedPeer.js "$i"
 done
