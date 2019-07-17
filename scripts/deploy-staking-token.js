@@ -44,7 +44,6 @@ function compileContract() {
 async function main() {
     console.log('**** Check that StakingToken is already deployed in StakingAuRa');
     let existingStakingTokenAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
-    console.log('***** raw existingStakingTokenAddress = ', existingStakingTokenAddress);
     if (existingStakingTokenAddress
           && existingStakingTokenAddress.toLowerCase() != '0x'
           && existingStakingTokenAddress.toLowerCase() != '0x0000000000000000000000000000000000000000'
