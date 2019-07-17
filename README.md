@@ -27,7 +27,7 @@ git clone -b aura-pos https://github.com/poanetwork/parity-ethereum.git
 # OR over ssh
 git clone -b aura-pos git@github.com:poanetwork/parity-ethereum.git
 cd parity-ethereum
-# assumes you have Rust (>= 1.34) and Cargo installed
+# assumes you have Rust and Cargo installed. With rustup use `rustup override set stable` to use latest stable
 cargo build --release --features final
 ```
 (_note that default branch is correctly set to **aura-pos** which contains the posdao features, not to master_)
@@ -37,11 +37,11 @@ Otherwise, to save time, you can download one of pre-compiled binaries for Ubunt
 # move up from posdao-test-setup root
 cd ..
 mkdir -p parity-ethereum/target/release/
-# replace the links below with the specific release version you want to test against
+# you can replace the links below with the specific release version
 # select either Ubuntu 18.04
-curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/download/parity-v2.4.5-posdao-v0.1.0/parity-ubuntu-18.04.zip' -o parity.zip
+curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-ubuntu-18.04.zip' -o parity.zip
 # OR Mac OS X
-curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/download/parity-v2.4.5-posdao-v0.1.0/parity-macos.zip' -o parity.zip
+curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-macos.zip' -o parity.zip
 unzip parity.zip -d parity-ethereum/target/release
 chmod +x parity-ethereum/target/release/parity
 # check that it works and version is correct (compare commit hash from the binary with hash on the release page)
