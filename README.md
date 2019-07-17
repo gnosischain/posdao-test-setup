@@ -19,13 +19,13 @@ To integrate with [parity-ethereum](https://github.com/poanetwork/parity-ethereu
 So there should be two folders on the same level and `posdao-test-setup` will use parity binary from the `parity-ethereum` folder, namely the binary is assumed to be at `../parity-ethereum/target/release/parity` relative to `posdao-test-setup` root.
 
 If you are working on modifications of `parity-ethereum` or want to compile specific branch/version, you can clone it directly and build the binary
-```
+```bash
 # move up from posdao-test-setup root
 cd ..
 # clone over https
-git clone https://github.com/poanetwork/parity-ethereum.git
+git clone -b aura-pos https://github.com/poanetwork/parity-ethereum.git
 # OR over ssh
-git clone git@github.com:poanetwork/parity-ethereum.git
+git clone -b aura-pos git@github.com:poanetwork/parity-ethereum.git
 cd parity-ethereum
 # assumes you have Rust (>= 1.34) and Cargo installed
 cargo build --release --features final
@@ -33,7 +33,7 @@ cargo build --release --features final
 (_note that default branch is correctly set to **aura-pos** which contains the posdao features, not to master_)
 
 Otherwise, to save time, you can download one of pre-compiled binaries for Ubuntu or Mac OS X from the [releases page](https://github.com/poanetwork/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
-```
+```bash
 # move up from posdao-test-setup root
 cd ..
 mkdir -p parity-ethereum/target/release/
