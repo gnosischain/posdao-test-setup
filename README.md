@@ -27,7 +27,14 @@ git clone -b aura-pos https://github.com/poanetwork/parity-ethereum.git
 # OR over ssh
 git clone -b aura-pos git@github.com:poanetwork/parity-ethereum.git
 cd parity-ethereum
-# assumes you have Rust and Cargo installed. With rustup use `rustup override set stable` to use latest stable
+#
+# Next step assumes you have rust and required dependencies installed,
+# for details please check https://github.com/poanetwork/parity-ethereum/blob/aura-pos/README.md
+# Note that you can instruct rust to always use the latest stable version for this project by running
+#     $ rustup override set stable
+# in `parity-ethereum` folder
+#
+# Build the binary
 cargo build --release --features final
 ```
 (_note that default branch is correctly set to **aura-pos** which contains the posdao features, not to master_)
