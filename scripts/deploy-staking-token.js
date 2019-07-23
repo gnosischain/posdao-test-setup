@@ -17,6 +17,7 @@ const expect = require('chai')
     .use(require('chai-as-promised'))
     .expect;
 const pp = require('../utils/prettyPrint');
+const mintCoinsToCandidates = require('./mint-coins-candidates');
 let tokenName = 'POSDAO';
 let tokenSymbol = 'POS';
 let tokenDecimals = 18;
@@ -120,6 +121,9 @@ async function main() {
     console.log('**** Check that StakingToken address in StakingAuRa is correct');
     contractAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
     expect(contractAddress).to.equal(address);
+
+    console.log('**** Mint initial coins to candidates');
+    await mintCoinsToCandidates();
 }
 
 main();
