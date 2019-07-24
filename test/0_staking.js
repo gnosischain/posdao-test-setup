@@ -19,7 +19,7 @@ const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 const keythereum = require('keythereum');
-const REVERT_EXCEPTION_MSG = 'Error: Node error: {"code":-32016,"message":"The execution failed due to an exception."}';
+const REVERT_EXCEPTION_MSG = 'Error: Node error: {"code":-32016,"message":"The execution failed due to an exception.","data":"Reverted"}';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
 describe('Candidates place stakes on themselves', () => {
