@@ -19,7 +19,7 @@ const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 const keythereum = require('keythereum');
-const REVERT_EXCEPTION_MSG = 'Error: Node error: {"code":-32016,"message":"The execution failed due to an exception."}';
+const REVERT_EXCEPTION_MSG = 'The execution failed due to an exception';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
 describe('Candidates place stakes on themselves', () => {
@@ -253,7 +253,7 @@ describe('Candidates place stakes on themselves', () => {
             expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
         }
         catch (e) {
-            expect(e && e.toString() == REVERT_EXCEPTION_MSG, `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
+            expect(e && e.toString().includes(REVERT_EXCEPTION_MSG), `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
         }
 
         console.log('**** Delegator can\'t move more staking tokens than one has');
@@ -267,7 +267,7 @@ describe('Candidates place stakes on themselves', () => {
             expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
         }
         catch (e) {
-            expect(e && e.toString() == REVERT_EXCEPTION_MSG, `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
+            expect(e && e.toString().includes(REVERT_EXCEPTION_MSG), `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
         }
     });
 
