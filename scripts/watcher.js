@@ -18,6 +18,10 @@ const randomContract = new web3.eth.Contract(
   require(`${artifactsPath}RandomAuRa.json`).abi,
   '0x3000000000000000000000000000000000000001'
 );
+const blockRewardContract = new web3.eth.Contract(
+  require(`${artifactsPath}BlockRewardAuRa.json`).abi,
+  '0x2000000000000000000000000000000000000001'
+);
 
 const contractNameByAddress = {};
 contractNameByAddress[validatorSetContract.options.address] = 'ValidatorSetAuRa';
@@ -128,7 +132,45 @@ web3.eth.subscribe('newBlockHeaders', function(error, result){
       console.log('');
     }
 
+    const getBridgeNativeFee = (await blockRewardContract.methods.getBridgeNativeFee().call()).toString();
+    const getTokenRewardUndistributed = (await blockRewardContract.methods.getTokenRewardUndistributed().call()).toString();
+    const getNativeRewardUndistributed = (await blockRewardContract.methods.getNativeRewardUndistributed().call()).toString();
+    const snapshotTotalStakeAmount = (await blockRewardContract.methods.snapshotTotalStakeAmount().call()).toString();
+    console.log(`getBridgeNativeFee = ${getBridgeNativeFee}`);
+    console.log(`getTokenRewardUndistributed = ${getTokenRewardUndistributed}`);
+    console.log(`getNativeRewardUndistributed = ${getNativeRewardUndistributed}`);
+    console.log(`snapshotTotalStakeAmount = ${snapshotTotalStakeAmount}`);
+
     console.log('');
+    const erc20ContractAddress = await stakingContract.methods.erc20TokenContract().call();
+    const erc20Contract = new web3.eth.Contract(
+      require(`../parity-data/StakingToken.json`).abi,
+      erc20ContractAddress
+    );
+    const stakingAuRaBalance = (await erc20Contract.methods.balanceOf(stakingContract.options.address).call()).toString();
+    console.log(`StakingAuRa contract balance: ${stakingAuRaBalance}`);
+
+    console.log('');
+    const validatorsStakingAddresses = [
+      '0x0b2f5e2f3cbd864eaa2c642e3769c1582361caf6',
+      '0xaa94b687d3f9552a453b81b2834ca53778980dc0',
+      '0x312c230e7d6db05224f60208a656e3541c5c42ba'
+    ];
+    console.log('Token balances:');
+    for (let i = 0; i < validatorsStakingAddresses.length; i++) {
+      let addressTokenBalance = (await erc20Contract.methods.balanceOf(validatorsStakingAddresses[i]).call()).toString();
+      console.log(`  Validator ${validatorsStakingAddresses[i]} = ${addressTokenBalance}`);
+      const delegators = await stakingContract.methods.poolDelegators(validatorsStakingAddresses[i]).call();
+      if (delegators.length > 10) {
+        for (let j = delegators.length - 10; j < delegators.length; j++) {
+          addressTokenBalance = (await erc20Contract.methods.balanceOf(delegators[j]).call()).toString();
+          console.log(`    Delegator ${j + 1}: ${delegators[j]} = ${addressTokenBalance}`);
+        }
+      }
+    }
+
+    console.log('');
+    console.log(`Block #${blockHeader.number}`);
     console.log('=======================================================');
     console.log('');
     console.log('');

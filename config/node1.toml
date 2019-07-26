@@ -9,7 +9,6 @@ disable = true
 port = 30301
 nat = "none"
 interface = "local"
-reserved_peers="parity-data/reserved-peers"
 
 [rpc]
 cors = ["all"]
@@ -43,7 +42,7 @@ reseal_on_txs = "none"
 extra_data = "Parity"
 
 [misc]
-logging = "engine=trace,miner=trace,reward=trace"
+#logging = "engine=trace,miner=trace,reward=trace"
 
 [footprint]
 pruning = "archive"

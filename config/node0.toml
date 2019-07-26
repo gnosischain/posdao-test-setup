@@ -28,4 +28,4 @@ disable = true
 enable = false
 
 [misc]
-logging = "engine=trace,miner=trace,reward=trace"
+#logging = "engine=trace,miner=trace,reward=trace"
