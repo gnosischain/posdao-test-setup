@@ -13,7 +13,7 @@
 *.patch
 
 # Account created during test
-accounts/keystore/UTC*
+#accounts/keystore/UTC*
 
 # Logs
 /parity-data/node[0-9]*/network/
