@@ -2,6 +2,7 @@
 const BLOCK_REWARD_ADDRESS = require("../posdao-contracts/spec").engine.authorityRound.params.blockRewardContractAddress;
 const VALIDATOR_SET_ADDRESS = require("../posdao-contracts/spec").engine.authorityRound.params.validators.multi[0].contract;
 const STAKING_CONTRACT_ADDRESS = "0x1100000000000000000000000000000000000001";
+const RANDOM_AURA_ADDRESS = "0x3000000000000000000000000000000000000001";
 
 module.exports = {
   OWNER: "0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24",
@@ -13,4 +14,5 @@ module.exports = {
   BLOCK_REWARD_ADDRESS,
   VALIDATOR_SET_ADDRESS,
   STAKING_CONTRACT_ADDRESS,
+  RANDOM_AURA_ADDRESS,
 };

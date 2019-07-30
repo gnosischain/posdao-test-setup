@@ -4,6 +4,13 @@ module.exports = function (contractName, web3) {
     var abi;
     var info;
     switch (contractName) {
+        case 'RandomAuRa':
+            abi = require('../posdao-contracts/build/contracts/RandomAuRa').abi;
+            return {
+                address: constants.RANDOM_AURA_ADDRESS,
+                abi: abi,
+                instance: new web3.eth.Contract(abi, constants.RANDOM_AURA_ADDRESS),
+            };
         case 'BlockRewardAuRa':
             abi = require('../posdao-contracts/build/contracts/BlockRewardAuRa').abi;
             return {

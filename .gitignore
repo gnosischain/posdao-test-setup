@@ -21,6 +21,7 @@ accounts/keystore/UTC*
 /parity-data/node[0-9]*/log
 /parity-data/node0/blocks.log
 /parity-data/node0/check.log
+/parity-data/node1/checkRandomSeed.log
 /parity-data/reserved-peers
 /parity-data/spec.json
 /parity-data/StakingToken.json
