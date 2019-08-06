@@ -16,101 +16,53 @@ const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`
 fs.writeFileSync(checkLogFileName, '', 'utf8');
 
 const RandomAuRa = require('../utils/getContract')('RandomAuRa', web3).instance;
+const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3).instance;
 let collectRoundLengthBN;
+let prevBlock;
 
 let seedState = (function () {
-    let currentPhase = '';
-    let lastValueBN = null;
+    let lastSeedBN;
     let lastChangeStart = 0;
     return {
         update: function (blockN, currentSeedBN, validatorsLength) {
-            if (!currentPhase) {
+            let err_reason;
+            if (!lastSeedBN || lastSeedBN.isZero()) {
                 // not initialized yet
-                if (currentSeedBN.isZero()) {
-                    return { err: false };
-                }
-                else {
-                    currentPhase = 'changing';
+                if (!currentSeedBN.isZero()) {
+                    // we start first round here
                     lastChangeStart = blockN;
-                    lastValueBN = currentSeedBN;
-                    return { err: false };
                 }
             }
-
-            if (currentPhase == 'changing') {
+            else {
                 if (blockN - lastChangeStart < validatorsLength) {
-                    // here should change
-                    return { err: false };
-                }
-                else if (blockN - lastChangeStart == validatorsLength) {
-                    // here should change
-                    currentPhase = 'fixed';
-                    lastValueBN = currentSeedBN;
-                    return { err: false };
-                }
-                else {
-                    // zombie apocalypse
-                    lastValueBN = currentSeedBN;
-                    return { err: true, reason: `we skipped a block during "${currentPhase}" phase` };
-                }
-            }
-
-            if (currentPhase == 'fixed') {
-                // blockN < lastChangeStart + collectRoundLengthBN
-                if (collectRoundLengthBN.gt(blockN - lastChangeStart)) {
-                    if (currentSeedBN.eq(lastValueBN)) {
-                        lastValueBN = currentSeedBN;
-                        return { err: false };
-                    }
-                    else {
-                        lastValueBN = currentSeedBN;
-                        return {
-                            err: true,
-                            reason: `seed value changed before collection round ended: ` +
-                                    `expected to change at block ${collectRoundLengthBN.add(lastChangeStart)}. ` +
-                                    `current seed value = ${currentSeedBN}, previous value = ${lastValueBN} `,
-                        };
+                    // validators reveal their shares, so seed should change every block
+                    if (currentSeedBN.eq(lastSeedBN)) {
+                        err_reason = `seed didn't change in this block, seed value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
                     }
                 }
-                else if (collectRoundLengthBN.eq(blockN - lastChangeStart)) {
-                    currentPhase = 'changing';
+                else if (blockN - lastChangeStart >= validatorsLength && collectRoundLengthBN.gt(blockN - lastChangeStart)){
+                    // we are outside of revealing phase but new round has not yet started, so seed should not change
+                    if (!currentSeedBN.eq(lastSeedBN)) {
+                        err_reason = `seed changed outside of revealing phase, previous value: ${lastSeedBN}, current value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
+                    }      
+                }
+                else if (collectRoundLengthBN.lte(blockN - lastChangeStart)) {
+                    // new round should start, so seed should change
+                    if (currentSeedBN.eq(lastSeedBN)) {
+                        err_reason = `seed didn't change in the beginning of a new round, seed value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
+                    }
                     lastChangeStart = blockN;
-                    if (currentSeedBN.eq(lastValueBN)) {
-                        lastValueBN = currentSeedBN;
-                        return {
-                            err: true,
-                            reason: `seed value didn't changed when new collection round started: ` +
-                                    `current seed value = ${currentSeedBN}, previous value = ${lastValueBN} `,
-                        };
-                    }
-                    else {
-                        lastValueBN = currentSeedBN;
-                        return {
-                            err: false,
-                        };
-                    }
                 }
-                else {
-                    // zombie apocalypse
-                    lastValueBN = currentSeedBN;
-                    return { err: true, reason: `we skipped a block during "${currentPhase}" phase` };
-                }
+
             }
+            lastSeedBN = currentSeedBN;
+            return {
+                err: !!err_reason,
+                reason: err_reason
+            };
         }
     }
 })();
-
-
-
-
-
-function getCurrentBlock() {
-    return web3.eth.getBlock('latest', false);
-}
-
-function getCurrentSeed() {
-    return RandomAuRa.methods.getCurrentSeed().call();
-}
 
 // utility functions:
 function appendLine(str) {
@@ -121,62 +73,34 @@ async function wait(ms) {
     await new Promise(r => setTimeout(r, ms));
 }
 
-function reportBad(blockOrd, blockVal, reason) {
-    fs.appendFileSync(checkLogFileName, JSON.stringify({
-        reason,
-        ordinaryNodeBlock: {
-          number: blockOrd.number,
-          hash: blockOrd.hash,
-          author: blockOrd.author,
-        },
-        validatorNodeBlock: {
-          number: blockVal.number,
-          hash: blockVal.hash,
-          author: blockVal.author,
-        },
-    }) + os.EOL, 'utf8');
-}
-
 function doCheck() {
     Promise.all([
-        getCurrentBlock(),
-        getCurrentSeed(),
-        RandomAuRa.methods.collectRoundLength().call(),
+        web3.eth.getBlock('latest', false),
+        RandomAuRa.methods.getCurrentSeed().call(),
+        ValidatorSetAuRa.methods.getValidators().call(),
     ]).then(results => {
         let block = results[0];
         if (block.number == prevBlock) return;
         prevBlock = block.number;
         let seed = results[1];
-        let dur = results[2];
-        appendLine(`${new Date().toISOString()}: block = ${block.number}, seed = ${seed}, dur = ${dur}`);
+        let validatorsLength = results[2].length;
+        let report = seedState.update(block.number, seed, validatorsLength);
+        if (report.err) {
+            appendLine(`[${block.number}]: report: ${report.reason}`);
+        }
     }).catch(e => {
-        appendLine(`${new Date().toISOString()}: exception: ${e}`);
+        appendLine(`exception occured: ${e}`);
     });
 }
 
 
 async function main() {
-    // initially wait until collectRoundLength becomes defined
+    // initially wait until collectRoundLength is defined
     while (true) {
         let _collectRoundLengthBN = await RandomAuRa.methods.collectRoundLength().call();
         if (_collectRoundLengthBN) {
             collectRoundLengthBN = _collectRoundLengthBN;
-            let currentBlock = (await getCurrentBlock()).number;
-            appendLine(`[${currentBlock}]: got collectRoundLengthBN = ${collectRoundLengthBN}`);
-            break;
-        }
-        else {
-            await wait(checkIntervalMS);
-        }
-    }
-
-    // wait for first non-zero seed
-    while (true) {
-        let _currentSeedBN = await getCurrentSeed();
-        if (!_currentSeedBN.isZero()) {
-            lastSeedChangeStartBlock = (await getCurrentBlock()).number;;
-            seedState = 'updating';
-            appendLine(`[${lastSeedChangeStartBlock}]: got first non-zero seed = ${_currentSeedBN}`);
+            let currentBlock = (await web3.eth.getBlock('latest', false)).number;
             break;
         }
         else {
