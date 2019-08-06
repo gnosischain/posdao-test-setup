@@ -16,16 +16,109 @@ const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`
 fs.writeFileSync(checkLogFileName, '', 'utf8');
 
 const RandomAuRa = require('../utils/getContract')('RandomAuRa', web3).instance;
-let collectRoundLength;
+let collectRoundLengthBN;
 
-let prevBlock = 0;
-function getLatestBlock() {
+let seedState = (function () {
+    let currentPhase = '';
+    let lastValueBN = null;
+    let lastChangeStart = 0;
+    return {
+        update: function (blockN, currentSeedBN, validatorsLength) {
+            if (!currentPhase) {
+                // not initialized yet
+                if (currentSeedBN.isZero()) {
+                    return { err: false };
+                }
+                else {
+                    currentPhase = 'changing';
+                    lastChangeStart = blockN;
+                    lastValueBN = currentSeedBN;
+                    return { err: false };
+                }
+            }
+
+            if (currentPhase == 'changing') {
+                if (blockN - lastChangeStart < validatorsLength) {
+                    // here should change
+                    return { err: false };
+                }
+                else if (blockN - lastChangeStart == validatorsLength) {
+                    // here should change
+                    currentPhase = 'fixed';
+                    lastValueBN = currentSeedBN;
+                    return { err: false };
+                }
+                else {
+                    // zombie apocalypse
+                    lastValueBN = currentSeedBN;
+                    return { err: true, reason: `we skipped a block during "${currentPhase}" phase` };
+                }
+            }
+
+            if (currentPhase == 'fixed') {
+                // blockN < lastChangeStart + collectRoundLengthBN
+                if (collectRoundLengthBN.gt(blockN - lastChangeStart)) {
+                    if (currentSeedBN.eq(lastValueBN)) {
+                        lastValueBN = currentSeedBN;
+                        return { err: false };
+                    }
+                    else {
+                        lastValueBN = currentSeedBN;
+                        return {
+                            err: true,
+                            reason: `seed value changed before collection round ended: ` +
+                                    `expected to change at block ${collectRoundLengthBN.add(lastChangeStart)}. ` +
+                                    `current seed value = ${currentSeedBN}, previous value = ${lastValueBN} `,
+                        };
+                    }
+                }
+                else if (collectRoundLengthBN.eq(blockN - lastChangeStart)) {
+                    currentPhase = 'changing';
+                    lastChangeStart = blockN;
+                    if (currentSeedBN.eq(lastValueBN)) {
+                        lastValueBN = currentSeedBN;
+                        return {
+                            err: true,
+                            reason: `seed value didn't changed when new collection round started: ` +
+                                    `current seed value = ${currentSeedBN}, previous value = ${lastValueBN} `,
+                        };
+                    }
+                    else {
+                        lastValueBN = currentSeedBN;
+                        return {
+                            err: false,
+                        };
+                    }
+                }
+                else {
+                    // zombie apocalypse
+                    lastValueBN = currentSeedBN;
+                    return { err: true, reason: `we skipped a block during "${currentPhase}" phase` };
+                }
+            }
+        }
+    }
+})();
+
+
+
+
+
+function getCurrentBlock() {
     return web3.eth.getBlock('latest', false);
 }
 
-let prevSeed = 0;
 function getCurrentSeed() {
     return RandomAuRa.methods.getCurrentSeed().call();
+}
+
+// utility functions:
+function appendLine(str) {
+    fs.appendFileSync(checkLogFileName, `${new Date().toISOString()} ${str}${os.EOL}`, 'utf8');
+}
+
+async function wait(ms) {
+    await new Promise(r => setTimeout(r, ms));
 }
 
 function reportBad(blockOrd, blockVal, reason) {
@@ -46,7 +139,7 @@ function reportBad(blockOrd, blockVal, reason) {
 
 function doCheck() {
     Promise.all([
-        getLatestBlock(),
+        getCurrentBlock(),
         getCurrentSeed(),
         RandomAuRa.methods.collectRoundLength().call(),
     ]).then(results => {
@@ -55,32 +148,43 @@ function doCheck() {
         prevBlock = block.number;
         let seed = results[1];
         let dur = results[2];
-        fs.appendFileSync(checkLogFileName, `${new Date().toISOString()}: block = ${block.number}, seed = ${seed}, dur = ${dur}${os.EOL}`, 'utf8');
-        /*fs.appendFileSync(blocksLogFileName, `${blockOrd.number} (${blockOrd.hash}) - ${blockVal.number} (${blockVal.hash})\n`, 'utf8');
-
-        if (Math.abs(blockOrd.number - blockVal.number) > 1) {
-            reportBad(blockOrd, blockVal, 'Block numbers too far apart: ' + (blockOrd.number - blockVal.number));
-            return;
-        }
-
-        if (Math.abs(blockOrd.number - blockVal.number) == 1) {
-            // maybe we just happen to be in the moment when blocks change, check next time
-            return;
-        }
-        // here block numbers agree
-
-        if (blockOrd.hash.toLowerCase() != blockVal.hash.toLowerCase()) {
-            reportBad(blockOrd, blockVal, 'Block hashes disagree: ' + blockOrd.hash.toLowerCase() + ' vs ' + blockVal.hash.toLowerCase());
-            return;
-        }*/
+        appendLine(`${new Date().toISOString()}: block = ${block.number}, seed = ${seed}, dur = ${dur}`);
     }).catch(e => {
-        //reportBad({}, {}, 'Exception: ' + e);
-        fs.appendFileSync(checkLogFileName, `${new Date().toISOString()}: exception: ${e}`, 'utf8');
+        appendLine(`${new Date().toISOString()}: exception: ${e}`);
     });
 }
 
-(async () => {
-    collectRoundLength = await RandomAuRa.methods.collectRoundLength().call();
-})();
-fs.appendFileSync(checkLogFileName, `${new Date().toISOString()}: collectRoundLength = ${collectRoundLength}${os.EOL}`, 'utf8');
-setInterval(doCheck, checkIntervalMS);
+
+async function main() {
+    // initially wait until collectRoundLength becomes defined
+    while (true) {
+        let _collectRoundLengthBN = await RandomAuRa.methods.collectRoundLength().call();
+        if (_collectRoundLengthBN) {
+            collectRoundLengthBN = _collectRoundLengthBN;
+            let currentBlock = (await getCurrentBlock()).number;
+            appendLine(`[${currentBlock}]: got collectRoundLengthBN = ${collectRoundLengthBN}`);
+            break;
+        }
+        else {
+            await wait(checkIntervalMS);
+        }
+    }
+
+    // wait for first non-zero seed
+    while (true) {
+        let _currentSeedBN = await getCurrentSeed();
+        if (!_currentSeedBN.isZero()) {
+            lastSeedChangeStartBlock = (await getCurrentBlock()).number;;
+            seedState = 'updating';
+            appendLine(`[${lastSeedChangeStartBlock}]: got first non-zero seed = ${_currentSeedBN}`);
+            break;
+        }
+        else {
+            await wait(checkIntervalMS);
+        }
+    }
+
+    setInterval(doCheck, checkIntervalMS);
+}
+
+main();
