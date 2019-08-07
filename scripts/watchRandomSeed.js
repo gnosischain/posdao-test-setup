@@ -13,6 +13,7 @@ const checkIntervalMS = 2539;
 
 const node1Path = '../parity-data/node1/';
 const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`);
+const checkDebugFileName = path.join(__dirname, `${node1Path}/checkRandomSeedDebug.log`);
 fs.writeFileSync(checkLogFileName, '', 'utf8');
 
 const RandomAuRa = require('../utils/getContract')('RandomAuRa', web3).instance;
@@ -44,7 +45,7 @@ let seedState = (function () {
                     // we are outside of revealing phase but new round has not yet started, so seed should not change
                     if (!currentSeedBN.eq(lastSeedBN)) {
                         err_reason = `seed changed outside of revealing phase, previous value: ${lastSeedBN}, current value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
-                    }      
+                    }
                 }
                 else if (collectRoundLengthBN.lte(blockN - lastChangeStart)) {
                     // new round should start, so seed should change
@@ -69,6 +70,10 @@ function appendLine(str) {
     fs.appendFileSync(checkLogFileName, `${new Date().toISOString()} ${str}${os.EOL}`, 'utf8');
 }
 
+function appendDebug(str) {
+    fs.appendFileSync(checkDebugFileName, `${new Date().toISOString()} ${str}${os.EOL}`, 'utf8');
+}
+
 async function wait(ms) {
     await new Promise(r => setTimeout(r, ms));
 }
@@ -85,6 +90,7 @@ function doCheck() {
         let seed = results[1];
         let validatorsLength = results[2].length;
         let report = seedState.update(block.number, seed, validatorsLength);
+        appendDebug(`[${block.number}]: seed=${seed} author=${block.author} validators=${results[2].join(',')} report=${report.reason||''}`);
         if (report.err) {
             appendLine(`[${block.number}]: report: ${report.reason}`);
         }
