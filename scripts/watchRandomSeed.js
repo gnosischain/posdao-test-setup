@@ -1,5 +1,5 @@
 /*
-    - RandomAuRa.getCurrentSeed (значение должно меняться каждые RandomAuRa.collectRoundLength() блоков)const fs = require('fs');
+    - RandomAuRa.getCurrentSeed (value should change every RandomAuRa.collectRoundLength() blocks)
 */
 
 const path = require('path');
