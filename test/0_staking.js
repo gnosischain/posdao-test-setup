@@ -32,8 +32,8 @@ describe('Candidates place stakes on themselves', () => {
 
     before(async () => {
         // this is min stake per a CANDIDATE
-        minCandidateStake = await StakingAuRa.instance.methods.getCandidateMinStake().call();
-        minDelegatorStake = await StakingAuRa.instance.methods.getDelegatorMinStake().call();
+        minCandidateStake = await StakingAuRa.instance.methods.candidateMinStake().call();
+        minDelegatorStake = await StakingAuRa.instance.methods.delegatorMinStake().call();
         minCandidateStakeBN = new BN(minCandidateStake.toString());
         minDelegatorStakeBN = new BN(minDelegatorStake.toString());
 
