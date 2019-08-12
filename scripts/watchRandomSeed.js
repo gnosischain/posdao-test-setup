@@ -81,7 +81,7 @@ async function wait(ms) {
 function doCheck() {
     Promise.all([
         web3.eth.getBlock('latest', false),
-        RandomAuRa.methods.getCurrentSeed().call(),
+        RandomAuRa.methods.currentSeed().call(),
         ValidatorSetAuRa.methods.getValidators().call(),
     ]).then(results => {
         let block = results[0];
