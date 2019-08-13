@@ -1,5 +1,5 @@
 /*
-    - RandomAuRa.getCurrentSeed (value should change every RandomAuRa.collectRoundLength() blocks)
+    - RandomAuRa.currentSeed (value should change every RandomAuRa.collectRoundLength() blocks)
 */
 
 const path = require('path');
