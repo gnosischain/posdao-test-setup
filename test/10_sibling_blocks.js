@@ -63,7 +63,7 @@ describe('Make the duplicate node a signer, check that it produces sibling block
         var signing = false;
         while (!signing) {
             await new Promise(r => setTimeout(r, 999));
-            signing2 = await rpc2.send('eth_mining', []);
+            signing = await rpc2.send('eth_mining', []);
             assert.typeOf(signing, 'boolean');
         };
         console.log('***** Duplicate node is signing OK');
@@ -77,6 +77,6 @@ describe('Make the duplicate node a signer, check that it produces sibling block
     it('the duplicated node gets removed from the set of validators', async () => {
         var validators = await validatorSetContract.methods.getValidators().call();
         expect(validators.includes(SIGNER_ADDRESS),
-               `${SIGNER_ADDRESS} should not be the set of validators`).to.be.false;
+               `${SIGNER_ADDRESS} should not be in the set of validators`).to.be.false;
     });
 });
