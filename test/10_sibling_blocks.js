@@ -9,17 +9,24 @@ const expect = require('chai')
     .expect;
 const ethers = require('ethers');
 const Web3 = require('web3');
+const PORT_GOOD = '9545';
 const PORT1 = '8546';
 const PORT2 = '8549';
+const URL_GOOD = `ws://localhost:${PORT_GOOD}`;   // good node address
 const URL1 = `http://localhost:${PORT1}`;   // original node address
 const URL2 = `http://localhost:${PORT2}`;   // duplicate node address
+const web3Good = new Web3(URL_GOOD);
 const web3 = new Web3(URL1);
+const rpcGood = new ethers.providers.Web3Provider(web3Good.currentProvider);
 const rpc1 = new ethers.providers.JsonRpcProvider(URL1);
 const rpc2 = new ethers.providers.JsonRpcProvider(URL2);
+const goodValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3Good).instance;
 const validatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3).instance;
 const PASSWORD_PATH = '/../config/password'
 const SIGNER_ADDRESS = '0x720E118Ab1006Cc97ED2EF6B4B49ac04bb3aA6d9';
 const PARITY = '../parity-ethereum/target/release/parity';
+
+var lastBlockBeforeDuplication;
 
 function startDuplicateNode(configToml) {
     var out = fs.openSync('./parity-data/node9/log', 'a');
@@ -56,6 +63,8 @@ describe('Make the duplicate node a signer, check that it produces sibling block
     });
 
     it('start the duplicate node', async () => {
+        lastBlockBeforeDuplication = await web3.eth.getBlockNumber();
+        assert.typeOf(lastBlockBeforeDuplication, 'number');
         startDuplicateNode('./config/node9.toml');
     });
 
@@ -70,13 +79,20 @@ describe('Make the duplicate node a signer, check that it produces sibling block
     });
 
     it('a sibling block is produced', async () => {
-        // TODO
-        await new Promise(r => setTimeout(r, 20000));
+        var maliceReported = false;
+        console.log('***** Listening on ReportedMalicious events from a good validator');
+        goodValidatorSetContract.events.ReportedMalicious({
+            fromBlock: lastBlockBeforeDuplication
+        }).on('data', (event) => {
+            maliceReported = true;
+        }).on('error', console.error);
+        expect(maliceReported).to.be.true;
     });
 
     it('the duplicated node gets removed from the set of validators', async () => {
-        var validators = await validatorSetContract.methods.getValidators().call();
-        expect(validators.includes(SIGNER_ADDRESS),
-               `${SIGNER_ADDRESS} should not be in the set of validators`).to.be.false;
+        var validators = await goodValidatorSetContract.methods.getValidators().call();
+        while (validators.includes(SIGNER_ADDRESS)) {
+            await new Promise(r => setTimeout(r, 499));
+        }
     });
 });
