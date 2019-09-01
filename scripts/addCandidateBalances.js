@@ -14,6 +14,7 @@ async function main() {
     assert(!Object.prototype.hasOwnProperty.call(accounts, candidate.staking));
     accounts[candidate.staking] = { balance: '0x100000000000000000' };
   }
+  accounts[constants.UNREMOVABLE_VALIDATOR.staking] = { balance: '0x100000000000000000' };
   await promisify(fs.writeFile)(__dirname + '/../parity-data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 
