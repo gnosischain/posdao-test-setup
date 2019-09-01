@@ -122,7 +122,7 @@ async function main() {
     contractAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
     expect(contractAddress).to.equal(address);
 
-    console.log('**** Mint initial coins to candidates');
+    console.log('**** Mint initial coins to candidates and unremovable validator');
     await mintCoinsToCandidates();
 }
 

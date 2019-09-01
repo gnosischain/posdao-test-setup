@@ -13,7 +13,7 @@ const constants = require('../utils/constants');
 let coins = constants.CANDIDATE_INITIAL_BALANCE;
 
 module.exports = async function () {
-    let txsp = mintCoins(web3, constants.OWNER, constants.CANDIDATES.map(c => c.staking), coins);
+    let txsp = mintCoins(web3, constants.OWNER, [...constants.CANDIDATES.map(c => c.staking), constants.UNREMOVABLE_VALIDATOR.staking], coins);
     let txs = await txsp;
     for (let tx of txs) {
         expect(tx.status, `Tx to mint inital balance failed: ${tx.transactionHash}`).to.equal(true);
@@ -25,4 +25,9 @@ module.exports = async function () {
             `Amount initial coins minted to ${candidate} is incorrect: expected ${coins}, but got ${balanceBN.toString()}`
         ).to.be.equal(coins);
     }
+    let uv = constants.UNREMOVABLE_VALIDATOR.staking;
+    let balanceBN = await web3.eth.getBalance(uv);
+    expect(balanceBN,
+        `Amount initial coins minted to unremovable validator (${uv}) is incorrect: expected ${coins}, but got ${balanceBN.toString()}`
+    ).to.be.equal(coins);
 }
