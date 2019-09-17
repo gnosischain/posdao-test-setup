@@ -18,7 +18,6 @@ const StakingTokenContract = require('../utils/getContract')('StakingToken', web
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
-const keythereum = require('keythereum');
 const REVERT_EXCEPTION_MSG = 'The execution failed due to an exception';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
@@ -38,19 +37,11 @@ describe('Candidates place stakes on themselves', () => {
         minDelegatorStakeBN = new BN(minDelegatorStake.toString());
 
         console.log('**** Delegator addresses are generated');
-
         for (let i = 0; i < delegatorsNumber; i++) {
-            keythereum.create({}, function (dk) {
-                keythereum.dump("testnetpoa", dk.privateKey, dk.salt, dk.iv, {}, function (keyObject) {
-                    keythereum.exportToFile(keyObject, "./accounts/keystore", function(keyFile) {
-                        delegators.push(keyObject.address);
-                    });
-                });
-            });
-        }
-
-        while (delegators.length < delegatorsNumber) {
-            await new Promise(r => setTimeout(r, 100));
+            let acc = web3.eth.accounts.create();
+            let keystoreObj = web3.eth.accounts.encrypt(acc.privateKey, 'testnetpoa');
+            delegators.push(acc.address);
+            fs.writeFileSync(path.join(__dirname, '../accounts/keystore', acc.address.substring(2).toLowerCase() + '.json'), JSON.stringify(keystoreObj), 'utf8');
         }
     });
 
