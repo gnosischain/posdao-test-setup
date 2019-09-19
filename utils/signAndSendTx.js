@@ -29,7 +29,7 @@ const keysPassword = fs.readFileSync(
 function getPrivateKey(web3, address) {
   var fname = path.join(keysDir, './keystore/', address.substring(2).toLowerCase() + '.json');
   var keystore = require(fname);
-  var privateKey = web3.eth.accounts.decrypt(keystore, 'testnetpoa').privateKey;
+  var privateKey = web3.eth.accounts.decrypt(keystore, keysPassword).privateKey;
   var pkBuff =  Buffer.from(privateKey.substring(2), "hex");
   return pkBuff;
 }
