@@ -13,7 +13,18 @@
 *.patch
 
 # Account created during test
-accounts/keystore/UTC*
+accounts/keystore/*
+!accounts/keystore/0b2f5e2f3cbd864eaa2c642e3769c1582361caf6.json
+!accounts/keystore/b6695f5c2e3f5eff8036b5f5f3a9d83a5310e51e.json
+!accounts/keystore/312c230e7d6db05224f60208a656e3541c5c42ba.json
+!accounts/keystore/b916e7e1f4bcb13549602ed042d36746fd0d96c9.json
+!accounts/keystore/32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24.json
+!accounts/keystore/be69eb0968226a1808975e1a1f2127667f2bffb3.json
+!accounts/keystore/720e118ab1006cc97ed2ef6b4b49ac04bb3aa6d9.json
+!accounts/keystore/db9cb2478d917719c53862008672166808258577.json
+!accounts/keystore/aa94b687d3f9552a453b81b2834ca53778980dc0.json
+!accounts/keystore/f67cc5231c5858ad6cc87b105217426e17b824bb.json
+
 
 # Logs
 /parity-data/node[0-9]*/network/

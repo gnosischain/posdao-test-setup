@@ -1,6 +1,5 @@
 'use strict';
 const EthereumTx = require('ethereumjs-tx');
-const Keythereum = require('keythereum');
 const fs = require('fs');
 const path = require('path');
 /*
@@ -27,10 +26,12 @@ const keysPassword = fs.readFileSync(
   'utf-8'
 ).trim();
 
-function getPrivateKey(address) {
-  var key = Keythereum.importFromFile(address, keysDir);
-  var privateKey = Keythereum.recover(keysPassword, key);
-  return privateKey;
+function getPrivateKey(web3, address) {
+  var fname = path.join(keysDir, './keystore/', address.substring(2).toLowerCase() + '.json');
+  var keystore = require(fname);
+  var privateKey = web3.eth.accounts.decrypt(keystore, keysPassword).privateKey;
+  var pkBuff =  Buffer.from(privateKey.substring(2), "hex");
+  return pkBuff;
 }
 
 module.exports = async function (web3, tx_details, privateKey) {
@@ -75,7 +76,7 @@ module.exports = async function (web3, tx_details, privateKey) {
   dbg('  **** chainId =', chainId);
 
   if (privateKey == null) {
-    privateKey = getPrivateKey(from);
+    privateKey = getPrivateKey(web3, from);
   }
 
   let _tx = {
