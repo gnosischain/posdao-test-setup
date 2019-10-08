@@ -1,0 +1,4 @@
+[submodule "submodules/posdao-contracts"]
+	path = submodules/posdao-contracts
+	url = https://github.com/poanetwork/posdao-contracts
+	branch = claim-reward
