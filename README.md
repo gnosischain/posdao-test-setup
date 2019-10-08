@@ -46,7 +46,7 @@ cd ..
 mkdir -p parity-ethereum/target/release/
 # you can replace the links below with the specific release version
 # select either Linux
-curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-linux.zip' -o parity.zip
+curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-linux-ubuntu-16-04.zip' -o parity.zip
 # OR Mac OS X
 curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-macos.zip' -o parity.zip
 unzip parity.zip -d parity-ethereum/target/release
