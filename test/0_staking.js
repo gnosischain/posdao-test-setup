@@ -185,7 +185,7 @@ describe('Candidates place stakes on themselves', () => {
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.stake(candidate, minDelegatorStakeBN.toString()),
                 gasPrice: '1000000000',
-                gasLimit: '200000'
+                gasLimit: '250000'
             });
             promises.push(prm);
         }
