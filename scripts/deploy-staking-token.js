@@ -17,7 +17,7 @@ const expect = require('chai')
     .use(require('chai-as-promised'))
     .expect;
 const pp = require('../utils/prettyPrint');
-const mintCoinsToCandidates = require('./mint-coins-candidates');
+const mintCoinsToCandidates = require('./mint-coins-to-candidates');
 let tokenName = 'POSDAO';
 let tokenSymbol = 'POS';
 let tokenDecimals = 18;
