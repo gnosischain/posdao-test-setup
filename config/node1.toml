@@ -44,3 +44,6 @@ extra_data = "Parity"
 
 [misc]
 logging = "engine=trace,miner=trace,reward=trace"
+
+[footprint]
+pruning = "archive"

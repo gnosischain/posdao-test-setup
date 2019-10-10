@@ -27,7 +27,7 @@ function compileContract() {
         language: 'Solidity',
         sources: {
             'token.sol': {
-                content: fs.readFileSync(path.join(__dirname, '../contracts/ERC677BridgeTokenRewardableMock.sol'), 'utf8'),
+                content: fs.readFileSync(path.join(__dirname, '../posdao-contracts/test/mockContracts/ERC677BridgeTokenRewardableMock.sol'), 'utf8'),
             },
         },
         settings: {
@@ -44,7 +44,7 @@ function compileContract() {
 
 async function main() {
     console.log('**** Check that StakingToken is already deployed in StakingAuRa');
-    let existingStakingTokenAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
+    let existingStakingTokenAddress = await StakingAuRa.instance.methods.erc677TokenContract().call();
     if (existingStakingTokenAddress
           && existingStakingTokenAddress.toLowerCase() != '0x'
           && existingStakingTokenAddress.toLowerCase() != '0x0000000000000000000000000000000000000000'
@@ -102,7 +102,7 @@ async function main() {
     tx = await SnS(web3, {
         from: OWNER,
         to: StakingAuRa.address,
-        method: StakingAuRa.instance.methods.setErc20TokenContract(address),
+        method: StakingAuRa.instance.methods.setErc677TokenContract(address),
         gasPrice: '0',
     });
     pp.tx(tx);
@@ -119,7 +119,7 @@ async function main() {
     expect(contractAddress).to.equal(BlockRewardAuRa.address);
 
     console.log('**** Check that StakingToken address in StakingAuRa is correct');
-    contractAddress = await StakingAuRa.instance.methods.erc20TokenContract().call();
+    contractAddress = await StakingAuRa.instance.methods.erc677TokenContract().call();
     expect(contractAddress).to.equal(address);
 
     console.log('**** Mint initial coins to candidates and unremovable validator');
