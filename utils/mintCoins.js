@@ -4,7 +4,7 @@ const OWNER = constants.OWNER;
 const getContract = require('./getContract');
 
 module.exports = async function (web3, fromWhom, toWhom, howMuch) {
-    let BlockRewardAuRa = getContract('BlockRewardAuRa', web3);
+    const BlockRewardAuRa = getContract('BlockRewardAuRa', web3);
     if (!fromWhom) {
         fromWhom = OWNER;
     }
@@ -24,7 +24,7 @@ module.exports = async function (web3, fromWhom, toWhom, howMuch) {
     let txsp = [];
     let nonce = await web3.eth.getTransactionCount(fromWhom);
     for (let i = 0; i < toWhom.length; i++) {
-        let tx = SnS(web3, {
+        const tx = SnS(web3, {
             from: fromWhom,
             to: BlockRewardAuRa.address,
             method: BlockRewardAuRa.instance.methods.addExtraReceiver(howMuch, toWhom[i]),
@@ -32,7 +32,7 @@ module.exports = async function (web3, fromWhom, toWhom, howMuch) {
             nonce: nonce,
         });
         txsp.push(tx);
-        nonce += 1;
+        nonce++;
     }
     // return all tx promises
     return Promise.all(txsp);
