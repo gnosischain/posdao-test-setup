@@ -8,12 +8,8 @@ async function main() {
   let specFile = await readFile(__dirname + '/../posdao-contracts/spec.json', 'UTF-8');
   assert(typeof specFile === 'string');
   specFile = JSON.parse(specFile);
-  const accounts = specFile.accounts;
-  assert(accounts != null && Object.getPrototypeOf(accounts) === Object.prototype);
-  for (const candidate of constants.CANDIDATES) {
-    assert(!Object.prototype.hasOwnProperty.call(accounts, candidate.staking));
-    accounts[candidate.staking] = { balance: '0x100000000000000000' };
-  }
+  assert(specFile.engine.authorityRound.params.stepDuration != null);
+  specFile.engine.authorityRound.params.stepDuration = 4;
   await promisify(fs.writeFile)(__dirname + '/../parity-data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 

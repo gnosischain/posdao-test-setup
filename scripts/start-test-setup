@@ -3,6 +3,7 @@
 # Exit on undefined variables.
 set -u
 set -e
+set -x
 
 PARITY=$1
 for i in $(seq 0 6); do
