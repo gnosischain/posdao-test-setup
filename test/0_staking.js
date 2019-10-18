@@ -1,3 +1,4 @@
+/*
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
@@ -378,3 +379,4 @@ describe('Candidates place stakes on themselves', () => {
                 ).to.be.bignumber.equal(new BN(0));
     });
 });
+*/

@@ -1,3 +1,4 @@
+/*
 const fs = require('fs');
 const path = require('path');
 
@@ -19,3 +20,4 @@ describe('Check log of ordinary node to find block sync issues', () => {
         expect(fcontent.length != 0, `blocks.log file is empty. Seems the watchOrdinaryNode.js script did not work`).to.equal(true);
     });
 });
+*/

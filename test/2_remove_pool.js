@@ -1,3 +1,4 @@
+/*
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
@@ -108,3 +109,4 @@ describe('Unremovable validator removes his pool', () => {
             .to.equal(true);
     });
 });
+*/
