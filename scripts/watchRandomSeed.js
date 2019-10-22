@@ -8,8 +8,8 @@ const os = require('os');
 const fs = require('fs');
 
 const web3 = new Web3('http://localhost:8541');
-// block time
-const checkIntervalMS = 2539;
+
+const checkIntervalMS = 2539; // should be less than block time
 
 const node1Path = '../parity-data/node1/';
 const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`);
@@ -41,16 +41,16 @@ let seedState = (function () {
                         err_reason = `seed didn't change in this block, seed value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
                     }
                 }
-                else if (blockN - lastChangeStart >= validatorsLength && collectRoundLengthBN.gt(blockN - lastChangeStart)){
+                else if (blockN - lastChangeStart >= validatorsLength && collectRoundLengthBN.gt(new web3.utils.BN(blockN - lastChangeStart))) {
                     // we are outside of revealing phase but new round has not yet started, so seed should not change
                     if (!currentSeedBN.eq(lastSeedBN)) {
-                        err_reason = `seed changed outside of revealing phase, previous value: ${lastSeedBN}, current value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
+                        err_reason = `seed changed outside of revealing phase, previous value: ${lastSeedBN}, current value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}, lastChangeStart = ${lastChangeStart}`;
                     }
                 }
-                else if (collectRoundLengthBN.lte(blockN - lastChangeStart)) {
+                else if (collectRoundLengthBN.lte(new web3.utils.BN(blockN - lastChangeStart))) {
                     // new round should start, so seed should change
                     if (currentSeedBN.eq(lastSeedBN)) {
-                        err_reason = `seed didn't change in the beginning of a new round, seed value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}`;
+                        err_reason = `seed didn't change in the beginning of a new round, seed value: ${currentSeedBN}, collectRoundLengthBN = ${collectRoundLengthBN}, lastChangeStart = ${lastChangeStart}`;
                     }
                     lastChangeStart = blockN;
                 }
@@ -87,7 +87,7 @@ function doCheck() {
         let block = results[0];
         if (block.number == prevBlock) return;
         prevBlock = block.number;
-        let seed = results[1];
+        let seed = new web3.utils.BN(results[1]);
         let validatorsLength = results[2].length;
         let report = seedState.update(block.number, seed, validatorsLength);
         appendDebug(`[${block.number}]: seed=${seed} author=${block.author} validators=${results[2].join(',')} report=${report.reason||''}`);
@@ -105,8 +105,7 @@ async function main() {
     while (true) {
         let _collectRoundLengthBN = await RandomAuRa.methods.collectRoundLength().call();
         if (_collectRoundLengthBN) {
-            collectRoundLengthBN = _collectRoundLengthBN;
-            let currentBlock = (await web3.eth.getBlock('latest', false)).number;
+            collectRoundLengthBN = new web3.utils.BN(_collectRoundLengthBN);
             break;
         }
         else {

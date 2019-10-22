@@ -33,6 +33,7 @@ accounts/keystore/*
 /parity-data/node0/blocks.log
 /parity-data/node0/check.log
 /parity-data/node1/checkRandomSeed.log
+/parity-data/node1/checkRandomSeedDebug.log
 /parity-data/reserved-peers
 /parity-data/spec.json
 /parity-data/StakingToken.json
@@ -44,4 +45,3 @@ build
 
 #Mac OS specific
 .DS_Store
-parity-data/node1/checkRandomSeedDebug.log
