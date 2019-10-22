@@ -1,6 +1,8 @@
 'use strict';
-const BLOCK_REWARD_ADDRESS = require("../posdao-contracts/spec").engine.authorityRound.params.blockRewardContractAddress;
-const VALIDATOR_SET_ADDRESS = require("../posdao-contracts/spec").engine.authorityRound.params.validators.multi[0].contract;
+const specParams = require("../posdao-contracts/spec").engine.authorityRound.params;
+const BLOCK_REWARD_ADDRESS = specParams.blockRewardContractAddress;
+const VALIDATOR_SET_ADDRESS = specParams.validators.multi[0].contract;
+const RANDOM_AURA_ADDRESS = specParams.randomnessContractAddress;
 const STAKING_CONTRACT_ADDRESS = "0x1100000000000000000000000000000000000001";
 
 module.exports = {
@@ -13,5 +15,6 @@ module.exports = {
   BLOCK_REWARD_ADDRESS,
   VALIDATOR_SET_ADDRESS,
   STAKING_CONTRACT_ADDRESS,
+  RANDOM_AURA_ADDRESS,
   CANDIDATE_INITIAL_BALANCE: '100000000000000000000', // 100 "ETH"
 };
