@@ -46,4 +46,6 @@ extra_data = "Parity"
 logging = "engine=trace,miner=trace,reward=trace"
 
 [footprint]
+tracing = "on"
+fat_db = "on"
 pruning = "archive"
