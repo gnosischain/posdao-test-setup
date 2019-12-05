@@ -2,7 +2,7 @@
 const specParams = require("../posdao-contracts/spec").engine.authorityRound.params;
 const BLOCK_REWARD_ADDRESS = specParams.blockRewardContractAddress;
 const VALIDATOR_SET_ADDRESS = specParams.validators.multi[0].contract;
-const RANDOM_AURA_ADDRESS = specParams.randomnessContractAddress;
+const RANDOM_AURA_ADDRESS = specParams.randomnessContractAddress[0];
 const STAKING_CONTRACT_ADDRESS = "0x1100000000000000000000000000000000000001";
 
 module.exports = {
