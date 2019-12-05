@@ -39,7 +39,7 @@ cargo build --release --features final
 ```
 (_note that default branch is correctly set to **aura-pos** which contains the posdao features, not to master_)
 
-Otherwise, to save time, you can download one of pre-compiled binaries for Ubuntu or Mac OS X from the [releases page](https://github.com/poanetwork/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
+Otherwise, to save time, you can download a pre-compiled binary for Mac OS X from the [releases page](https://github.com/poanetwork/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 cd ..
