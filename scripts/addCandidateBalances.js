@@ -14,6 +14,12 @@ async function main() {
     assert(!Object.prototype.hasOwnProperty.call(accounts, candidate.staking));
     accounts[candidate.staking] = { balance: '0x100000000000000000' };
   }
+
+  // This is a temporary patch until `randomness_contract_address` option
+  // in https://github.com/poanetwork/parity-ethereum/tree/aura-pos
+  // is changed from `Option<Address>` to `Option<BTreeMap<Uint, Address>>`
+  specFile.engine.authorityRound.params.randomnessContractAddress = specFile.engine.authorityRound.params.randomnessContractAddress[0];
+
   await promisify(fs.writeFile)(__dirname + '/../parity-data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 
