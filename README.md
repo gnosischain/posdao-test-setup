@@ -44,10 +44,6 @@ Otherwise, to save time, you can download one of pre-compiled binaries for Ubunt
 # move up from posdao-test-setup root
 cd ..
 mkdir -p parity-ethereum/target/release/
-# you can replace the links below with the specific release version
-# select either Ubuntu 18.04
-curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-ubuntu-18.04.zip' -o parity.zip
-# OR Mac OS X
 curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-macos.zip' -o parity.zip
 unzip parity.zip -d parity-ethereum/target/release
 chmod +x parity-ethereum/target/release/parity
