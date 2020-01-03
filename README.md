@@ -1,6 +1,6 @@
 # Parity proof-of-stake test setup
 
-This is an integration test of AuRa PoS with three Parity nodes running locally.
+This is an integration test of AuRa PoS with seven Parity nodes running locally.
 
 
 ## Usage
@@ -28,9 +28,9 @@ git clone -b aura-pos https://github.com/poanetwork/parity-ethereum.git
 git clone -b aura-pos git@github.com:poanetwork/parity-ethereum.git
 cd parity-ethereum
 #
-# Next step assumes you have rust and required dependencies installed,
+# Next step assumes you have Rust and required dependencies installed,
 # for details please check https://github.com/poanetwork/parity-ethereum/blob/aura-pos/README.md
-# Note that you can instruct rust to always use the latest stable version for this project by running
+# Note that you can instruct Rust to always use the latest stable version for this project by running
 #     $ rustup override set stable
 # in `parity-ethereum` folder
 #
@@ -76,7 +76,7 @@ With this done, the node can be added to the list of started nodes in
 `scripts/stop-test-setup`.
 
 If the new node has to be an initial validator, the network spec should reflect
-that: add the node's address to `INITIAL_VALIDATORS` in `scripts/network-spec`.
+that: add the node's address to `INITIAL_VALIDATORS` and `STAKING_ADDRESSES` in `scripts/network-spec`.
 
 ## Simulation
 
