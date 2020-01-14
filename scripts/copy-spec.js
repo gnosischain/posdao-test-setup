@@ -66,13 +66,9 @@ async function main() {
   }
 
   if (upstreamParity) { // if this is upstream Parity
-    // Remove `posdaoTransition` option as it is not implemented in upstream yet.
-    // Should be implemented in https://github.com/paritytech/parity-ethereum/pull/11245
+    // Remove `posdaoTransition` option as it is not merged to upstream yet.
+    // Waiting for https://github.com/paritytech/parity-ethereum/pull/11245
     delete specFile.engine.authorityRound.params.posdaoTransition;
-
-    // Remove `blockGasLimitContractTransitions` option as it is not implemented in upstream yet.
-    // Should be implemented in https://github.com/paritytech/parity-ethereum/pull/10928
-    delete specFile.engine.authorityRound.params.blockGasLimitContractTransitions;
 
     // Apply a new format to spec.json (the new format is actual beginning from Parity 2.6.5-beta)
     const accounts = Object.keys(specFile.accounts);
