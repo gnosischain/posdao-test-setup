@@ -3,6 +3,9 @@ const { promisify } = require('util');
 const readFile = promisify(fs.readFile);
 const assert = require('assert');
 
+const constants = require('../utils/constants');
+const OWNER = constants.OWNER;
+
 async function main() {
   let specFile = await readFile(__dirname + '/../parity-data/spec.json', 'UTF-8');
 
@@ -21,7 +24,7 @@ async function main() {
       if (emitInitiateChangeCallable) {
         const validators = await validatorSetContract.methods.getValidators().call();
         await validatorSetContract.methods.emitInitiateChange().send({
-          from: validators[0],
+          from: OWNER,
           gas: '1600000',
           gasPrice: '0'
         })
