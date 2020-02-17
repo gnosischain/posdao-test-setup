@@ -52,23 +52,24 @@ async function main() {
   const versionMajor = version[1];
   const versionMinor = version[2];
   const versionPatch = version[3];
-  const upstreamMajor = 2;
-  const upstreamMinor = 7;
-  const upstreamPatch = 0;
 
-  let upstreamParity = true;
-  if (versionMajor < upstreamMajor) {
-    upstreamParity = false;
-  } else if (versionMajor == upstreamMajor && versionMinor < upstreamMinor) {
-    upstreamParity = false;
-  } else if (versionMajor == upstreamMajor && versionMinor == upstreamMinor && versionPatch < upstreamPatch) {
-    upstreamParity = false;
+  function isVersionGte(expectedMajor, expectedMinor, expectedPatch) {
+    if (versionMajor < expectedMajor) {
+      return false;
+    } else if (versionMajor == expectedMajor && versionMinor < expectedMinor) {
+      return false;
+    } else if (versionMajor == expectedMajor && versionMinor == expectedMinor && versionPatch < expectedPatch) {
+      return false;
+    }
+    return true;
   }
 
-  if (upstreamParity) { // if this is upstream Parity
-    // Remove `posdaoTransition` option as it is not merged to upstream yet.
-    // Waiting for https://github.com/paritytech/parity-ethereum/pull/11245
-    delete specFile.engine.authorityRound.params.posdaoTransition;
+  if (isVersionGte(2,7,0)) { // if this is Parity Ethereum >= v2.7.0
+    if (!isVersionGte(2,7,3)) { // if this is Parity Ethereum < v2.7.3
+      // Remove `posdaoTransition` option as it is not released yet.
+      // Waiting for https://github.com/paritytech/parity-ethereum/pull/11245 to be included to release.
+      delete specFile.engine.authorityRound.params.posdaoTransition;
+    }
 
     // Apply a new format to spec.json (the new format is actual beginning from Parity 2.6.5-beta)
     const accounts = Object.keys(specFile.accounts);
