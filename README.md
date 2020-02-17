@@ -1,6 +1,6 @@
 # Parity proof-of-stake test setup
 
-This is an integration test of AuRa PoS with seven Parity nodes running locally.
+This is an integration test of AuRa POSDAO with seven Parity nodes running locally.
 
 
 ## Usage
@@ -10,7 +10,7 @@ To configure the repository and run tests, execute `npm run all`.
 
 ## Requirements
 
-To integrate with [parity-ethereum](https://github.com/poanetwork/parity-ethereum), the following structure of folders is assumed:
+To integrate with [parity-ethereum](https://github.com/paritytech/parity-ethereum), the following structure of folders is assumed:
 ```
 .
 ├── parity-ethereum
@@ -22,35 +22,31 @@ If you are working on modifications of `parity-ethereum` or want to compile spec
 ```bash
 # move up from posdao-test-setup root
 cd ..
-# clone over https
-git clone -b aura-pos https://github.com/poanetwork/parity-ethereum.git
-# OR over ssh
-git clone -b aura-pos git@github.com:poanetwork/parity-ethereum.git
+git clone https://github.com/paritytech/parity-ethereum
 cd parity-ethereum
 #
 # Next step assumes you have Rust and required dependencies installed,
-# for details please check https://github.com/poanetwork/parity-ethereum/blob/aura-pos/README.md
+# for details please check https://github.com/paritytech/parity-ethereum/blob/master/README.md
 # Note that you can instruct Rust to always use the latest stable version for this project by running
 #     $ rustup override set stable
-# in `parity-ethereum` folder
+# in `parity-ethereum` folder.
 #
 # Build the binary
 cargo build --release --features final
 ```
-(_note that default branch is correctly set to **aura-pos** which contains the posdao features, not to master_)
 
-Otherwise, to save time, you can download a pre-compiled binary for Mac OS X from the [releases page](https://github.com/poanetwork/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
+To save time, you can download a pre-compiled binary from the [releases page](https://github.com/paritytech/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 cd ..
 mkdir -p parity-ethereum/target/release/
-curl -SfL 'https://github.com/poanetwork/parity-ethereum/releases/latest/download/parity-macos.zip' -o parity.zip
-unzip parity.zip -d parity-ethereum/target/release
+curl -SfL 'https://releases.parity.io/ethereum/stable/x86_64-apple-darwin/parity' -o parity-ethereum/target/release/parity
 chmod +x parity-ethereum/target/release/parity
-# check that it works and version is correct (compare commit hash from the binary with hash on the release page)
+# check that it works and version is correct (compare the version from the binary with version on the release page)
 parity-ethereum/target/release/parity --version
-rm parity.zip
 ```
+
+This setup is backward compatible with our [old v2.5.9 fork](https://github.com/poanetwork/parity-ethereum/tree/aura-pos).
 
 
 ## Development
