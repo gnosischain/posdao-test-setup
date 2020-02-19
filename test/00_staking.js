@@ -66,6 +66,11 @@ describe('Candidates place stakes on themselves', () => {
     });
 
     it('Owner emulates bridge token fee accrual', async () => {
+        const stakeTokenInflationRate = await BlockRewardAuRa.instance.methods.STAKE_TOKEN_INFLATION_RATE().call();
+        if (stakeTokenInflationRate != 0) {
+            console.log('Skipping this step because inflation is activated (the reward will be minted as a result of inflation, not a bridge fee)');
+            return;
+        }
         const bridgeTokenFeeAmount = '1000000000000000000';
         await SnS(web3, {
             from: OWNER,
