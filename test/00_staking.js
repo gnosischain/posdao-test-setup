@@ -81,11 +81,11 @@ describe('Candidates place stakes on themselves', () => {
         await SnS(web3, {
             from: OWNER,
             to: BlockRewardAuRa.address,
-            method: BlockRewardAuRa.instance.methods.addBridgeTokenFeeReceivers(bridgeTokenFeeAmount),
+            method: BlockRewardAuRa.instance.methods.addBridgeTokenRewardReceivers(bridgeTokenFeeAmount),
             gasPrice: '0'
         });
-        const bridgeTokenFeeActual = new BN(await BlockRewardAuRa.instance.methods.bridgeTokenFee().call());
-        expect(bridgeTokenFeeActual, 'bridgeTokenFee amount is incorrect').to.be.bignumber.equal(new BN(bridgeTokenFeeAmount));
+        const bridgeTokenFeeActual = new BN(await BlockRewardAuRa.instance.methods.bridgeTokenReward().call());
+        expect(bridgeTokenFeeActual, 'bridgeTokenReward amount is incorrect').to.be.bignumber.equal(new BN(bridgeTokenFeeAmount));
     });
 
     it('Candidates add pools for themselves', async () => {
