@@ -64,8 +64,10 @@ async function main() {
     return true;
   }
 
+
+
   if (isVersionGte(2,7,0)) { // if this is Parity Ethereum >= v2.7.0
-    if (!isVersionGte(2,7,3)) { // if this is Parity Ethereum < v2.7.3
+    if (!isVersionGte(2,7,3) && stdout.indexOf('posdao') == -1) { // if this is Parity Ethereum < v2.7.3 and not v2.7.2-posdao-stable
       // Remove `posdaoTransition` option as it is not released yet.
       // Waiting for https://github.com/paritytech/parity-ethereum/pull/11245 to be included to release.
       delete specFile.engine.authorityRound.params.posdaoTransition;
