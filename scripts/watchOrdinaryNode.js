@@ -3,10 +3,13 @@ const path = require('path');
 const Web3 = require('web3');
 const os = require('os');
 
+const ordUrl = 'ws://localhost:9540';
+const valUrl = 'ws://localhost:9541';
+
 // ordinary node
-const web3Ord = new Web3('http://localhost:8540');
+const web3Ord = new Web3(new Web3.providers.WebsocketProvider(ordUrl));
 // reference validator node
-const web3Val = new Web3('http://localhost:8541');
+const web3Val = new Web3(new Web3.providers.WebsocketProvider(valUrl));
 // block time
 const blockTimeMS = 2539;
 
@@ -14,15 +17,18 @@ const node0Path = '../parity-data/node0/';
 const blocksLogFileName = path.join(__dirname, `${node0Path}blocks.log`);
 const checkLogFileName = path.join(__dirname, `${node0Path}check.log`);
 
-fs.writeFileSync(blocksLogFileName, '', 'utf8');
-fs.writeFileSync(checkLogFileName, '', 'utf8');
+var tooFarApartCounter = 0;
 
 function getLatestBlock(web3) {
-    return web3.eth.getBlock('latest', false);
+    if (isConnected(web3)) {
+        return web3.eth.getBlock('latest', false);
+    } else {
+        return null;
+    }
 }
 
 function reportBad(blockOrd, blockVal, reason) {
-    fs.appendFileSync(checkLogFileName, JSON.stringify({
+    const report = JSON.stringify({
         reason,
         ordinaryNodeBlock: {
           number: blockOrd.number,
@@ -34,37 +40,76 @@ function reportBad(blockOrd, blockVal, reason) {
           hash: blockVal.hash,
           author: blockVal.author,
         },
-    }) + os.EOL, 'utf8');
+    }) + os.EOL;
+    fs.appendFileSync(checkLogFileName, report, 'utf8');
 }
 
-function doCheck() {
+function isConnected(web3) {
+    const connection = web3.currentProvider.connection;
+    return connection.readyState == connection.OPEN;
+}
+
+function repeatOrExit() {
+    const ordConnected = isConnected(web3Ord);
+    const valConnected = isConnected(web3Val);
+
+    if (ordConnected || valConnected) {
+        if (!ordConnected) {
+            web3Ord.setProvider(new Web3.providers.WebsocketProvider(ordUrl));
+        }
+        if (!valConnected) {
+            web3Val.setProvider(new Web3.providers.WebsocketProvider(valUrl));
+        }
+
+        setTimeout(doCheck, blockTimeMS);
+    } else {
+        // Exit if both nodes are turned off
+        process.exit();
+    }
+}
+
+async function doCheck() {
     Promise.all([
         getLatestBlock(web3Ord),
         getLatestBlock(web3Val)
-    ]).then(blocks => {
+    ]).then(async function(blocks) {
         let blockOrd = blocks[0];
         let blockVal = blocks[1];
+
+        if (blockOrd == null || blockVal == null) {
+            repeatOrExit();
+            return;
+        }
 
         fs.appendFileSync(blocksLogFileName, `${blockOrd.number} (${blockOrd.hash}) - ${blockVal.number} (${blockVal.hash})\n`, 'utf8');
 
         if (Math.abs(blockOrd.number - blockVal.number) > 1) {
-            reportBad(blockOrd, blockVal, 'Block numbers too far apart: ' + (blockOrd.number - blockVal.number));
+            tooFarApartCounter++;
+            if (tooFarApartCounter * blockTimeMS > 30000) {
+                // If the block numbers differ for more than 30 seconds,
+                // something is wrong
+                reportBad(blockOrd, blockVal, 'Block numbers too far apart: ' + (blockOrd.number - blockVal.number));
+                tooFarApartCounter = 0;
+            }
+            setTimeout(doCheck, blockTimeMS);
             return;
         }
 
         if (Math.abs(blockOrd.number - blockVal.number) == 1) {
             // maybe we just happen to be in the moment when blocks change, check next time
+            setTimeout(doCheck, blockTimeMS);
             return;
         }
         // here block numbers agree
 
         if (blockOrd.hash.toLowerCase() != blockVal.hash.toLowerCase()) {
             reportBad(blockOrd, blockVal, 'Block hashes disagree: ' + blockOrd.hash.toLowerCase() + ' vs ' + blockVal.hash.toLowerCase());
-            return;
         }
+
+        setTimeout(doCheck, blockTimeMS);
     }).catch(e => {
-      reportBad({}, {}, 'Exception: ' + e);
+        repeatOrExit();
     });
 }
 
-setInterval(doCheck, blockTimeMS);
+setTimeout(doCheck, blockTimeMS);

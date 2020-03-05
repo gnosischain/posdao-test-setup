@@ -2,6 +2,7 @@
     - RandomAuRa.currentSeed (value should change every RandomAuRa.collectRoundLength() blocks)
 */
 
+/*
 const path = require('path');
 const Web3 = require('web3');
 const os = require('os');
@@ -117,3 +118,4 @@ async function main() {
 }
 
 main();
+*/

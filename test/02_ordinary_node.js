@@ -11,11 +11,17 @@ const check_fname = path.join(__dirname, `${node0Path}/check.log`);
 
 describe('Check log of ordinary node to find block sync issues', () => {
     it(`file ${check_fname} should be empty`, async () => {
-        const fcontent = fs.readFileSync(check_fname, 'utf8').trim();
+        let fcontent = '';
+        try {
+            fcontent = fs.readFileSync(check_fname, 'utf8').trim();
+        } catch(e) {}
         expect(fcontent.length == 0, `Ordinary node had some block sync issue, check ${path.basename(check_fname)} for logs`).to.equal(true);
     });
     it(`file ${blocks_fname} should not be empty`, async () => {
-        const fcontent = fs.readFileSync(blocks_fname, 'utf8').trim();
+        let fcontent = '';
+        try {
+            fcontent = fs.readFileSync(blocks_fname, 'utf8').trim();
+        } catch(e) {}
         expect(fcontent.length != 0, `${path.basename(blocks_fname)} file is empty. Seems the watchOrdinaryNode.js script did not work`).to.equal(true);
     });
 });
