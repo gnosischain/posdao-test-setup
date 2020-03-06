@@ -2,7 +2,6 @@
     - RandomAuRa.currentSeed (value should change every RandomAuRa.collectRoundLength() blocks)
 */
 
-/*
 const path = require('path');
 const Web3 = require('web3');
 const os = require('os');
@@ -12,15 +11,17 @@ const web3 = new Web3('http://localhost:8541');
 
 const checkIntervalMS = 2539; // should be less than block time
 
+const artifactsPath = '../posdao-contracts/build/contracts/';
 const node1Path = '../parity-data/node1/';
 const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`);
 const checkDebugFileName = path.join(__dirname, `${node1Path}/checkRandomSeedDebug.log`);
 fs.writeFileSync(checkLogFileName, '', 'utf8');
 
-const RandomAuRa = require('../utils/getContract')('RandomAuRa', web3).instance;
-const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3).instance;
-let collectRoundLengthBN;
-let prevBlock;
+var RandomAuRa;
+var ValidatorSetAuRa;
+
+var collectRoundLengthBN;
+var prevBlock;
 
 let seedState = (function () {
     let lastSeedBN;
@@ -75,10 +76,6 @@ function appendDebug(str) {
     fs.appendFileSync(checkDebugFileName, `${new Date().toISOString()} ${str}${os.EOL}`, 'utf8');
 }
 
-async function wait(ms) {
-    await new Promise(r => setTimeout(r, ms));
-}
-
 function doCheck() {
     Promise.all([
         web3.eth.getBlock('latest', false),
@@ -100,22 +97,32 @@ function doCheck() {
     });
 }
 
-
-async function main() {
-    // initially wait until collectRoundLength is defined
-    while (true) {
-        let _collectRoundLengthBN = await RandomAuRa.methods.collectRoundLength().call();
-        if (_collectRoundLengthBN) {
-            collectRoundLengthBN = new web3.utils.BN(_collectRoundLengthBN);
-            break;
-        }
-        else {
-            await wait(checkIntervalMS);
+function getValidatorSetContractAddress(currentBlock) {
+    let vsBlock;
+    let spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
+    spec = JSON.parse(spec);
+    for (const hfBlock in spec.engine.authorityRound.params.validators.multi) {
+        if (currentBlock >= hfBlock || !currentBlock) {
+            vsBlock = hfBlock;
         }
     }
+    const multi = spec.engine.authorityRound.params.validators.multi[vsBlock];
+    return multi.contract || multi.safeContract;
+}
 
+async function main() {
+    ValidatorSetAuRa = new web3.eth.Contract(
+        require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
+        getValidatorSetContractAddress()
+    );
+    RandomAuRa = new web3.eth.Contract(
+        require(`${artifactsPath}RandomAuRa.json`).abi,
+        await ValidatorSetAuRa.methods.randomContract().call()
+    );
+    collectRoundLengthBN = new web3.utils.BN(
+        await RandomAuRa.methods.collectRoundLength().call()
+    );
     setInterval(doCheck, checkIntervalMS);
 }
 
 main();
-*/

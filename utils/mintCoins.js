@@ -1,10 +1,8 @@
 const constants = require('./constants');
 const SnS = require('./signAndSendTx.js');
 const OWNER = constants.OWNER;
-const getContract = require('./getContract');
 
-module.exports = async function (web3, fromWhom, toWhom, howMuch) {
-    const BlockRewardAuRa = getContract('BlockRewardAuRa', web3);
+module.exports = async function (web3, fromWhom, toWhom, howMuch, blockRewardAuRa) {
     if (!fromWhom) {
         fromWhom = OWNER;
     }
@@ -12,11 +10,14 @@ module.exports = async function (web3, fromWhom, toWhom, howMuch) {
         toWhom = [toWhom];
     }
 
+    let mintersAllowed = await blockRewardAuRa.methods.ercToNativeBridgesAllowed().call();
+    mintersAllowed.push(fromWhom);
+
     // first - set allowed sender, this is always done from OWNER
     await SnS(web3, {
         from: OWNER,
-        to: BlockRewardAuRa.address,
-        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([fromWhom]),
+        to: blockRewardAuRa.options.address,
+        method: blockRewardAuRa.methods.setErcToNativeBridgesAllowed(mintersAllowed),
         gasPrice: '0',
     });
 
@@ -26,8 +27,8 @@ module.exports = async function (web3, fromWhom, toWhom, howMuch) {
     for (let i = 0; i < toWhom.length; i++) {
         const tx = SnS(web3, {
             from: fromWhom,
-            to: BlockRewardAuRa.address,
-            method: BlockRewardAuRa.instance.methods.addExtraReceiver(howMuch, toWhom[i]),
+            to: blockRewardAuRa.options.address,
+            method: blockRewardAuRa.methods.addExtraReceiver(howMuch, toWhom[i]),
             gasPrice: '0',
             nonce: nonce,
         });

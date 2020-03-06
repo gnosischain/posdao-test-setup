@@ -9,6 +9,8 @@ const web3 = new Web3(providerUrl);
 const BN = web3.utils.BN;
 
 async function main() {
+  const bridgeAddress = '0x7301CFA0e1756B71869E93d4e4Dca5c7d0eb0AA6';
+
   // Ensure the current POA BlockReward contract is working
   console.log('Checking old BlockReward...');
   const oldBlockRewardContractCompiled = await compile(
@@ -97,7 +99,7 @@ async function main() {
     assert((await validatorSetContract.methods.stakingByMiningAddress(miningAddresses[i]).call()).equalsIgnoreCase(stakingAddresses[i]));
   }
 
-  const currentBlock = await web3.eth.getBlockNumber();
+  let currentBlock = await web3.eth.getBlockNumber();
   const approximateTransitionBlock = currentBlock + 31; // we take 31 blocks to finish initialization and let the nodes restart
   const stakingEpochStartBlock = Math.ceil(approximateTransitionBlock / process.env.COLLECT_ROUND_LENGTH) * process.env.COLLECT_ROUND_LENGTH + 1;
 
@@ -137,14 +139,14 @@ async function main() {
     oldBlockRewardContract.options.address
   ).send(txSendOptions);
   await blockRewardContract.methods.setErcToNativeBridgesAllowed(
-    ['0x7301CFA0e1756B71869E93d4e4Dca5c7d0eb0AA6']
+    [bridgeAddress]
   ).send(txSendOptions);
   await tokenContract.methods.setBlockRewardContract(
     blockRewardContract.options.address
   ).send(txSendOptions);
   assert(await blockRewardContract.methods.isInitialized().call());
   assert(await blockRewardContract.methods.validatorSetContract().call() == validatorSetContract.options.address);
-  assert((await blockRewardContract.methods.ercToNativeBridgesAllowed().call()).equalsIgnoreCase(['0x7301CFA0e1756B71869E93d4e4Dca5c7d0eb0AA6']));
+  assert((await blockRewardContract.methods.ercToNativeBridgesAllowed().call()).equalsIgnoreCase([bridgeAddress]));
   assert(await tokenContract.methods.blockRewardContract().call() == blockRewardContract.options.address);
 
   console.log('Initialize Random contract...');
@@ -159,9 +161,11 @@ async function main() {
   console.log('Initialize TxPermission contract...');
   await txPermissionContract.methods.initialize(
     [process.env.OWNER],
+    certifierContract.options.address,
     validatorSetContract.options.address
   ).send(txSendOptions);
   assert(await txPermissionContract.methods.isInitialized().call());
+  assert(await txPermissionContract.methods.certifierContract().call() == certifierContract.options.address);
   assert(await txPermissionContract.methods.validatorSetContract().call() == validatorSetContract.options.address);
   assert(await txPermissionContract.methods.isSenderAllowed(process.env.OWNER).call());
   assert((await txPermissionContract.methods.allowedSenders().call()).equalsIgnoreCase([process.env.OWNER]));
@@ -198,6 +202,8 @@ async function main() {
   spec.engine.authorityRound.params.randomnessContractAddress = {};
   spec.engine.authorityRound.params.randomnessContractAddress[stakingEpochStartBlock] = randomContract.options.address;
   spec.engine.authorityRound.params.posdaoTransition = stakingEpochStartBlock;
+  spec.engine.authorityRound.params.blockGasLimitContractTransitions = {};
+  spec.engine.authorityRound.params.blockGasLimitContractTransitions[stakingEpochStartBlock] = txPermissionContract.options.address;
   spec.params.registrar = registryContract.options.address;
   spec.params.transactionPermissionContract = txPermissionContract.options.address;
   spec.params.transactionPermissionContractTransition = stakingEpochStartBlock;
@@ -246,13 +252,49 @@ async function main() {
   }
 
   console.log('');
-  console.log(`CURRENT BLOCK: ${await web3.eth.getBlockNumber()}`);
   console.log(`POSDAO TRANSITION BLOCK: ${stakingEpochStartBlock}`);
+
+  assert(!(new BN(await oldBlockRewardContract.methods.mintedTotallyByBridge(bridgeAddress).call())).eq(new BN(0)));
+  assert(!(new BN(await oldBlockRewardContract.methods.mintedTotally().call())).eq(new BN(0)));
+  assert((new BN(await blockRewardContract.methods.mintedTotallyByBridge(bridgeAddress).call())).eq(new BN(0)));
+  assert((new BN(await blockRewardContract.methods.mintedTotally().call())).eq(new BN(0)));
+
   console.log('');
-
   console.log('Waiting for the POSDAO transition...');
+  currentBlock = await web3.eth.getBlockNumber();
+  while (currentBlock < stakingEpochStartBlock) {
+    console.log(`Current block: ${currentBlock}. Remaining blocks: ${stakingEpochStartBlock-currentBlock}`);
+    await sleep(spec.engine.authorityRound.params.stepDuration * 1000);
+    currentBlock = await web3.eth.getBlockNumber();
+  }
 
-  process.exit();
+  console.log('');
+  console.log('Checking bridge statistics migration...');
+  assert((new BN(await blockRewardContract.methods.mintedTotallyByBridge(bridgeAddress).call())).eq(
+    new BN(await oldBlockRewardContract.methods.mintedTotallyByBridge(bridgeAddress).call())
+  ));
+  assert((new BN(await blockRewardContract.methods.mintedTotally().call())).eq(
+    new BN(await oldBlockRewardContract.methods.mintedTotally().call())
+  ));
+
+  console.log('');
+  console.log('Waiting for the finalizeChange call...');
+  let finalizationWaitingBlocks = 0;
+  let validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
+  assert(validatorSetApplyBlock == 0);
+  while (validatorSetApplyBlock == 0 && finalizationWaitingBlocks <= miningAddresses.length) {
+    await sleep(spec.engine.authorityRound.params.stepDuration * 1000);
+    validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
+    finalizationWaitingBlocks++;
+  }
+  if (validatorSetApplyBlock != 0) {
+    console.log(`Success! finalizeChange was called at block ${validatorSetApplyBlock}.`);
+    console.log('Now, run POSDAO tests');
+    process.exit();
+  } else {
+    console.log(`Unfortunately, finalizeChange wasn't called within ${miningAddresses.length} blocks. Something is wrong.`);
+    process.exit(1);
+  }
 }
 
 async function compile(dir, contractName) {

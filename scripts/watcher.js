@@ -163,7 +163,7 @@ function getValidatorSetContractAddress(currentBlock) {
   let spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
   spec = JSON.parse(spec);
   for (const hfBlock in spec.engine.authorityRound.params.validators.multi) {
-    if (currentBlock >= hfBlock) {
+    if (currentBlock >= hfBlock || !currentBlock) {
       vsBlock = hfBlock;
     }
   }
