@@ -230,7 +230,7 @@ async function main() {
       throw Error(`Cannot stop the node # ${i}`);
     }
 
-    await promisify(exec)(`../parity-ethereum/target/release/parity --config "./config/node${i}.toml" >> "./parity-data/node${i}/log" 2>&1 &`);
+    await promisify(exec)(`../open-ethereum/target/release/parity --config "./config/node${i}.toml" >> "./parity-data/node${i}/log" 2>&1 &`);
 
     let newPid = null;
     let steps;
