@@ -44,7 +44,7 @@ async function main() {
   console.log('Step duration will be changed at ', new Date(newStepDurationTimestamp * 1000).toLocaleTimeString('en-US'));
 
   const exec = promisify(require('child_process').exec);
-  const { stdout, stderr } = await exec('../../parity-ethereum/target/release/parity --version');
+  const { stdout, stderr } = await exec('../../open-ethereum/target/release/parity --version');
 
   assert(!stderr);
 
@@ -66,14 +66,14 @@ async function main() {
 
 
 
-  if (isVersionGte(2,7,0)) { // if this is Parity Ethereum >= v2.7.0
-    if (!isVersionGte(2,7,3) && stdout.indexOf('posdao') == -1) { // if this is Parity Ethereum < v2.7.3 and not v2.7.2-posdao-stable
+  if (isVersionGte(2,7,0)) { // if this is Open Ethereum >= v2.7.0
+    if (!isVersionGte(2,7,3) && stdout.indexOf('posdao') == -1) { // if this is Open Ethereum < v2.7.3 and not v2.7.2-posdao-stable
       // Remove `posdaoTransition` option as it is not released yet.
-      // Waiting for https://github.com/paritytech/parity-ethereum/pull/11245 to be included to release.
+      // Waiting for https://github.com/OpenEthereum/open-ethereum/pull/11245 to be included to release.
       delete specFile.engine.authorityRound.params.posdaoTransition;
     }
 
-    // Apply a new format to spec.json (the new format is actual beginning from Parity 2.6.5-beta)
+    // Apply a new format to spec.json (the new format is actual beginning from Open Ethereum 2.6.5-beta)
     const accounts = Object.keys(specFile.accounts);
     for (let i = 0; i < accounts.length; i++) {
       const address = accounts[i];

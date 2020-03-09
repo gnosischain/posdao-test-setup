@@ -1,70 +1,79 @@
-# Parity proof-of-stake test setup
+# Open Ethereum proof-of-stake test setup
 
-This is an integration test of AuRa POSDAO with seven Parity nodes running locally.
+This is an integration test of AuRa POSDAO with seven Open Ethereum nodes running locally from the genesis block.
 
-
-## Usage
-
-To configure the repository and run tests, execute `npm run all`.
+To test a migration from POA to POSDAO, please use another branch: [`migrate-poa-to-posdao`](https://github.com/poanetwork/posdao-test-setup/tree/migrate-poa-to-posdao#readme).
 
 
 ## Requirements
 
-To integrate with [parity-ethereum](https://github.com/paritytech/parity-ethereum), the following structure of folders is assumed:
+To integrate with [Open Ethereum](https://github.com/OpenEthereum/open-ethereum), the following structure of folders is assumed:
 ```
 .
-├── parity-ethereum
+├── open-ethereum
 ├── posdao-test-setup
 ```
-So there should be two folders on the same level and `posdao-test-setup` will use parity binary from the `parity-ethereum` folder, namely the binary is assumed to be at `../parity-ethereum/target/release/parity` relative to `posdao-test-setup` root.
+So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `open-ethereum` folder, namely the binary is assumed to be at `../open-ethereum/target/release/parity` relative to `posdao-test-setup` root.
 
-If you are working on modifications of `parity-ethereum` or want to compile specific branch/version, you can clone it directly and build the binary
+If you want to compile a specific branch/version of `Open Ethereum`, you can clone it directly and build the binary
 ```bash
 # move up from posdao-test-setup root
-cd ..
-git clone https://github.com/paritytech/parity-ethereum
-cd parity-ethereum
+$ cd ..
+$ git clone https://github.com/OpenEthereum/open-ethereum
+$ cd open-ethereum
 #
 # Next step assumes you have Rust and required dependencies installed,
-# for details please check https://github.com/paritytech/parity-ethereum/blob/master/README.md
+# for details please check https://github.com/OpenEthereum/open-ethereum/blob/master/README.md
 # Note that you can instruct Rust to always use the latest stable version for this project by running
 #     $ rustup override set stable
-# in `parity-ethereum` folder.
+# in `open-ethereum` folder.
 #
 # Build the binary
-cargo build --release --features final
+$ cargo build --release --features final
 ```
 
-To save time, you can download a pre-compiled binary from the [releases page](https://github.com/paritytech/parity-ethereum/releases). But you still need to maintain directory structure and naming conventions:
+To save time, you can download a pre-compiled binary from the [releases page](https://github.com/OpenEthereum/open-ethereum/releases). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
-cd ..
-mkdir -p parity-ethereum/target/release/
-curl -SfL 'https://releases.parity.io/ethereum/stable/x86_64-apple-darwin/parity' -o parity-ethereum/target/release/parity
-chmod +x parity-ethereum/target/release/parity
+$ cd ..
+$ mkdir -p open-ethereum/target/release/
+# an example for macOS binary
+$ curl -SfL 'https://releases.parity.io/ethereum/stable/x86_64-apple-darwin/parity' -o open-ethereum/target/release/parity
+$ chmod +x open-ethereum/target/release/parity
 # check that it works and version is correct (compare the version from the binary with version on the release page)
-parity-ethereum/target/release/parity --version
+$ open-ethereum/target/release/parity --version
 ```
 
-This setup is backward compatible with our [old v2.5.9 fork](https://github.com/poanetwork/parity-ethereum/tree/aura-pos).
+
+## Usage
+
+After `Open Ethereum` client is downloaded or built (see above), the integration test can be launched with `npm run all` (in the root of `posdao-test-setup` working directory).
+
+To stop the tests, use `npm run stop-test-setup` (or just use `CTRL+C` in the console while `npm run all` working).
+
+To stop and clear directories, use `npm run cleanup` in a separate console.
+
+To restart the tests from scratch just run `npm run all` again.
+
+To watch on blocks and transactions, use `npm run watcher` in a separate console.
 
 
 ## Development
 
 ### Adding new validator nodes and their keys
 
-To add a new validator node, Parity should generate an account together with its
+To add a new validator node, Open Ethereum should generate an account together with its
 secret key like so:
 
 ```
-parity account new --config config/nodeX.toml --keys-path parity-data/nodeX/keys
+$ parity account new --config config/nodeX.toml --keys-path parity-data/nodeX/keys
 ```
 
 given a node configuration file `config/nodeX.toml` and a newly created
 directory `parity-data/nodeX/keys`. `config/nodeX.toml` should then be amended
 with the validator address output by the above command. Also, the keys directory
 `parity-data/nodeX/keys` should be committed to the Git repository: it is a part
-of persistent Parity state which should be kept across state resets which happen
+of persistent Open Ethereum state which should be kept across state resets which happen
 when you run `npm run all`.
 
 With this done, the node can be added to the list of started nodes in

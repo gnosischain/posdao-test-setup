@@ -22,7 +22,6 @@ async function main() {
     while (true) {
       const emitInitiateChangeCallable = await validatorSetContract.methods.emitInitiateChangeCallable().call();
       if (emitInitiateChangeCallable) {
-        const validators = await validatorSetContract.methods.getValidators().call();
         await validatorSetContract.methods.emitInitiateChange().send({
           from: OWNER,
           gas: '1600000',
