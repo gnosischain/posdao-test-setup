@@ -1,8 +1,8 @@
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
-const solc = require('solc');
 const constants = require('../utils/constants');
+const { compile, getValidatorSetContractAddress } = require('../utils/utils');
 const mintCoins = require('../utils/mintCoins');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
@@ -19,7 +19,6 @@ const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
 const REVERT_EXCEPTION_MSG = 'The execution failed due to an exception';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
-const artifactsPath = '../posdao-contracts/build/contracts/';
 
 var BlockRewardAuRa;
 var ValidatorSetAuRa;
@@ -29,15 +28,15 @@ var StakingTokenContract;
 describe('Initialize contract instances', () => {
     it('Done', async () => {
         ValidatorSetAuRa = new web3.eth.Contract(
-          require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
+          require(`${constants.ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
           getValidatorSetContractAddress()
         );
         BlockRewardAuRa = new web3.eth.Contract(
-          require(`${artifactsPath}BlockRewardAuRa.json`).abi,
+          require(`${constants.ARTIFACTS_PATH}BlockRewardAuRa.json`).abi,
           await ValidatorSetAuRa.methods.blockRewardContract().call()
         );
         StakingAuRa = new web3.eth.Contract(
-          require(`${artifactsPath}StakingAuRa.json`).abi,
+          require(`${constants.ARTIFACTS_PATH}StakingAuRa.json`).abi,
           await ValidatorSetAuRa.methods.stakingContract().call()
         );
         const StakingTokenContractCompiled = await compile(
@@ -454,60 +453,3 @@ describe('Tests of staking...', () => {
                 ).to.be.bignumber.equal(new BN(0));
     });
 });
-
-async function compile(dir, contractName) {
-  const input = {
-    language: 'Solidity',
-    sources: {
-      '': {
-        content: fs.readFileSync(dir + contractName + '.sol').toString()
-      }
-    },
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200
-      },
-      evmVersion: "constantinople",
-      outputSelection: {
-        '*': {
-          '*': [ 'abi', 'evm.bytecode.object', 'evm.methodIdentifiers' ]
-        }
-      }
-    }
-  }
-
-  const compiled = JSON.parse(solc.compile(JSON.stringify(input), function(path) {
-    let content;
-    try {
-      content = fs.readFileSync(dir + path);
-    } catch (e) {
-      if (e.code == 'ENOENT') {
-        try {
-          content = fs.readFileSync(dir + '../' + path);
-        } catch (e) {
-          content = fs.readFileSync(dir + '../node_modules/' + path);
-        }
-      }
-    }
-    return {
-      contents: content.toString()
-    }
-  }));
-
-  const result = compiled.contracts[''][contractName];
-  return { abi: result.abi, bytecode: '0x' + result.evm.bytecode.object };
-}
-
-function getValidatorSetContractAddress(currentBlock) {
-  let vsBlock;
-  let spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
-  spec = JSON.parse(spec);
-  for (const hfBlock in spec.engine.authorityRound.params.validators.multi) {
-    if (currentBlock >= hfBlock || !currentBlock) {
-      vsBlock = hfBlock;
-    }
-  }
-  const multi = spec.engine.authorityRound.params.validators.multi[vsBlock];
-  return multi.contract || multi.safeContract;
-}

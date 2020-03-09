@@ -8,4 +8,5 @@ module.exports = {
     { mining: "0x720e118ab1006cc97ed2ef6b4b49ac04bb3aa6d9", staking: "0xb6695f5c2e3f5eff8036b5f5f3a9d83a5310e51e" }
   ],
   CANDIDATE_INITIAL_BALANCE: '100000000000000000000', // 100 "ETH"
+  ARTIFACTS_PATH: '../posdao-contracts/build/contracts/'
 };

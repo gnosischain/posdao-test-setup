@@ -16,6 +16,6 @@ describe('Check log of random seeds to find incorrect seed values', () => {
     });
     it(`file ${seed_debug_fname} should not be empty`, async () => {
         const fcontent = fs.readFileSync(seed_debug_fname, 'utf8').trim();
-        expect(fcontent.length != 0, `${path.basename(seed_debug_fname)} file is empty. Seems the watchRandomSeed.js script did not work`).to.equal(true);
+        expect(fcontent.length != 0, `${path.basename(seed_debug_fname)} file is empty. Seems the watch-random-seed.js script did not work`).to.equal(true);
     });
 });

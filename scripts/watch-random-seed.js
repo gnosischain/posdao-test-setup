@@ -1,17 +1,14 @@
-/*
-    - RandomAuRa.currentSeed (value should change every RandomAuRa.collectRoundLength() blocks)
-*/
-
 const path = require('path');
 const Web3 = require('web3');
 const os = require('os');
 const fs = require('fs');
+const { getValidatorSetContractAddress } = require('../utils/utils');
+const { ARTIFACTS_PATH } = require('../utils/constants');
 
 const web3 = new Web3('http://localhost:8541');
 
 const checkIntervalMS = 2539; // should be less than block time
 
-const artifactsPath = '../posdao-contracts/build/contracts/';
 const node1Path = '../parity-data/node1/';
 const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`);
 const checkDebugFileName = path.join(__dirname, `${node1Path}/checkRandomSeedDebug.log`);
@@ -97,26 +94,13 @@ function doCheck() {
     });
 }
 
-function getValidatorSetContractAddress(currentBlock) {
-    let vsBlock;
-    let spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
-    spec = JSON.parse(spec);
-    for (const hfBlock in spec.engine.authorityRound.params.validators.multi) {
-        if (currentBlock >= hfBlock || !currentBlock) {
-            vsBlock = hfBlock;
-        }
-    }
-    const multi = spec.engine.authorityRound.params.validators.multi[vsBlock];
-    return multi.contract || multi.safeContract;
-}
-
 async function main() {
     ValidatorSetAuRa = new web3.eth.Contract(
-        require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
+        require(`${ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
         getValidatorSetContractAddress()
     );
     RandomAuRa = new web3.eth.Contract(
-        require(`${artifactsPath}RandomAuRa.json`).abi,
+        require(`${ARTIFACTS_PATH}RandomAuRa.json`).abi,
         await ValidatorSetAuRa.methods.randomContract().call()
     );
     collectRoundLengthBN = new web3.utils.BN(

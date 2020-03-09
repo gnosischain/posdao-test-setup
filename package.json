@@ -11,7 +11,7 @@
     "start-poa": "bash scripts/start-poa ../parity-ethereum/target/release/parity268",
     "stop-test-setup": "bash scripts/stop-test-setup",
     "test-posdao": "node_modules/.bin/mocha --bail --timeout 1200000 && npm run watcher",
-    "transit-to-posdao": ". ./scripts/network-spec && (node scripts/watchOrdinaryNode.js &) && node scripts/transit-to-posdao.js && (node scripts/watchRandomSeed &)",
+    "transit-to-posdao": ". ./scripts/network-spec && (node scripts/watch-ordinary-node.js &) && node scripts/transit-to-posdao.js && (node scripts/watch-random-seed &)",
     "watcher": "node scripts/watcher.js"
   },
   "repository": {

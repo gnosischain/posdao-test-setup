@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 const os = require('os');
+const { isConnected } = require('../utils/utils');
 
 const ordUrl = 'ws://localhost:9540';
 const valUrl = 'ws://localhost:9541';
@@ -42,11 +43,6 @@ function reportBad(blockOrd, blockVal, reason) {
         },
     }) + os.EOL;
     fs.appendFileSync(checkLogFileName, report, 'utf8');
-}
-
-function isConnected(web3) {
-    const connection = web3.currentProvider.connection;
-    return connection.readyState == connection.OPEN;
 }
 
 function repeatOrExit() {

@@ -1,7 +1,8 @@
 const fs = require('fs');
 const { URL } = require('url');
 const process = require('process');
-var os = require("os");
+const { sleep } = require('../utils/utils');
+const os = require("os");
 
 main();
 
@@ -57,8 +58,4 @@ function getEnodeURL(cmd) {
       resolve(result);
     });
   })
-}
-
-function sleep(millis) {
-  return new Promise(resolve => setTimeout(resolve, millis));
 }

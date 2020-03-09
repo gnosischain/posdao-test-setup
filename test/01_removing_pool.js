@@ -2,6 +2,7 @@ const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
 const constants = require('../utils/constants');
+const { getValidatorSetContractAddress } = require('../utils/utils');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
 web3.eth.transactionConfirmationBlocks = 1;
@@ -13,7 +14,6 @@ const expect = require('chai')
     .expect;
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
-const artifactsPath = '../posdao-contracts/build/contracts/';
 
 var ValidatorSetAuRa;
 var StakingAuRa;
@@ -23,11 +23,11 @@ describe('Pool removal and validator set change', () => {
 
     it('Initialize contract instances', async () => {
         ValidatorSetAuRa = new web3.eth.Contract(
-          require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
+          require(`${constants.ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
           getValidatorSetContractAddress()
         );
         StakingAuRa = new web3.eth.Contract(
-          require(`${artifactsPath}StakingAuRa.json`).abi,
+          require(`${constants.ARTIFACTS_PATH}StakingAuRa.json`).abi,
           await ValidatorSetAuRa.methods.stakingContract().call()
         );
     });
@@ -121,16 +121,3 @@ describe('Unremovable validator removes his pool', () => {
             .to.equal(true);
     });
 });
-
-function getValidatorSetContractAddress(currentBlock) {
-  let vsBlock;
-  let spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
-  spec = JSON.parse(spec);
-  for (const hfBlock in spec.engine.authorityRound.params.validators.multi) {
-    if (currentBlock >= hfBlock || !currentBlock) {
-      vsBlock = hfBlock;
-    }
-  }
-  const multi = spec.engine.authorityRound.params.validators.multi[vsBlock];
-  return multi.contract || multi.safeContract;
-}

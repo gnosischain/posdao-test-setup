@@ -1,9 +1,8 @@
 const assert = require('assert');
-const fs = require('fs');
 const exec = require('child_process').exec;
 const { promisify } = require('util');
-const solc = require('solc');
 const Web3 = require('web3');
+const { compile, isConnected, readSpec, sleep, writeSpec } = require('../utils/utils');
 const providerUrl = 'ws://localhost:9541';
 const web3 = new Web3(providerUrl);
 const BN = web3.utils.BN;
@@ -207,6 +206,12 @@ async function main() {
   spec.params.registrar = registryContract.options.address;
   spec.params.transactionPermissionContract = txPermissionContract.options.address;
   spec.params.transactionPermissionContractTransition = stakingEpochStartBlock;
+  // switch to another duration in 120 seconds
+  const newStepDurationTimestamp = Math.round((Date.now() / 1000 + 120) / 10) * 10;
+  spec.engine.authorityRound.params.stepDuration = {};
+  spec.engine.authorityRound.params.stepDuration[0] = 5;
+  spec.engine.authorityRound.params.stepDuration[newStepDurationTimestamp] = 4;
+  console.log('  Step duration will be changed at ', new Date(newStepDurationTimestamp * 1000).toLocaleTimeString('en-US'));
   writeSpec(spec);
 
   console.log('Restarting the nodes randomly...');
@@ -247,7 +252,7 @@ async function main() {
     }
   }
 
-  if (!isConnected()) {
+  if (!isConnected(web3)) {
     web3.setProvider(new Web3.providers.WebsocketProvider(providerUrl));
   }
 
@@ -264,7 +269,7 @@ async function main() {
   currentBlock = await web3.eth.getBlockNumber();
   while (currentBlock < stakingEpochStartBlock) {
     console.log(`Current block: ${currentBlock}. Remaining blocks: ${stakingEpochStartBlock-currentBlock}`);
-    await sleep(spec.engine.authorityRound.params.stepDuration * 1000);
+    await sleep(5000);
     currentBlock = await web3.eth.getBlockNumber();
   }
 
@@ -283,7 +288,7 @@ async function main() {
   let validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
   assert(validatorSetApplyBlock == 0);
   while (validatorSetApplyBlock == 0 && finalizationWaitingBlocks <= miningAddresses.length) {
-    await sleep(spec.engine.authorityRound.params.stepDuration * 1000);
+    await sleep(4000);
     validatorSetApplyBlock = await validatorSetContract.methods.validatorSetApplyBlock().call();
     finalizationWaitingBlocks++;
   }
@@ -295,50 +300,6 @@ async function main() {
     console.log(`Unfortunately, finalizeChange wasn't called within ${miningAddresses.length} blocks. Something is wrong.`);
     process.exit(1);
   }
-}
-
-async function compile(dir, contractName) {
-  const input = {
-    language: 'Solidity',
-    sources: {
-      '': {
-        content: fs.readFileSync(dir + contractName + '.sol').toString()
-      }
-    },
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200
-      },
-      evmVersion: "constantinople",
-      outputSelection: {
-        '*': {
-          '*': [ 'abi', 'evm.bytecode.object', 'evm.methodIdentifiers' ]
-        }
-      }
-    }
-  }
-
-  const compiled = JSON.parse(solc.compile(JSON.stringify(input), function(path) {
-    let content;
-    try {
-      content = fs.readFileSync(dir + path);
-    } catch (e) {
-      if (e.code == 'ENOENT') {
-        try {
-          content = fs.readFileSync(dir + '../' + path);
-        } catch (e) {
-          content = fs.readFileSync(dir + '../node_modules/' + path);
-        }
-      }
-    }
-    return {
-      contents: content.toString()
-    }
-  }));
-
-  const result = compiled.contracts[''][contractName];
-  return { abi: result.abi, bytecode: '0x' + result.evm.bytecode.object };
 }
 
 async function deploy(contractName, constructorArguments = null) {
@@ -391,17 +352,6 @@ function getOldBlockRewardContractAddress() {
   return readSpec().engine.authorityRound.params.blockRewardContractAddress;
 }
 
-function isConnected() {
-  const connection = web3.currentProvider.connection;
-  return connection.readyState == connection.OPEN;
-}
-
-function readSpec() {
-  const spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
-  assert(typeof spec === 'string');
-  return JSON.parse(spec);
-}
-
 function shuffle(a) {
   var j, x, i;
   for (i = a.length - 1; i > 0; i--) {
@@ -411,14 +361,6 @@ function shuffle(a) {
     a[j] = x;
   }
   return a;
-}
-
-async function sleep(ms) {
-  await new Promise(r => setTimeout(r, ms));
-}
-
-function writeSpec(spec) {
-  fs.writeFileSync(__dirname + '/../parity-data/spec.json', JSON.stringify(spec, null, '  '), 'UTF-8');
 }
 
 Array.prototype.equalsIgnoreCase = function(array) {

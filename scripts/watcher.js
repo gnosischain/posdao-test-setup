@@ -1,18 +1,18 @@
 console.log('');
 console.log('');
 
-const fs = require('fs');
 const Web3 = require('web3');
 const providerUrl = 'ws://localhost:9541';
 const web3 = new Web3(new Web3.providers.WebsocketProvider(providerUrl));
-const artifactsPath = '../posdao-contracts/build/contracts/';
+const { ARTIFACTS_PATH } = require('../utils/constants');
+const { getValidatorSetContractAddress, isConnected } = require('../utils/utils');
 
 main();
 
 var prevConnected = false;
 var subscription = null;
 async function main() {
-  const connected = isConnected();
+  const connected = isConnected(web3);
   if (!connected) {
     if (subscription) {
       await subscription.unsubscribe();
@@ -36,7 +36,7 @@ async function onNewBlock(blockHeader) {
     const contractNameByAddress = {};
     
     const validatorSetContract = new web3.eth.Contract(
-      require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
+      require(`${ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
       getValidatorSetContractAddress(blockHeader.number)
     );
     contractNameByAddress[validatorSetContract.options.address] = 'ValidatorSetAuRa';
@@ -45,12 +45,12 @@ async function onNewBlock(blockHeader) {
     let randomContract = null;
     try {
       stakingContract = new web3.eth.Contract(
-        require(`${artifactsPath}StakingAuRa.json`).abi,
+        require(`${ARTIFACTS_PATH}StakingAuRa.json`).abi,
         await validatorSetContract.methods.stakingContract().call()
       );
       contractNameByAddress[stakingContract.options.address] = 'StakingAuRa';
       randomContract = new web3.eth.Contract(
-        require(`${artifactsPath}RandomAuRa.json`).abi,
+        require(`${ARTIFACTS_PATH}RandomAuRa.json`).abi,
         await validatorSetContract.methods.randomContract().call()
       );
       contractNameByAddress[randomContract.options.address] = 'RandomAuRa';
@@ -156,22 +156,4 @@ async function onNewBlock(blockHeader) {
     console.log('');
     console.log('');
   }
-}
-
-function getValidatorSetContractAddress(currentBlock) {
-  let vsBlock;
-  let spec = fs.readFileSync(__dirname + '/../parity-data/spec.json', 'utf8');
-  spec = JSON.parse(spec);
-  for (const hfBlock in spec.engine.authorityRound.params.validators.multi) {
-    if (currentBlock >= hfBlock || !currentBlock) {
-      vsBlock = hfBlock;
-    }
-  }
-  const multi = spec.engine.authorityRound.params.validators.multi[vsBlock];
-  return multi.contract || multi.safeContract;
-}
-
-function isConnected() {
-  const connection = web3.currentProvider.connection;
-  return connection.readyState == connection.OPEN;
 }

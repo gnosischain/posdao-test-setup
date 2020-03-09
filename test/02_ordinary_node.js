@@ -22,6 +22,6 @@ describe('Check log of ordinary node to find block sync issues', () => {
         try {
             fcontent = fs.readFileSync(blocks_fname, 'utf8').trim();
         } catch(e) {}
-        expect(fcontent.length != 0, `${path.basename(blocks_fname)} file is empty. Seems the watchOrdinaryNode.js script did not work`).to.equal(true);
+        expect(fcontent.length != 0, `${path.basename(blocks_fname)} file is empty. Seems the watch-ordinary-node.js script did not work`).to.equal(true);
     });
 });

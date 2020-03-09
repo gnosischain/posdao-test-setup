@@ -8,5 +8,5 @@ set -x
 PARITY=$1
 for i in $(seq 0 6); do
     "$PARITY" --config "./config/node${i}.toml" >> "./parity-data/node${i}/log" 2>&1 &
-    node ./scripts/getReservedPeer.js "$i"
+    node ./scripts/get-reserved-peer.js "$i"
 done
