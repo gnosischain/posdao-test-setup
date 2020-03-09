@@ -5,11 +5,6 @@ This is an integration test of AuRa POSDAO with seven `Open Ethereum` nodes runn
 The test starts a chain with POA consensus and then migrates to POSDAO consensus. POA utilizes `Open Ethereum v2.6.8-beta`, but POSDAO requires `v2.7.2-posdao-stable` (and above). The chain switches from `v2.6.8-beta` to `v2.7.2-posdao-stable` when migrating from POA to POSDAO consensus.
 
 
-## Usage
-
-To configure the repository and run tests, execute `npm run all`, but first `Open Ethereum` client must be downloaded or built (see below).
-
-
 ## Requirements
 
 To integrate with [Open Ethereum](https://github.com/OpenEthereum/open-ethereum), the following structure of folders is assumed:
@@ -58,6 +53,21 @@ chmod +x open-ethereum/target/release/parity268
 # check that it works and version is correct (must be v2.6.8-beta)
 open-ethereum/target/release/parity268 --version
 ```
+
+
+## Usage
+
+After `Open Ethereum` client is downloaded or built (see above), the integration test can be launched with `npm run all` (in the root of `posdao-test-setup` working directory).
+
+To stop the tests, use `npm run stop-test-setup` (or just use `CTRL+C` in the console while `npm run all` working).
+
+To stop and clear directories, use `npm run cleanup` in a separate console.
+
+To restart the tests from scratch just run `npm run all` again.
+
+To watch on blocks and transactions, use `npm run watcher` in a separate console.
+
+The full tests may take about 30 minutes.
 
 
 ## Development
