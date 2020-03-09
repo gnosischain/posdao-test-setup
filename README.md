@@ -18,9 +18,9 @@ So there should be two folders on the same level and `posdao-test-setup` will us
 If you want to compile specific branch/version, you can clone it directly and build the binary
 ```bash
 # move up from posdao-test-setup root
-cd ..
-git clone -b posdao-backport https://github.com/poanetwork/open-ethereum
-cd open-ethereum
+$ cd ..
+$ git clone -b posdao-backport https://github.com/poanetwork/open-ethereum
+$ cd open-ethereum
 #
 # Next step assumes you have Rust and required dependencies installed,
 # for details please check https://github.com/OpenEthereum/open-ethereum/blob/master/README.md
@@ -29,29 +29,29 @@ cd open-ethereum
 # in `open-ethereum` folder.
 #
 # Build the binary
-cargo build --release --features final
+$ cargo build --release --features final
 ```
 
 To save time, you can download a pre-compiled binary from the [releases page](https://github.com/poanetwork/open-ethereum/releases). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
-cd ..
-mkdir -p open-ethereum/target/release/
+$ cd ..
+$ mkdir -p open-ethereum/target/release/
 # an example for macOS binary
-curl -SfL 'https://github.com/poanetwork/open-ethereum/releases/download/v2.7.2-posdao-stable/parity-macos.zip' -o open-ethereum/target/release/parity-macos.zip
-unzip open-ethereum/target/release/parity-macos.zip -d open-ethereum/target/release
-chmod +x open-ethereum/target/release/parity
+$ curl -SfL 'https://github.com/poanetwork/open-ethereum/releases/download/v2.7.2-posdao-stable/parity-macos.zip' -o open-ethereum/target/release/parity-macos.zip
+$ unzip open-ethereum/target/release/parity-macos.zip -d open-ethereum/target/release
+$ chmod +x open-ethereum/target/release/parity
 # check that it works and version is correct (compare the version from the binary with version on the release page)
-open-ethereum/target/release/parity --version
+$ open-ethereum/target/release/parity --version
 ```
 
 As it was noted above, this setup requires having two different Open Ethereum binaries: `v2.6.8-beta` and `v2.7.2-posdao-stable`. The directory `open-ethereum/target/release` must contain two binaries: `parity268` (v2.6.8-beta) and `parity` (v2.7.2-posdao-stable). So, after v2.7.2 is built or downloaded to `open-ethereum/target/release` (according to the above instructions), the `v2.6.8-beta` must also be downloaded to the same directory:
 
 ```bash
-curl -SfL 'https://releases.parity.io/ethereum/v2.6.8/x86_64-apple-darwin/parity' -o open-ethereum/target/release/parity268
-chmod +x open-ethereum/target/release/parity268
+$ curl -SfL 'https://releases.parity.io/ethereum/v2.6.8/x86_64-apple-darwin/parity' -o open-ethereum/target/release/parity268
+$ chmod +x open-ethereum/target/release/parity268
 # check that it works and version is correct (must be v2.6.8-beta)
-open-ethereum/target/release/parity268 --version
+$ open-ethereum/target/release/parity268 --version
 ```
 
 
@@ -78,7 +78,7 @@ To add a new validator node, Open Ethereum should generate an account together w
 secret key like so:
 
 ```
-parity account new --config config/nodeX.toml --keys-path parity-data/nodeX/keys
+$ parity account new --config config/nodeX.toml --keys-path parity-data/nodeX/keys
 ```
 
 given a node configuration file `config/nodeX.toml` and a newly created
