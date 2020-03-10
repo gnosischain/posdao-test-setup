@@ -28,23 +28,19 @@ var StakingTokenContract;
 describe('Initialize contract instances', () => {
     it('Done', async () => {
         ValidatorSetAuRa = new web3.eth.Contract(
-          require(`${constants.ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
-          getValidatorSetContractAddress()
+            require(`${constants.ARTIFACTS_PATH}ValidatorSetAuRa.json`).abi,
+            getValidatorSetContractAddress()
         );
         BlockRewardAuRa = new web3.eth.Contract(
-          require(`${constants.ARTIFACTS_PATH}BlockRewardAuRa.json`).abi,
-          await ValidatorSetAuRa.methods.blockRewardContract().call()
+            require(`${constants.ARTIFACTS_PATH}BlockRewardAuRa.json`).abi,
+            await ValidatorSetAuRa.methods.blockRewardContract().call()
         );
         StakingAuRa = new web3.eth.Contract(
-          require(`${constants.ARTIFACTS_PATH}StakingAuRa.json`).abi,
-          await ValidatorSetAuRa.methods.stakingContract().call()
-        );
-        const StakingTokenContractCompiled = await compile(
-            __dirname + '/../posdao-contracts/test/mockContracts/',
-            'ERC677BridgeTokenRewardableMock'
+            require(`${constants.ARTIFACTS_PATH}StakingAuRa.json`).abi,
+            await ValidatorSetAuRa.methods.stakingContract().call()
         );
         StakingTokenContract = new web3.eth.Contract(
-            StakingTokenContractCompiled.abi,
+            require(`${constants.ARTIFACTS_PATH}ERC677BridgeTokenRewardable.json`).abi,
             await StakingAuRa.methods.erc677TokenContract().call()
         );
     });

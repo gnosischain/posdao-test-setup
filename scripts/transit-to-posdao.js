@@ -23,27 +23,10 @@ async function main() {
   const lastBlockProcessed = await oldBlockRewardContract.methods.lastBlockProcessed().call();
   assert(lastBlockProcessed == await web3.eth.getBlockNumber() && lastBlockProcessed != 0);
 
-  console.log('Deploying STAKE token contract...');
-
-  // Compile STAKE token contract
-  const tokenContractCompiled = await compile(
-    __dirname + '/../posdao-contracts/test/mockContracts/',
-    'ERC677BridgeTokenRewardableMock'
-  );
-
-  // Deploy STAKE token contract
-  let tokenContract = new web3.eth.Contract(tokenContractCompiled.abi);
-  tokenContract = await tokenContract
-    .deploy({
-      data: tokenContractCompiled.bytecode,
-      arguments: ['STAKE', 'STAKE', 18]
-    })
-    .send({
-      from: process.env.OWNER,
-      gas: '4700000',
-      gasPrice: '0'
-    });
-  console.log(`  address: ${tokenContract.options.address}`);
+  // Build and deploy STAKE token contract
+  const tokenContract = await deploy('ERC677BridgeTokenRewardable', [
+    'STAKE', 'STAKE', 18
+  ]);
 
   // Build and deploy POSDAO contracts
   const validatorSetContract = await deploy('ValidatorSetAuRa');
