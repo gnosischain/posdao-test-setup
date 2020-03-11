@@ -134,11 +134,13 @@ async function main() {
   console.log('Initialize Random contract...');
   await randomContract.methods.initialize(
     process.env.COLLECT_ROUND_LENGTH,
-    validatorSetContract.options.address
+    validatorSetContract.options.address,
+    true
   ).send(txSendOptions);
   assert(await randomContract.methods.isInitialized().call());
   assert(await randomContract.methods.validatorSetContract().call() == validatorSetContract.options.address);
   assert(await randomContract.methods.collectRoundLength().call() == process.env.COLLECT_ROUND_LENGTH);
+  assert(await randomContract.methods.punishForUnreveal().call() == true);
 
   console.log('Initialize TxPermission contract...');
   await txPermissionContract.methods.initialize(
