@@ -317,8 +317,7 @@ async function deploy(contractName, constructorArguments = null) {
         data: adminUpgradeabilityProxyJSON.bytecode,
         arguments: [
           contract.options.address, // implementation address
-          process.env.OWNER, // admin (owner)
-          []
+          process.env.OWNER // admin (owner)
         ]
       })
       .send({
