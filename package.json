@@ -8,7 +8,7 @@
     "get-all-submodules": "git submodule update --init --remote",
     "compile-posdao-contracts": "cd ./posdao-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js && node ../scripts/copy-spec.js",
-    "start-test-setup": "bash scripts/start-test-setup ../open-ethereum/target/release/parity && (node scripts/watchOrdinaryNode.js &) && node scripts/deploy-staking-token.js && (node scripts/watchRandomSeed &) && (node scripts/emitInitiateChange &)",
+    "start-test-setup": "bash scripts/start-test-setup ../open-ethereum/target/release/open-ethereum && (node scripts/watchOrdinaryNode.js &) && node scripts/deploy-staking-token.js && (node scripts/watchRandomSeed &) && (node scripts/emitInitiateChange &)",
     "test": "node_modules/.bin/mocha --bail --timeout 1200000 && npm run watcher",
     "stop-test-setup": "bash scripts/stop-test-setup",
     "watcher": "node scripts/watcher.js"

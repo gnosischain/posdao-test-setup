@@ -13,7 +13,7 @@ To integrate with [Open Ethereum](https://github.com/OpenEthereum/open-ethereum)
 ├── open-ethereum
 ├── posdao-test-setup
 ```
-So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `open-ethereum` folder, namely the binary is assumed to be at `../open-ethereum/target/release/parity` relative to `posdao-test-setup` root.
+So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `open-ethereum` folder, namely the binary is assumed to be at `../open-ethereum/target/release/open-ethereum` relative to `posdao-test-setup` root.
 
 If you want to compile a specific branch/version of `Open Ethereum`, you can clone it directly and build the binary
 ```bash
@@ -38,10 +38,10 @@ To save time, you can download a pre-compiled binary from the [releases page](ht
 $ cd ..
 $ mkdir -p open-ethereum/target/release/
 # an example for macOS binary
-$ curl -SfL 'https://releases.parity.io/ethereum/stable/x86_64-apple-darwin/parity' -o open-ethereum/target/release/parity
-$ chmod +x open-ethereum/target/release/parity
+$ curl -SfL 'https://releases.parity.io/ethereum/stable/x86_64-apple-darwin/parity' -o open-ethereum/target/release/open-ethereum
+$ chmod +x open-ethereum/target/release/open-ethereum
 # check that it works and version is correct (compare the version from the binary with version on the release page)
-$ open-ethereum/target/release/parity --version
+$ open-ethereum/target/release/open-ethereum --version
 ```
 
 
