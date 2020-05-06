@@ -24,8 +24,9 @@ async function main() {
   assert(lastBlockProcessed == await web3.eth.getBlockNumber() && lastBlockProcessed != 0);
 
   // Build and deploy STAKE token contract
+  const netId = await web3.eth.net.getId();
   const tokenContract = await deploy('ERC677BridgeTokenRewardable', [
-    'STAKE', 'STAKE', 18
+    'STAKE', 'STAKE', 18, netId
   ]);
 
   // Build and deploy POSDAO contracts
