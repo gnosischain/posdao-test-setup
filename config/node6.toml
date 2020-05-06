@@ -25,9 +25,6 @@ disable = true
 [secretstore]
 disable = true
 
-[ipfs]
-enable = false
-
 [account]
 unlock = ["0x720e118ab1006cc97ed2ef6b4b49ac04bb3aa6d9"]
 password = ["config/password"]

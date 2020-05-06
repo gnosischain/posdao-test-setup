@@ -67,9 +67,8 @@ async function main() {
 
 
   if (isVersionGte(2,7,0)) { // if this is Open Ethereum >= v2.7.0
-    if (!isVersionGte(2,7,3) && stdout.indexOf('posdao') == -1) { // if this is Open Ethereum < v2.7.3 and not v2.7.2-posdao-stable
+    if (!isVersionGte(3,0,0) && stdout.indexOf('posdao') == -1) { // if this is Open Ethereum < v3.0.0 and not v2.7.2-posdao-stable
       // Remove `posdaoTransition` option as it is not released yet.
-      // Waiting for https://github.com/OpenEthereum/open-ethereum/pull/11245 to be included to release.
       delete specFile.engine.authorityRound.params.posdaoTransition;
     }
 

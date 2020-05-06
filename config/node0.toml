@@ -24,8 +24,5 @@ disable = true
 [secretstore]
 disable = true
 
-[ipfs]
-enable = false
-
 [misc]
 logging = "engine=trace,miner=trace,reward=trace"
