@@ -56,13 +56,14 @@ async function main() {
     let compiledContract = compileContract();
     let abi = compiledContract.abi;
     let bytecode = compiledContract.evm.bytecode.object;
+    const netId = await web3.eth.net.getId();
 
     let contract = new web3.eth.Contract(abi);
-    console.log('**** Deploying StakingToken');
+    console.log(`**** Deploying StakingToken. netId = ${netId}`);
     let StakingTokenInstance = await contract
         .deploy({
             data: '0x' + bytecode,
-            arguments: [tokenName, tokenSymbol, tokenDecimals],
+            arguments: [tokenName, tokenSymbol, tokenDecimals, netId],
         })
         .send({
             from: OWNER,
