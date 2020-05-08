@@ -18,8 +18,8 @@ const expect = require('chai')
     .expect;
 const pp = require('../utils/prettyPrint');
 const mintCoinsToCandidates = require('./mint-coins-to-candidates');
-let tokenName = 'POSDAO';
-let tokenSymbol = 'POS';
+let tokenName = 'STAKE';
+let tokenSymbol = 'STAKE';
 let tokenDecimals = 18;
 
 function compileContract() {
