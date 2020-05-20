@@ -44,7 +44,7 @@ async function main() {
   console.log('Step duration will be changed at ', new Date(newStepDurationTimestamp * 1000).toLocaleTimeString('en-US'));
 
   const exec = promisify(require('child_process').exec);
-  const { stdout, stderr } = await exec('../../open-ethereum/target/release/parity --version');
+  const { stdout, stderr } = await exec('../../openethereum/target/release/openethereum --version');
 
   assert(!stderr);
 
@@ -66,13 +66,13 @@ async function main() {
 
 
 
-  if (isVersionGte(2,7,0)) { // if this is Open Ethereum >= v2.7.0
-    if (!isVersionGte(3,0,0) && stdout.indexOf('posdao') == -1) { // if this is Open Ethereum < v3.0.0 and not v2.7.2-posdao-stable
+  if (isVersionGte(2,7,0)) { // if this is OpenEthereum >= v2.7.0
+    if (!isVersionGte(3,0,0) && stdout.indexOf('posdao') == -1) { // if this is OpenEthereum < v3.0.0 and not v2.7.2-posdao-stable
       // Remove `posdaoTransition` option as it is not released yet.
       delete specFile.engine.authorityRound.params.posdaoTransition;
     }
 
-    // Apply a new format to spec.json (the new format is actual beginning from Open Ethereum 2.6.5-beta)
+    // Apply a new format to spec.json (the new format is actual beginning from OpenEthereum 2.6.5-beta)
     const accounts = Object.keys(specFile.accounts);
     for (let i = 0; i < accounts.length; i++) {
       const address = accounts[i];
