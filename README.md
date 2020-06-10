@@ -32,7 +32,7 @@ $ cd openethereum
 $ cargo build --release --features final
 ```
 
-To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/openethereum/releases). But you still need to maintain directory structure and naming conventions:
+To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/openethereum/releases) (>= v3.0.0 is supported). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
