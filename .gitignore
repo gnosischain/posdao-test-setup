@@ -27,16 +27,16 @@ accounts/keystore/*
 
 
 # Logs
-/parity-data/node[0-9]*/network/
-/parity-data/node[0-9]*/chains/
-/parity-data/node[0-9]*/log
-/parity-data/node0/blocks.log
-/parity-data/node0/check.log
-/parity-data/node1/checkRandomSeed.log
-/parity-data/node1/checkRandomSeedDebug.log
-/parity-data/reserved-peers
-/parity-data/spec.json
-/parity-data/StakingToken.json
+/data/node[0-9]*/network/
+/data/node[0-9]*/chains/
+/data/node[0-9]*/log
+/data/node0/blocks.log
+/data/node0/check.log
+/data/node1/checkRandomSeed.log
+/data/node1/checkRandomSeedDebug.log
+/data/reserved-peers
+/data/spec.json
+/data/StakingToken.json
 
 # NPM files
 /node_modules/

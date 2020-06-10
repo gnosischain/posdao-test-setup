@@ -10,7 +10,7 @@ const web3Val = new Web3('http://localhost:8541');
 // block time
 const blockTimeMS = 2539;
 
-const node0Path = '../parity-data/node0/';
+const node0Path = '../data/node0/';
 const blocksLogFileName = path.join(__dirname, `${node0Path}blocks.log`);
 const checkLogFileName = path.join(__dirname, `${node0Path}check.log`);
 

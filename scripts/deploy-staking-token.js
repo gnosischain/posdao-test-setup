@@ -73,9 +73,9 @@ async function main() {
     let address = StakingTokenInstance.options.address;
     console.log('**** StakingToken deployed at:', address);
 
-    console.log('**** Saving output to parity-data');
+    console.log('**** Saving output to ./data');
     let runtimeData = { abi, address };
-    fs.writeFileSync(path.join(__dirname, '../parity-data/StakingToken.json'), JSON.stringify(runtimeData, null, 4));
+    fs.writeFileSync(path.join(__dirname, '../data/StakingToken.json'), JSON.stringify(runtimeData, null, 4));
 
     let tx;
 

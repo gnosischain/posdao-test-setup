@@ -1,6 +1,6 @@
 [parity]
-chain = "./parity-data/spec.json"
-base_path = "parity-data/node0"
+chain = "./data/spec.json"
+base_path = "data/node0"
 
 [ui]
 disable = true

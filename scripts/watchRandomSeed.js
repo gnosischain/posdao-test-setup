@@ -11,7 +11,7 @@ const web3 = new Web3('http://localhost:8541');
 
 const checkIntervalMS = 2539; // should be less than block time
 
-const node1Path = '../parity-data/node1/';
+const node1Path = '../data/node1/';
 const checkLogFileName = path.join(__dirname, `${node1Path}/checkRandomSeed.log`);
 const checkDebugFileName = path.join(__dirname, `${node1Path}/checkRandomSeedDebug.log`);
 fs.writeFileSync(checkLogFileName, '', 'utf8');

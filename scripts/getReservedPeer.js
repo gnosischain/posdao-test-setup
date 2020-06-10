@@ -17,7 +17,7 @@ async function main() {
     try {
       const enodeURL = await getEnodeURL(cmd);
       console.log("enode URL: " + enodeURL);
-      fs.appendFileSync("parity-data/reserved-peers", enodeURL + os.EOL);
+      fs.appendFileSync("data/reserved-peers", enodeURL + os.EOL);
       break;
     } catch(e) {
       if (i <= maxAttempts) {

@@ -1,6 +1,6 @@
 [parity]
-chain = "./parity-data/spec.json"
-base_path = "parity-data/node1"
+chain = "./data/spec.json"
+base_path = "data/node1"
 
 [ui]
 disable = true
@@ -9,7 +9,7 @@ disable = true
 port = 30301
 nat = "none"
 interface = "local"
-reserved_peers="parity-data/reserved-peers"
+reserved_peers="data/reserved-peers"
 
 [rpc]
 cors = ["all"]

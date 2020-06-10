@@ -1,6 +1,6 @@
 [parity]
-chain = "./parity-data/spec.json"
-base_path = "parity-data/node6"
+chain = "./data/spec.json"
+base_path = "data/node6"
 
 [ui]
 disable = true
@@ -8,7 +8,7 @@ disable = true
 [network]
 port = 30306
 discovery = true
-reserved_peers="parity-data/reserved-peers"
+reserved_peers="data/reserved-peers"
 nat = "none"
 interface = "local"
 

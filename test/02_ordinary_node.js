@@ -5,7 +5,7 @@ const expect = require('chai')
     .use(require('chai-as-promised'))
     .expect;
 
-const node0Path = '../parity-data/node0';
+const node0Path = '../data/node0';
 const blocks_fname = path.join(__dirname, `${node0Path}/blocks.log`);
 const check_fname = path.join(__dirname, `${node0Path}/check.log`);
 

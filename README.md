@@ -67,13 +67,13 @@ To add a new validator node, OpenEthereum should generate an account together wi
 secret key like so:
 
 ```
-$ ./openethereum/target/release/openethereum account new --config config/nodeX.toml --keys-path ./posdao-test-setup/parity-data/nodeX/keys
+$ ./openethereum/target/release/openethereum account new --config config/nodeX.toml --keys-path ./posdao-test-setup/data/nodeX/keys
 ```
 
 given a node configuration file `config/nodeX.toml` and a newly created
-directory `parity-data/nodeX/keys`. `config/nodeX.toml` should then be amended
+directory `data/nodeX/keys`. `config/nodeX.toml` should then be amended
 with the validator address output by the above command. Also, the keys directory
-`parity-data/nodeX/keys` should be committed to the Git repository: it is a part
+`data/nodeX/keys` should be committed to the Git repository: it is a part
 of persistent OpenEthereum state which should be kept across state resets which happen
 when you run `npm run all`.
 

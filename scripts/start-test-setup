@@ -7,6 +7,6 @@ set -x
 
 OPENETHEREUM=$1
 for i in $(seq 0 6); do
-    "$OPENETHEREUM" --config "./config/node${i}.toml" >> "./parity-data/node${i}/log" 2>&1 &
+    "$OPENETHEREUM" --config "./config/node${i}.toml" >> "./data/node${i}/log" 2>&1 &
     node ./scripts/getReservedPeer.js "$i"
 done

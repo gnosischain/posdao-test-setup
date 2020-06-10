@@ -22,7 +22,7 @@ async function main() {
   console.log();
   console.log();
 
-  await promisify(fs.writeFile)(__dirname + '/../parity-data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
+  await promisify(fs.writeFile)(__dirname + '/../data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 
 main();

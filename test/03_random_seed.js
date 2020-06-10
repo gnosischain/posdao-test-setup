@@ -5,7 +5,7 @@ const expect = require('chai')
     .use(require('chai-as-promised'))
     .expect;
 
-const node1Path = '../parity-data/node1';
+const node1Path = '../data/node1';
 const seed_fname = path.join(__dirname, `${node1Path}/checkRandomSeed.log`);
 const seed_debug_fname = path.join(__dirname, `${node1Path}/checkRandomSeedDebug.log`);
 
