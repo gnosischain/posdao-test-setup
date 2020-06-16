@@ -5,8 +5,8 @@ set -u
 set -e
 set -x
 
-OPENETHEREUM=$1
+NETHERMIND=$1
 for i in $(seq 0 6); do
-    "$OPENETHEREUM" --config "./config/node${i}.toml" >> "./data/node${i}/log" 2>&1 &
+    dotnet "$NETHERMIND" --config "./config/node${i}.cfg" >> "./data/node${i}/log" 2>&1 &
     node ./scripts/getReservedPeer.js "$i"
 done
