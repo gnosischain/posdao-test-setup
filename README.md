@@ -19,30 +19,24 @@ If you want to compile a specific branch/version of `OpenEthereum`, you can clon
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
-$ git clone https://github.com/openethereum/openethereum
-$ cd openethereum
+$ git clone https://github.com/NethermindEth/nethermind.git
+$ cd nethermind
+$ git submodule init
+$ git submodule update
 #
-# Next step assumes you have Rust and required dependencies installed,
-# for details please check https://github.com/openethereum/openethereum#readme
-# Note that you can instruct Rust to always use the latest stable version for this project by running
-#     $ rustup override set stable
-# in `openethereum` folder.
-#
+# Next step assumes you have dotnet core installed,
 # Build the binary
-$ cargo build --release --features final
+$ dotnet build nethermind/src/Nethermind/Nethermind.sln -c Release -o ./nethermind/bin
 ```
 
-To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/openethereum/releases) (>= v3.0.0 is supported). But you still need to maintain directory structure and naming conventions:
+To save time, you can download a pre-compiled binary from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.8.52 is supported). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
-$ mkdir -p openethereum/target/release/
-# an example for macOS binary
+$ mkdir -p nethermind/bin
+# an example for linux binary
 $ curl -SfL 'https://github.com/openethereum/openethereum/releases/download/v3.0.0/openethereum-macos-v3.0.0.zip' -o openethereum/target/release/openethereum.zip
-$ unzip openethereum/target/release/openethereum.zip -d openethereum/target/release
-$ chmod +x openethereum/target/release/openethereum
-# check that it works and version is correct (compare the version from the binary with version on the release page)
-$ openethereum/target/release/openethereum --version
+$ unzip onethermind/bin/nethermind.zip -d nethermind/bin
 ```
 
 
