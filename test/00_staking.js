@@ -18,7 +18,7 @@ const StakingTokenContract = require('../utils/getContract')('StakingToken', web
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
-const REVERT_EXCEPTION_MSG = 'The execution failed due to an exception';
+const REVERT_EXCEPTION_MSG = 'revert';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
 describe('Candidates place stakes on themselves', () => {
