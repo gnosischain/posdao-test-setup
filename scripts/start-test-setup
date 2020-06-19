@@ -7,6 +7,6 @@ set -x
 
 NETHERMIND=$1
 for i in $(seq 0 6); do
-    dotnet "$NETHERMIND" -l debug --config "./config/node${i}.cfg" >> "./data/node${i}/log" 2>&1 &
+    dotnet "$NETHERMIND" -l trace --config "./config/node${i}.cfg" >> "./data/node${i}/log" 2>&1 &
     node ./scripts/getReservedPeer.js "$i"
 done
