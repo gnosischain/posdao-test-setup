@@ -1,0 +1,39 @@
+{
+  "Init": {
+    "WebSocketsEnabled": true,
+    "StoreReceipts" : true,    
+    "IsMining": true,
+    "ChainSpecPath": "./data/spec.json",  
+    "GenesisHash": "0x06bcc4ab6d275d24d068fcb1ec3cbf3a6cf443092470147a1f9663af0882e9a1",
+    "BaseDbPath": "./data/node0",
+    "LogDirectory": "./data/node0",
+    "LogFileName": "nethermind.logs.txt",
+    "StaticNodesPath": "./data/reserved-peers"
+  },
+  "Network": {
+    "DiscoveryPort": 30300,
+    "P2PPort": 30300
+  },
+  "JsonRpc": {
+    "Enabled": true,
+    "Host": "127.0.0.1",
+    "Port": 8540,
+    "WebSocketsPort": 9540
+  },
+  "Db": {
+    "WriteBufferSize": 16000000,
+    "WriteBufferNumber": 4,
+    "BlockCacheSize": 128000000,
+    "CacheIndexAndFilterBlocks": true,
+    "BlockInfosDbCacheIndexAndFilterBlocks": false,
+    "HeadersDbCacheIndexAndFilterBlocks": false,
+    "BlocksDbCacheIndexAndFilterBlocks": false    
+  },
+  "Sync": {
+    "FastSync": false
+  },
+  "KeyStore":
+  {
+    "KeyStoreDirectory": "./data/node0/keys/DPoSChain"
+  }
+}

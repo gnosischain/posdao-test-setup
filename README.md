@@ -1,11 +1,13 @@
-# OpenEthereum proof-of-stake test setup
+# POSDAO test setup
 
-This is an integration test of AuRa POSDAO with seven OpenEthereum nodes running locally from the genesis block.
+This is an integration test of AuRa POSDAO with seven OpenEthereum (or Nethermind) nodes running locally from the genesis block.
 
 To test a migration from POA to POSDAO, please use another branch: [`migrate-poa-to-posdao`](https://github.com/poanetwork/posdao-test-setup/tree/migrate-poa-to-posdao#readme).
 
 
-## Requirements
+## Ethereum client installation
+
+### OpenEthereum
 
 To integrate with [OpenEthereum](https://github.com/openethereum/openethereum), the following structure of folders is assumed:
 ```
@@ -45,35 +47,58 @@ $ chmod +x openethereum/target/release/openethereum
 $ openethereum/target/release/openethereum --version
 ```
 
+### Nethermind
+
+To integrate with [Nethermind](https://github.com/NethermindEth/nethermind), the following structure of folders is assumed:
+```
+.
+├── nethermind
+├── posdao-test-setup
+```
+So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `nethermind` folder, namely the binary is assumed to be at `../nethermind/bin/Nethermind.Runner` relative to `posdao-test-setup` root.
+
+A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.8.77 is supported). You need to maintain directory structure and naming conventions:
+```bash
+# move up from posdao-test-setup root
+$ cd ..
+$ mkdir -p nethermind/bin
+# an example for Linux binary
+$ curl -SfL 'https://github.com/NethermindEth/nethermind/releases/download/1.8.77/nethermind-linux-amd64-1.8.77-9d3a58a-20200723.zip' -o nethermind/bin/nethermind.zip
+$ unzip nethermind/bin/nethermind.zip -d nethermind/bin
+$ chmod +x nethermind/bin/Nethermind.Runner
+# check that it works and version is correct (compare the version from the binary with version on the release page)
+$ nethermind/bin/Nethermind.Runner --version
+```
+
 
 ## Usage
 
-After `OpenEthereum` client is downloaded or built (see above), the integration test can be launched with `npm run all` (in the root of `posdao-test-setup` working directory).
+After OpenEthereum client is downloaded or built (see above), the integration test can be launched with `npm run all` (in the root of `posdao-test-setup` working directory). To use Nethermind client instead, the integration test should be launched with `npm run all-nethermind`.
 
-To stop the tests, use `npm run stop-test-setup` (or just use `CTRL+C` in the console while `npm run all` working).
+To stop the tests, use `npm run stop-test-setup` (or just use `CTRL+C` in the console).
 
 To stop and clear directories, use `npm run cleanup` in a separate console.
 
-To restart the tests from scratch just run `npm run all` again.
+To restart the tests from scratch just run `npm run all` (or `npm run all-nethermind`) again.
 
-To watch on blocks and transactions, use `npm run watcher` in a separate console.
+To monitor blocks and transactions, use `npm run watcher` in a separate console.
 
 
 ## Development
 
-### Adding new validator nodes and their keys
+### Adding new validator nodes and their keys (for OpenEthereum client only)
 
 To add a new validator node, OpenEthereum should generate an account together with its
 secret key like so:
 
 ```
-$ ./openethereum/target/release/openethereum account new --config config/nodeX.toml --keys-path ./posdao-test-setup/data/nodeX/keys
+$ ./openethereum/target/release/openethereum account new --config config/nodeX.openethereum.toml --keys-path ./posdao-test-setup/data/nodeX/keys
 ```
 
-given a node configuration file `config/nodeX.toml` and a newly created
-directory `data/nodeX/keys`. `config/nodeX.toml` should then be amended
+given a node configuration file `config/nodeX.openethereum.toml` and a newly created
+directory `data/nodeX/keys`. `config/nodeX.openethereum.toml` should then be amended
 with the validator address output by the above command. Also, the keys directory
-`data/nodeX/keys` should be committed to the Git repository: it is a part
+`data/nodeX/keys` should be committed to the Git repository: it is part
 of persistent OpenEthereum state which should be kept across state resets which happen
 when you run `npm run all`.
 

@@ -1,0 +1,47 @@
+{
+  "Init": {
+    "WebSocketsEnabled": true,
+    "StoreReceipts" : true,    
+    "IsMining": true,
+    "ChainSpecPath": "./data/spec.json",  
+    "GenesisHash": "0x06bcc4ab6d275d24d068fcb1ec3cbf3a6cf443092470147a1f9663af0882e9a1",
+    "BaseDbPath": "./data/node2",
+    "LogDirectory": "./data/node2",
+    "LogFileName": "nethermind.logs.txt",
+    "StaticNodesPath": "./data/reserved-peers"
+  },
+  "Network": {
+    "DiscoveryPort": 30302,
+    "P2PPort": 30302
+  },
+  "JsonRpc": {
+    "Enabled": true,
+    "Host": "127.0.0.1",
+    "Port": 8542,
+    "WebSocketsPort": 9542
+  },
+  "Db": {
+    "WriteBufferSize": 16000000,
+    "WriteBufferNumber": 4,
+    "BlockCacheSize": 128000000,
+    "CacheIndexAndFilterBlocks": true,
+    "BlockInfosDbCacheIndexAndFilterBlocks": false,
+    "HeadersDbCacheIndexAndFilterBlocks": false,
+    "BlocksDbCacheIndexAndFilterBlocks": false    
+  },
+  "Sync": {
+    "FastSync": false
+  },
+  "Aura":
+  {
+    "ForceSealing": true,
+    "AllowAuRaPrivateChains": true
+  },
+  "KeyStore":
+  {
+    "BlockAuthorAccount": "0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441",
+    "PasswordFiles": ["./config/password"],
+    "UnlockAccounts": ["0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441"],
+    "KeyStoreDirectory": "./data/node2/keys/DPoSChain"
+  }
+}

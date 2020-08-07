@@ -18,7 +18,8 @@ const StakingTokenContract = require('../utils/getContract')('StakingToken', web
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
 const pp = require('../utils/prettyPrint');
-const REVERT_EXCEPTION_MSG = 'The execution failed due to an exception';
+const FAILED_EXCEPTION_MSG = 'The execution failed due to an exception';
+const REVERT_EXCEPTION_MSG = 'revert';
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
 describe('Candidates place stakes on themselves', () => {
@@ -267,7 +268,8 @@ describe('Candidates place stakes on themselves', () => {
             expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
         }
         catch (e) {
-            expect(e && e.toString().includes(REVERT_EXCEPTION_MSG), `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
+            const eString = e ? e.toString() : '';
+            expect(e && (eString.includes(FAILED_EXCEPTION_MSG) || eString.includes(REVERT_EXCEPTION_MSG)), `Tx threw an unexpected exception: ` + eString).to.equal(true);
         }
 
         console.log('**** Delegator can\'t move more staking tokens than one has');
@@ -281,7 +283,8 @@ describe('Candidates place stakes on themselves', () => {
             expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
         }
         catch (e) {
-            expect(e && e.toString().includes(REVERT_EXCEPTION_MSG), `Tx threw an unexpected exception: ` + e.toString()).to.equal(true)
+            const eString = e ? e.toString() : '';
+            expect(e && (eString.includes(FAILED_EXCEPTION_MSG) || eString.includes(REVERT_EXCEPTION_MSG)), `Tx threw an unexpected exception: ` + eString).to.equal(true);
         }
     });
 

@@ -5,8 +5,13 @@ set -u
 set -e
 set -x
 
-OPENETHEREUM=$1
+CLIENT=$1
+if [[ $CLIENT == *"openethereum"* ]]; then
+    extension="openethereum.toml"
+else
+    extension="nethermind.json"
+fi
 for i in $(seq 0 6); do
-    "$OPENETHEREUM" --config "./config/node${i}.toml" >> "./data/node${i}/log" 2>&1 &
+    "$CLIENT" --config "./config/node${i}.${extension}" >> "./data/node${i}/log" 2>&1 &
     node ./scripts/getReservedPeer.js "$i"
 done
