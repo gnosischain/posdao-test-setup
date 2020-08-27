@@ -8,6 +8,7 @@ const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const web3 = new Web3('http://localhost:8541');
 web3.eth.transactionConfirmationBlocks = 1;
+web3.eth.transactionPollingTimeout = 30;
 const BN = web3.utils.BN;
 const BlockRewardAuRa = require(path.join(__dirname, '../utils/getContract'))('BlockRewardAuRa', web3);
 const StakingAuRa = require(path.join(__dirname, '../utils/getContract'))('StakingAuRa', web3);
