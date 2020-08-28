@@ -43,5 +43,9 @@
     "PasswordFiles": ["./config/password"],
     "UnlockAccounts": ["0xbe69eb0968226a1808975e1a1f2127667f2bffb3"],
     "KeyStoreDirectory": "./data/node5/keys/DPoSChain"
+  },
+  "MiningConfig":
+  {
+    "MinGasPrice": "1000000000"
   }
 }
