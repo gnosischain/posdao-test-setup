@@ -46,6 +46,7 @@
   },
   "MiningConfig":
   {
-    "MinGasPrice": "1000000000"
+    "MinGasPrice": "1000000000",
+    "TargetBlockGasLimit": "10000000"
   }
 }
