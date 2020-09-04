@@ -24,7 +24,7 @@ contractNameByAddress[validatorSetContract.options.address] = 'ValidatorSetAuRa'
 contractNameByAddress[stakingContract.options.address] = 'StakingAuRa';
 contractNameByAddress[randomContract.options.address] = 'RandomAuRa';
 
-let prevBlockNumber = 0;
+let prevBlock = null;
 
 main();
 
@@ -32,9 +32,7 @@ async function main() {
   while (true) {
     const block = await web3.eth.getBlock('latest', true);
 
-    if (block.number > prevBlockNumber) {
-      prevBlockNumber = block.number;
-    } else {
+    if (prevBlock && block.number <= prevBlock.number) {
       await sleep(500);
       continue;
     }
@@ -43,6 +41,9 @@ async function main() {
     console.log(`  Gas used:  ${block.gasUsed} [${block.transactions.length} txs]`);
     console.log(`  Gas limit: ${block.gasLimit}`);
     console.log(`  Validator: ${block.miner}`);
+    if (prevBlock) {
+      console.log(`  Timestamp delta from prevBlock: ${block.timestamp - prevBlock.timestamp}`);
+    }
     console.log('');
 
     const stakingEpoch = await stakingContract.methods.stakingEpoch().call();
@@ -139,6 +140,8 @@ async function main() {
     console.log('=======================================================');
     console.log('');
     console.log('');
+
+    prevBlock = block;
   }
 }
 
