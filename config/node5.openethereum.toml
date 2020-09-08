@@ -32,7 +32,7 @@ password = ["config/password"]
 [mining]
 force_sealing = true
 min_gas_price = 1000000000
-gas_floor_target = "10000000"
+gas_floor_target = "12000000"
 engine_signer = "0xbe69eb0968226a1808975e1a1f2127667f2bffb3"
 reseal_on_txs = "none"
 extra_data = "Parity"
