@@ -59,9 +59,10 @@ async function main() {
     let bytecode = compiledContract.evm.bytecode.object;
     const netId = await web3.eth.net.getId();
 
-    let contract = new web3.eth.Contract(abi);
     console.log(`**** Deploying StakingToken. netId = ${netId}`);
-    let StakingTokenInstance = await contract
+    const contract = new web3.eth.Contract(abi);
+    // Deploy using eth_sendTransaction
+    const StakingTokenInstance = await contract
         .deploy({
             data: '0x' + bytecode,
             arguments: [tokenName, tokenSymbol, tokenDecimals, netId],
@@ -69,8 +70,23 @@ async function main() {
         .send({
             from: OWNER,
             gas: '4700000',
-            gasPrice: '0',
+            gasPrice: '0'
         });
+    /*
+    // Deploy using eth_sendRawTransaction
+    const stakingTokenDeploy = await contract.deploy({
+        data: '0x' + bytecode,
+        arguments: [tokenName, tokenSymbol, tokenDecimals, netId]
+    });
+    const stakingTokenDeployTxReceipt = await SnS(web3, {
+        from: OWNER,
+        method: stakingTokenDeploy,
+        gasLimit: '4700000',
+        gasPrice: '0'
+    });
+    const StakingTokenInstance = new web3.eth.Contract(abi, stakingTokenDeployTxReceipt.contractAddress);
+    */
+
     let address = StakingTokenInstance.options.address;
     console.log('**** StakingToken deployed at:', address);
 
