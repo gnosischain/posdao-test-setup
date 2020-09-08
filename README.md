@@ -63,7 +63,7 @@ A pre-compiled binary can be downloaded from the [releases page](https://github.
 $ cd ..
 $ mkdir -p nethermind/bin
 # an example for Linux binary
-$ curl -SfL 'https://nethdev.blob.core.windows.net/builds/nethermind-linux-amd64-1.8.80-1a21fe8.zip' -o nethermind/bin/nethermind.zip
+$ curl -SfL 'https://nethdev.blob.core.windows.net/builds/nethermind-linux-amd64-1.8.98-f9bc1c1.zip' -o nethermind/bin/nethermind.zip
 $ unzip nethermind/bin/nethermind.zip -d nethermind/bin
 $ chmod +x nethermind/bin/Nethermind.Runner
 # check that it works and version is correct (compare the version from the binary with version on the release page)
