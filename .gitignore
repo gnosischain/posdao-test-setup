@@ -38,6 +38,9 @@ accounts/keystore/*
 /data/spec.json
 /data/StakingToken.json
 
+# Empty files
+/data/node*/keys/DPoSChain/address_book.json
+
 # NPM files
 /node_modules/
 
