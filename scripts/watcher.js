@@ -6,6 +6,10 @@ const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:9541'));
 
 const artifactsPath = '../posdao-contracts/build/contracts/';
+const blockRewardContract = new web3.eth.Contract(
+  require(`${artifactsPath}BlockRewardAuRa.json`).abi,
+  '0x2000000000000000000000000000000000000001'
+);
 const validatorSetContract = new web3.eth.Contract(
   require(`${artifactsPath}ValidatorSetAuRa.json`).abi,
   '0x1000000000000000000000000000000000000001'
@@ -23,6 +27,7 @@ const contractNameByAddress = {};
 contractNameByAddress[validatorSetContract.options.address] = 'ValidatorSetAuRa';
 contractNameByAddress[stakingContract.options.address] = 'StakingAuRa';
 contractNameByAddress[randomContract.options.address] = 'RandomAuRa';
+contractNameByAddress[blockRewardContract.options.address] = 'BlockRewardAuRa';
 
 let prevBlock = null;
 

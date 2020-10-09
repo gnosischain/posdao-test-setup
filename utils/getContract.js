@@ -43,6 +43,14 @@ module.exports = function (contractName, web3) {
                 instance: new web3.eth.Contract(info.abi, info.address),
             };
 
+        case 'TxPriority':
+            abi = require('../posdao-contracts/build/contracts/TxPriority').abi;
+            return {
+                address: constants.TX_PRIORITY_CONTRACT_ADDRESS,
+                abi: abi,
+                instance: new web3.eth.Contract(abi, constants.TX_PRIORITY_CONTRACT_ADDRESS),
+            };
+
         default:
             throw new Error('Unknown contract ' + contractName);
     }
