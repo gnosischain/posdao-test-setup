@@ -36,7 +36,7 @@
   {
     "ForceSealing": true,
     "AllowAuRaPrivateChains": true,
-    "TransactionPriorityContractAddress": "0x4100000000000000000000000000000000000000"
+    "TxPriorityContractAddress": "0x4100000000000000000000000000000000000000"
   },
   "KeyStore":
   {

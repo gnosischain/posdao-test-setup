@@ -57,7 +57,7 @@ To integrate with [Nethermind](https://github.com/NethermindEth/nethermind), the
 ```
 So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `nethermind` folder, namely the binary is assumed to be at `../nethermind/bin/Nethermind.Runner` relative to `posdao-test-setup` root.
 
-A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.8.98 is supported). You need to maintain directory structure and naming conventions:
+A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.9.10 is supported). You need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
