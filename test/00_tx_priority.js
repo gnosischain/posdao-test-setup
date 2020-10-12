@@ -22,17 +22,42 @@ describe('TxPriority tests', () => {
   let delegatorMinStake;
 
   before(async function() {
+    /*
     const nodeInfo = await web3.eth.getNodeInfo();
     if (!nodeInfo.includes('Nethermind')) {
       console.log('    TxPriority tests will be skipped as they can only run with Nethermind');
       this.skip();
     } else {
+    */
       candidateMinStake = await StakingAuRa.instance.methods.candidateMinStake().call();
       delegatorMinStake = await StakingAuRa.instance.methods.delegatorMinStake().call();
+
+      const transactions = [{
+        // Set minter address to be able to mint coins through the BlockReward
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]).send,
+        from: OWNER,
+        gasPrice: gasPrice0
+      }, {
+        // Mint coins for the owner
+        method: BlockRewardAuRa.instance.methods.addExtraReceiver(web3.utils.toWei('1'), OWNER).send,
+        from: OWNER,
+        gasPrice: gasPrice0
+      }, {
+        // Mint coins for the arbitrary account
+        method: BlockRewardAuRa.instance.methods.addExtraReceiver(web3.utils.toWei('1'), account.address).send,
+        from: OWNER,
+        gasPrice: gasPrice0
+      }];
+      const results = await batchSendTransactions(transactions);
+      const allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
+      expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
+    /*
     }
+    */
   });
 
   it('Test 1', async function() {
+    // Set priorities
     let transactions = [{
       // Set priority for BlockRewardAuRa.setErcToNativeBridgesAllowed
       method: TxPriority.instance.methods.setPriority(BlockRewardAuRa.address, '0x171d54dd', '3000').send,
@@ -48,26 +73,12 @@ describe('TxPriority tests', () => {
       method: TxPriority.instance.methods.setPriority(StakingAuRa.address, '0x48aaa4a2', '1000').send,
       from: OWNER,
       gasPrice: gasPrice0
-    }, {
-      // Set minter address to be able to mint coins through the BlockReward
-      method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]).send,
-      from: OWNER,
-      gasPrice: gasPrice0
-    }, {
-      // Mint coins for the owner
-      method: BlockRewardAuRa.instance.methods.addExtraReceiver(web3.utils.toWei('1'), OWNER).send,
-      from: OWNER,
-      gasPrice: gasPrice0
-    }, {
-      // Mint coins for the arbitrary account
-      method: BlockRewardAuRa.instance.methods.addExtraReceiver(web3.utils.toWei('1'), account.address).send,
-      from: OWNER,
-      gasPrice: gasPrice0
     }];
     let results = await batchSendTransactions(transactions);
     let allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
-    expect(allTxSucceeded, `Some transaction failed`).to.equal(true);
+    expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
 
+    // Send test transactions
     const ownerNonce = await web3.eth.getTransactionCount(OWNER);
     transactions = [{
       // 0. Call StakingAuRa.setCandidateMinStake with non-zero gas price
@@ -99,66 +110,15 @@ describe('TxPriority tests', () => {
         gasPrice: gasPrice2
       })).rawTransaction]
     }];
-    results = await batchSendTransactions(transactions);
-
-    // Ensure these transactions were mined in the same block
-    const blockNumbers = results.map(r => r.receipt.blockNumber);
-    expect(
-      blockNumbers.filter((x, i, a) => a.indexOf(x) == i).length,
-      'Transactions were not mined in the same block'
-    ).to.equal(1);
-
-    // Check min/max transactionIndex
-    const minTransactionIndex = results.reduce((acc, cur) => {
-      if (cur.receipt.transactionIndex < acc) {
-        return cur.receipt.transactionIndex;
-      } else {
-        return acc;
-      }
-    }, results[0].receipt.transactionIndex);
-    const maxTransactionIndex = results.reduce((acc, cur) => {
-      if (cur.receipt.transactionIndex > acc) {
-        return cur.receipt.transactionIndex;
-      } else {
-        return acc;
-      }
-    }, results[0].receipt.transactionIndex);
-    expect(
-      maxTransactionIndex - minTransactionIndex + 1,
-      'Transactions are not consequent in the block'
-    ).to.equal(results.length);
+    results = await batchSendTransactions(transactions, true);
 
     // Sort and check results by transactionIndex
-    const sortedResults = results.map((r, i) => {
-      return { i, transactionIndex: r.receipt.transactionIndex };
-    });
-    sortedResults.sort((a, b) => a.transactionIndex - b.transactionIndex);
-    const expectedResults = sortedResults.map(r => r.i);
-    expect(expectedResults, 'Invalid transactions order').to.eql([
+    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       3, // arbitrary transaction
     ]);
-
-    if (minTransactionIndex > 0) {
-      // There must be emitInitiateChange and/or randomness transaction
-      // at the beginning of the block
-      const block = await web3.eth.getBlock(blockNumbers[0], true);
-      expect(block.transactions.length).to.be.at.least(maxTransactionIndex + 1);
-      for (let i = 0; i < block.transactions.length; i++) {
-        const superiorTx = block.transactions[i];
-        if (superiorTx.transactionIndex < minTransactionIndex) {
-          const data = superiorTx.input.toLowerCase();
-          expect(
-            // ValidatorSetAuRa.emitInitiateChange()
-            superiorTx.to == constants.VALIDATOR_SET_ADDRESS && data.startsWith('0x93b4e25e') ||
-            // RandomAuRa.commitHash(bytes32,bytes) or revealNumber(uint256)
-            superiorTx.to == constants.RANDOM_AURA_ADDRESS && (data.startsWith('0x0b61ba85') || data.startsWith('0xfe7d567d'))
-          ).to.equal(true);
-        }
-      }
-    }
 
     // Remove previously set priorities
     transactions = [{
@@ -179,14 +139,14 @@ describe('TxPriority tests', () => {
     }];
     results = await batchSendTransactions(transactions);
     allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
-    expect(allTxSucceeded, `Some removePriority transaction failed`).to.equal(true);
+    expect(allTxSucceeded, 'Cannot remove priorities').to.equal(true);
   });
 
   it('Finish', async function() {
     await waitForNextStakingEpoch(web3);
   });
 
-  function batchSendTransactions(transactions) {
+  async function batchSendTransactions(transactions, ensureSingleBlock) {
     let promises = [];
     let batch = new web3.BatchRequest();
     transactions.forEach(item => {
@@ -215,7 +175,66 @@ describe('TxPriority tests', () => {
       }));
     });
     batch.execute();
-    return Promise.all(promises);
+    const results = await Promise.all(promises);
+
+    if (ensureSingleBlock) {
+      // Ensure the transactions were mined in the same block
+      const blockNumbers = results.map(r => r.receipt.blockNumber);
+      expect(
+        blockNumbers.filter((x, i, a) => a.indexOf(x) == i).length,
+        'Transactions were not mined in the same block'
+      ).to.equal(1);
+
+      // Check min/max transactionIndex
+      const minTransactionIndex = results.reduce((acc, cur) => {
+        if (cur.receipt.transactionIndex < acc) {
+          return cur.receipt.transactionIndex;
+        } else {
+          return acc;
+        }
+      }, results[0].receipt.transactionIndex);
+      const maxTransactionIndex = results.reduce((acc, cur) => {
+        if (cur.receipt.transactionIndex > acc) {
+          return cur.receipt.transactionIndex;
+        } else {
+          return acc;
+        }
+      }, results[0].receipt.transactionIndex);
+      expect(
+        maxTransactionIndex - minTransactionIndex + 1,
+        'Transactions are not consequent in the block'
+      ).to.equal(results.length);
+
+      if (minTransactionIndex > 0) {
+        // There must be emitInitiateChange and/or randomness transaction
+        // at the beginning of the block
+        const block = await web3.eth.getBlock(blockNumbers[0], true);
+        expect(block.transactions.length).to.be.at.least(maxTransactionIndex + 1);
+        for (let i = 0; i < block.transactions.length; i++) {
+          const superiorTx = block.transactions[i];
+          if (superiorTx.transactionIndex < minTransactionIndex) {
+            const data = superiorTx.input.toLowerCase();
+            expect(
+              // ValidatorSetAuRa.emitInitiateChange()
+              superiorTx.to == constants.VALIDATOR_SET_ADDRESS && data.startsWith('0x93b4e25e') ||
+              // RandomAuRa.commitHash(bytes32,bytes) or revealNumber(uint256)
+              superiorTx.to == constants.RANDOM_AURA_ADDRESS && (data.startsWith('0x0b61ba85') || data.startsWith('0xfe7d567d'))
+            ).to.equal(true);
+          }
+        }
+      }
+    }
+
+    return results;
+  }
+
+  function sortByTransactionIndex(results) {
+    let sortedResults = results.map((r, i) => {
+      return { i, transactionIndex: r.receipt.transactionIndex };
+    });
+    sortedResults.sort((a, b) => a.transactionIndex - b.transactionIndex);
+    sortedResults = sortedResults.map(r => r.i);
+    return sortedResults;
   }
 
 });
