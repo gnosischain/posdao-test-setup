@@ -30,21 +30,25 @@ describe('TxPriority tests', () => {
       candidateMinStake = await StakingAuRa.instance.methods.candidateMinStake().call();
       delegatorMinStake = await StakingAuRa.instance.methods.delegatorMinStake().call();
 
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
         // Set minter address to be able to mint coins through the BlockReward
         method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]).send,
         from: OWNER,
-        gasPrice: gasPrice0
+        gasPrice: gasPrice0,
+        nonce: ownerNonce
       }, {
         // Mint coins for the owner
         method: BlockRewardAuRa.instance.methods.addExtraReceiver(web3.utils.toWei('1'), OWNER).send,
         from: OWNER,
-        gasPrice: gasPrice0
+        gasPrice: gasPrice0,
+        nonce: ownerNonce + 1
       }, {
         // Mint coins for the arbitrary account
         method: BlockRewardAuRa.instance.methods.addExtraReceiver(web3.utils.toWei('1'), account.address).send,
         from: OWNER,
-        gasPrice: gasPrice0
+        gasPrice: gasPrice0,
+        nonce: ownerNonce + 2
       }];
       const results = await batchSendTransactions(transactions);
       const allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
