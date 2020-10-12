@@ -108,7 +108,7 @@ describe('TxPriority tests', () => {
     }];
     results = await batchSendTransactions(transactions, true);
 
-    // Sort and check results by transactionIndex
+    // Check transactions order
     expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
@@ -173,12 +173,122 @@ describe('TxPriority tests', () => {
     }];
     const results = await batchSendTransactions(transactions, true);
 
-    // Sort and check results by transactionIndex
+    // Check transactions order
     expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
       3, // arbitrary transaction
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+  });
+
+  it('Test 3', async function() {
+    // Set priorities
+    let transactions = [{
+      // Set priority for BlockRewardAuRa.setErcToNativeBridgesAllowed
+      method: TxPriority.instance.methods.setPriority(BlockRewardAuRa.address, '0x171d54dd', '3000').send,
+      from: OWNER,
+      gasPrice: gasPrice0
+    }, {
+      // Set priority for StakingAuRa.setDelegatorMinStake
+      method: TxPriority.instance.methods.setPriority(StakingAuRa.address, '0x2bafde8d', '2000').send,
+      from: OWNER,
+      gasPrice: gasPrice0
+    }, {
+      // Set priority for the arbitrary address
+      method: TxPriority.instance.methods.setPriority(account.address, '0x00000000', '1500').send,
+      from: OWNER,
+      gasPrice: gasPrice0
+    }, {
+      // Set priority for StakingAuRa.setCandidateMinStake
+      method: TxPriority.instance.methods.setPriority(StakingAuRa.address, '0x48aaa4a2', '1000').send,
+      from: OWNER,
+      gasPrice: gasPrice0
+    }];
+    let results = await batchSendTransactions(transactions);
+    let allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
+    expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
+
+    // Send test transactions
+    const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+    transactions = [{
+      // 0. Call StakingAuRa.setCandidateMinStake with non-zero gas price
+      // and nonce + 0
+      method: StakingAuRa.instance.methods.setCandidateMinStake(candidateMinStake).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce
+    }, {
+      // 1. Call StakingAuRa.setDelegatorMinStake with non-zero gas price
+      // and nonce + 1
+      method: StakingAuRa.instance.methods.setDelegatorMinStake(delegatorMinStake).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce + 1
+    }, {
+      // 2. Call BlockRewardAuRa.setErcToNativeBridgesAllowed with non-zero gas price
+      // and nonce + 2
+      method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce + 2
+    }, {
+      // 3. The arbitrary account sends a TX with the same gas price
+      method: web3.eth.sendSignedTransaction,
+      params: [(await account.signTransaction({
+        to: account.address,
+        gas: '21000',
+        gasPrice: gasPrice1
+      })).rawTransaction]
+    }];
+    results = await batchSendTransactions(transactions, true);
+
+    // Check transactions order
+    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+      3, // arbitrary transaction
+      0, // StakingAuRa.setCandidateMinStake
+      1, // StakingAuRa.setDelegatorMinStake
+      2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+  });
+
+  it('Test 4 (depends on Test 3)', async function() {
+    // Send test transactions
+    const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+    const transactions = [{
+      // 0. The arbitrary account sends a TX
+      method: web3.eth.sendSignedTransaction,
+      params: [(await account.signTransaction({
+        to: account.address,
+        gas: '21000',
+        gasPrice: gasPrice1
+      })).rawTransaction]
+    }, {
+      // 1. Call StakingAuRa.setCandidateMinStake with the same gas price
+      method: StakingAuRa.instance.methods.setCandidateMinStake(candidateMinStake).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce
+    }, {
+      // 2. Call BlockRewardAuRa.setErcToNativeBridgesAllowed with the same gas price
+      // and nonce
+      method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce
+    }, {
+      // 3. Call StakingAuRa.setDelegatorMinStake with the same gas price and nonce
+      method: StakingAuRa.instance.methods.setDelegatorMinStake(delegatorMinStake).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce
+    }];
+    const results = await batchSendTransactions(transactions, true);
+
+    // Check transactions order
+    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+      2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      0, // arbitrary transaction
     ]);
   });
 
@@ -217,38 +327,46 @@ describe('TxPriority tests', () => {
     batch.execute();
     const results = await Promise.all(promises);
 
-    if (ensureSingleBlock) {
+    if (ensureSingleBlock && transactions.length > 0) {
       // Ensure the transactions were mined in the same block
-      const blockNumbers = results.map(r => r.receipt.blockNumber);
-      expect(
-        blockNumbers.filter((x, i, a) => a.indexOf(x) == i).length,
-        'Transactions were not mined in the same block'
-      ).to.equal(1);
+      let blockNumber = 0;
+      let blockNumbers = results.map(r => r ? r.receipt.blockNumber : 0);
+      blockNumbers = blockNumbers.filter((x, i, a) => a.indexOf(x) == i);
+      blockNumbers.sort((a, b) => a - b);
+      if (blockNumbers.length == 1) {
+        blockNumber = blockNumbers[0];
+        expect(blockNumber > 0, 'Invalid block number').to.equal(true);
+      } else if (blockNumbers.length == 2) {
+        blockNumber = blockNumbers[1];
+        expect(blockNumber > 0 && blockNumbers[0] == 0, 'Invalid block number').to.equal(true);
+      } else {
+        expect(false, 'Transactions were not mined in the same block').to.equal(true);
+      }
 
       // Check min/max transactionIndex
-      const minTransactionIndex = results.reduce((acc, cur) => {
-        if (cur.receipt.transactionIndex < acc) {
-          return cur.receipt.transactionIndex;
-        } else {
-          return acc;
+      let minTransactionIndex = Number.MAX_SAFE_INTEGER;
+      let maxTransactionIndex = Number.MIN_SAFE_INTEGER;
+      let definedResults = 0;
+      results.forEach(r => {
+        if (r) {
+          minTransactionIndex = Math.min(minTransactionIndex, r.receipt.transactionIndex);
+          maxTransactionIndex = Math.max(maxTransactionIndex, r.receipt.transactionIndex);
+          definedResults++;
         }
-      }, results[0].receipt.transactionIndex);
-      const maxTransactionIndex = results.reduce((acc, cur) => {
-        if (cur.receipt.transactionIndex > acc) {
-          return cur.receipt.transactionIndex;
-        } else {
-          return acc;
-        }
-      }, results[0].receipt.transactionIndex);
+      });
+      expect(
+        minTransactionIndex == Number.MAX_SAFE_INTEGER || maxTransactionIndex == Number.MIN_SAFE_INTEGER || !definedResults,
+        'transactionIndexes are not found'
+      ).to.equal(false);
       expect(
         maxTransactionIndex - minTransactionIndex + 1,
         'Transactions are not consequent in the block'
-      ).to.equal(results.length);
+      ).to.equal(definedResults);
 
       if (minTransactionIndex > 0) {
         // There must be emitInitiateChange and/or randomness transaction
         // at the beginning of the block
-        const block = await web3.eth.getBlock(blockNumbers[0], true);
+        const block = await web3.eth.getBlock(blockNumber, true);
         expect(block.transactions.length).to.be.at.least(maxTransactionIndex + 1);
         for (let i = 0; i < block.transactions.length; i++) {
           const superiorTx = block.transactions[i];
@@ -270,8 +388,9 @@ describe('TxPriority tests', () => {
 
   function sortByTransactionIndex(results) {
     let sortedResults = results.map((r, i) => {
-      return { i, transactionIndex: r.receipt.transactionIndex };
+      return { i, transactionIndex: r ? r.receipt.transactionIndex : -1 };
     });
+    sortedResults = sortedResults.filter(sr => sr.transactionIndex >= 0);
     sortedResults.sort((a, b) => a.transactionIndex - b.transactionIndex);
     sortedResults = sortedResults.map(r => r.i);
     return sortedResults;
