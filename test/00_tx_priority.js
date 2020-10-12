@@ -22,13 +22,11 @@ describe('TxPriority tests', () => {
   let delegatorMinStake;
 
   before(async function() {
-    /*
     const nodeInfo = await web3.eth.getNodeInfo();
     if (!nodeInfo.includes('Nethermind')) {
       console.log('    TxPriority tests will be skipped as they can only run with Nethermind');
       this.skip();
     } else {
-    */
       candidateMinStake = await StakingAuRa.instance.methods.candidateMinStake().call();
       delegatorMinStake = await StakingAuRa.instance.methods.delegatorMinStake().call();
 
@@ -51,9 +49,7 @@ describe('TxPriority tests', () => {
       const results = await batchSendTransactions(transactions);
       const allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
       expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
-    /*
     }
-    */
   });
 
   it('Test 1', async function() {
@@ -140,6 +136,50 @@ describe('TxPriority tests', () => {
     results = await batchSendTransactions(transactions);
     allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
     expect(allTxSucceeded, 'Cannot remove priorities').to.equal(true);
+  });
+
+  it('Test 2', async function() {
+    // Send test transactions
+    const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+    const transactions = [{
+      // 0. Call StakingAuRa.setCandidateMinStake with non-zero gas price
+      // and nonce + 0
+      method: StakingAuRa.instance.methods.setCandidateMinStake(candidateMinStake).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce
+    }, {
+      // 1. Call BlockRewardAuRa.setErcToNativeBridgesAllowed with non-zero gas price
+      // and nonce + 2
+      method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce + 2
+    }, {
+      // 2. Call StakingAuRa.setDelegatorMinStake with non-zero gas price
+      // and nonce + 1
+      method: StakingAuRa.instance.methods.setDelegatorMinStake(delegatorMinStake).send,
+      from: OWNER,
+      gasPrice: gasPrice1,
+      nonce: ownerNonce + 1
+    }, {
+      // 3. The arbitrary account sends a TX with higher gas price
+      method: web3.eth.sendSignedTransaction,
+      params: [(await account.signTransaction({
+        to: '0x0000000000000000000000000000000000000000',
+        gas: '21000',
+        gasPrice: gasPrice2
+      })).rawTransaction]
+    }];
+    const results = await batchSendTransactions(transactions, true);
+
+    // Sort and check results by transactionIndex
+    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+      3, // arbitrary transaction
+      0, // StakingAuRa.setCandidateMinStake
+      2, // StakingAuRa.setDelegatorMinStake
+      1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
   });
 
   it('Finish', async function() {
