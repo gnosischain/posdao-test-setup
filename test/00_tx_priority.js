@@ -294,7 +294,9 @@ describe('TxPriority tests', () => {
       const arguments = item.arguments;
       if (arguments !== undefined && !item.params.gas) {
         promises.push(new Promise((resolve, reject) => {
-          item.method(...arguments).estimateGas(item.params, async (err, gas) => {
+          const params = Object.assign({}, item.params); // copy the object without reference
+          delete params.nonce;
+          item.method(...arguments).estimateGas(params, async (err, gas) => {
             if (err) {
               reject(err);
             } else {
