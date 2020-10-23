@@ -22,11 +22,13 @@ describe('TxPriority tests', () => {
   let delegatorMinStake;
 
   before(async function() {
+    /*
     const nodeInfo = await web3.eth.getNodeInfo();
     if (!nodeInfo.includes('Nethermind')) {
       console.log('    TxPriority tests will be skipped as they can only run with Nethermind');
       this.skip();
     } else {
+    */
       candidateMinStake = await StakingAuRa.instance.methods.candidateMinStake().call();
       delegatorMinStake = await StakingAuRa.instance.methods.delegatorMinStake().call();
 
@@ -50,7 +52,7 @@ describe('TxPriority tests', () => {
       const results = await batchSendTransactions(transactions);
       const allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
       expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
-    }
+    //}
   });
 
   it('Test 1', async function() {
@@ -287,9 +289,8 @@ describe('TxPriority tests', () => {
   });
 
   async function batchSendTransactions(transactions, ensureSingleBlock) {
-    let promises = [];
-
     // Estimate gas for each transaction
+    const promises = [];
     transactions.forEach(item => {
       const arguments = item.arguments;
       if (arguments !== undefined && !item.params.gas) {
@@ -309,67 +310,18 @@ describe('TxPriority tests', () => {
       }
     });
     const gas = await Promise.all(promises);
-    promises = [];
 
-    // Prepare transactions for sending in batch
-    let batch = new web3.BatchRequest();
-    transactions.forEach((item, index) => {
-      const arguments = item.arguments;
-      let send;
-      if (arguments !== undefined) {
-        // eth_sendTransaction
-        send = item.method(...arguments).send;
-      } else {
-        // eth_sendRawTransaction
-        send = item.method;
-      }
-      if (gas[index]) {
-        item.params.gas = gas[index] * 2;
-      }
-      promises.push(new Promise((resolve, reject) => {
-        batch.add(send.request(item.params, async (err, txHash) => {
-          if (err) {
-            reject(err);
-          } else {
-            const tx = await web3.eth.getTransaction(txHash);
-            if (tx) {
-              let receipt = null;
-              while (receipt == null) {
-                await new Promise(r => setTimeout(r, 500));
-                receipt = await web3.eth.getTransactionReceipt(txHash);
-              }
-              resolve({ tx, receipt });
-            } else {
-              resolve();
-            }
-          }
-        }));
-      }));
-    });
-
-    // Ensure we are close to the end of previous block
-    const latestBlockNumber = await web3.eth.getBlockNumber();
-    do {
-      await new Promise(r => setTimeout(r, 100));
-    } while ((await web3.eth.getBlockNumber()) == latestBlockNumber);
-
-    // Execute the batch
-    batch.execute();
-    const results = await Promise.all(promises);
+    let results = await executeTransactions(transactions, gas);
 
     if (ensureSingleBlock && transactions.length > 0) {
       // Ensure the transactions were mined in the same block
-      let blockNumber = 0;
-      let blockNumbers = results.map(r => r ? r.receipt.blockNumber : 0);
-      blockNumbers = blockNumbers.filter((x, i, a) => a.indexOf(x) == i);
-      blockNumbers.sort((a, b) => a - b);
-      if (blockNumbers.length == 1) {
-        blockNumber = blockNumbers[0];
-        expect(blockNumber > 0, 'Invalid block number').to.equal(true);
-      } else if (blockNumbers.length == 2) {
-        blockNumber = blockNumbers[1];
-        expect(blockNumber > 0 && blockNumbers[0] == 0, `Invalid block numbers: ${blockNumbers[0]}, ${blockNumbers[1]}. Transactions were not mined in the same block`).to.equal(true);
-      } else {
+      let blockNumber = getTransactionsBlockNumber(results);
+      for (let t = 0; t < 10 && !blockNumber; t++) {
+        console.log('    Transactions were not mined in the same block. Try again...');
+        results = await executeTransactions(transactions, gas);
+        blockNumber = getTransactionsBlockNumber(results);
+      }
+      if (!blockNumber) {
         expect(false, 'Transactions were not mined in the same block').to.equal(true);
       }
 
@@ -414,6 +366,67 @@ describe('TxPriority tests', () => {
     }
 
     return results;
+  }
+
+  async function executeTransactions(transactions, gas) {
+    const promises = [];
+
+    // Prepare transactions for sending in batch
+    let batch = new web3.BatchRequest();
+    transactions.forEach((item, index) => {
+      const arguments = item.arguments;
+      let send;
+      if (arguments !== undefined) {
+        // eth_sendTransaction
+        send = item.method(...arguments).send;
+      } else {
+        // eth_sendRawTransaction
+        send = item.method;
+      }
+      if (gas[index]) {
+        item.params.gas = gas[index] * 2;
+      }
+      promises.push(new Promise((resolve, reject) => {
+        batch.add(send.request(item.params, async (err, txHash) => {
+          if (err) {
+            reject(err);
+          } else {
+            const tx = await web3.eth.getTransaction(txHash);
+            if (tx) {
+              let receipt = null;
+              while (receipt == null) {
+                await new Promise(r => setTimeout(r, 500));
+                receipt = await web3.eth.getTransactionReceipt(txHash);
+              }
+              resolve({ tx, receipt });
+            } else {
+              resolve();
+            }
+          }
+        }));
+      }));
+    });
+
+    // Execute the batch
+    batch.execute();
+    return await Promise.all(promises);
+  }
+
+  function getTransactionsBlockNumber(results) {
+    let blockNumber = 0;
+    let blockNumbers = results.map(r => r ? r.receipt.blockNumber : 0);
+    blockNumbers = blockNumbers.filter((x, i, a) => a.indexOf(x) == i);
+    blockNumbers.sort((a, b) => a - b);
+    if (blockNumbers.length == 1) {
+      blockNumber = blockNumbers[0];
+      expect(blockNumber > 0, 'Invalid block number').to.equal(true);
+    } else if (blockNumbers.length == 2) {
+      blockNumber = blockNumbers[1];
+      if (blockNumber == 0 || blockNumbers[0] != 0) {
+        return 0;
+      }
+    }
+    return blockNumber;
   }
 
   function sortByTransactionIndex(results) {
