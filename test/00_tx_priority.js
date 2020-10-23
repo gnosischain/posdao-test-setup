@@ -433,7 +433,7 @@ describe('TxPriority tests', () => {
   }
 
   async function sendTestTransactionsInSingleBlock(sendTestTransactions) {
-    const results = await sendTestTransactions();
+    let results = await sendTestTransactions();
     for (let t = 0; t < 10 && results == null; t++) {
       console.log('    Transactions were not mined in the same block. Try again...');
       results = await sendTestTransactions();
