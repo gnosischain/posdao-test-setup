@@ -311,7 +311,7 @@ describe('TxPriority tests', () => {
     const gas = await Promise.all(promises);
     promises = [];
 
-    // Send transactions
+    // Prepare transactions for sending in batch
     let batch = new web3.BatchRequest();
     transactions.forEach((item, index) => {
       const arguments = item.arguments;
@@ -346,6 +346,14 @@ describe('TxPriority tests', () => {
         }));
       }));
     });
+
+    // Ensure we are close to the end of previous block
+    const latestBlockNumber = await web3.eth.getBlockNumber();
+    do {
+      await new Promise(r => setTimeout(r, 100));
+    } while ((await web3.eth.getBlockNumber()) == latestBlockNumber);
+
+    // Execute the batch
     batch.execute();
     const results = await Promise.all(promises);
 
@@ -360,7 +368,7 @@ describe('TxPriority tests', () => {
         expect(blockNumber > 0, 'Invalid block number').to.equal(true);
       } else if (blockNumbers.length == 2) {
         blockNumber = blockNumbers[1];
-        expect(blockNumber > 0 && blockNumbers[0] == 0, 'Invalid block number').to.equal(true);
+        expect(blockNumber > 0 && blockNumbers[0] == 0, `Invalid block numbers: ${blockNumbers[0]}, ${blockNumbers[1]}. Transactions were not mined in the same block`).to.equal(true);
       } else {
         expect(false, 'Transactions were not mined in the same block').to.equal(true);
       }
