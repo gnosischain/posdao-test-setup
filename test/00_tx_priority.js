@@ -22,13 +22,11 @@ describe('TxPriority tests', () => {
   let delegatorMinStake;
 
   before(async function() {
-    /*
     const nodeInfo = await web3.eth.getNodeInfo();
     if (!nodeInfo.includes('Nethermind')) {
       console.log('    TxPriority tests will be skipped as they can only run with Nethermind');
       this.skip();
     } else {
-    */
       candidateMinStake = await StakingAuRa.instance.methods.candidateMinStake().call();
       delegatorMinStake = await StakingAuRa.instance.methods.delegatorMinStake().call();
 
@@ -52,7 +50,7 @@ describe('TxPriority tests', () => {
       const results = await batchSendTransactions(transactions);
       const allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
       expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
-    //}
+    }
   });
 
   it('Test 1', async function() {
