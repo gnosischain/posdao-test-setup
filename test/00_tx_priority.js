@@ -48,7 +48,7 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
       }];
       const results = await batchSendTransactions(transactions);
-      const allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
+      const allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
       expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
     }
   });
@@ -73,7 +73,7 @@ describe('TxPriority tests', () => {
       params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
     }];
     let results = await batchSendTransactions(transactions);
-    let allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
+    let allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
 
     // Send test transactions in a single block
@@ -136,7 +136,7 @@ describe('TxPriority tests', () => {
       params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
     }];
     results = await batchSendTransactions(transactions);
-    allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
+    allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, 'Cannot remove priorities').to.equal(true);
   });
 
@@ -208,7 +208,7 @@ describe('TxPriority tests', () => {
       params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
     }];
     let results = await batchSendTransactions(transactions);
-    let allTxSucceeded = results.reduce((acc, val) => acc && val.receipt.status, true);
+    let allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
 
     // Send test transactions in a single block
@@ -332,10 +332,10 @@ describe('TxPriority tests', () => {
       let minTransactionIndex = Number.MAX_SAFE_INTEGER;
       let maxTransactionIndex = Number.MIN_SAFE_INTEGER;
       let definedResults = 0;
-      results.forEach(r => {
-        if (r) {
-          minTransactionIndex = Math.min(minTransactionIndex, r.receipt.transactionIndex);
-          maxTransactionIndex = Math.max(maxTransactionIndex, r.receipt.transactionIndex);
+      results.forEach(receipt => {
+        if (receipt) {
+          minTransactionIndex = Math.min(minTransactionIndex, receipt.transactionIndex);
+          maxTransactionIndex = Math.max(maxTransactionIndex, receipt.transactionIndex);
           definedResults++;
         }
       });
@@ -394,17 +394,14 @@ describe('TxPriority tests', () => {
           if (err) {
             reject(err);
           } else {
-            const tx = await web3.eth.getTransaction(txHash);
-            if (tx) {
-              let receipt = null;
-              while (receipt == null) {
-                await new Promise(r => setTimeout(r, 500));
-                receipt = await web3.eth.getTransactionReceipt(txHash);
-              }
-              resolve({ tx, receipt });
-            } else {
-              resolve();
+            let attempts = 0;
+            let receipt = null;
+            // Wait for the receipt during 30 seconds
+            while (receipt == null && attempts++ <= 60) {
+              await new Promise(r => setTimeout(r, 500));
+              receipt = await web3.eth.getTransactionReceipt(txHash);
             }
+            resolve(receipt);
           }
         }));
       }));
@@ -417,7 +414,7 @@ describe('TxPriority tests', () => {
 
   function getTransactionsBlockNumber(results) {
     let blockNumber = 0;
-    let blockNumbers = results.map(r => r ? r.receipt.blockNumber : 0);
+    let blockNumbers = results.map(receipt => receipt ? receipt.blockNumber : 0);
     blockNumbers = blockNumbers.filter((x, i, a) => a.indexOf(x) == i);
     blockNumbers.sort((a, b) => a - b);
     if (blockNumbers.length == 1) {
@@ -445,8 +442,8 @@ describe('TxPriority tests', () => {
   }
 
   function sortByTransactionIndex(results) {
-    let sortedResults = results.map((r, i) => {
-      return { i, transactionIndex: r ? r.receipt.transactionIndex : -1 };
+    let sortedResults = results.map((receipt, i) => {
+      return { i, transactionIndex: receipt ? receipt.transactionIndex : -1 };
     });
     sortedResults = sortedResults.filter(sr => sr.transactionIndex >= 0);
     sortedResults.sort((a, b) => a.transactionIndex - b.transactionIndex);
