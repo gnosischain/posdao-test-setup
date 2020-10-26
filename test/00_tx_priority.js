@@ -76,6 +76,9 @@ describe('TxPriority tests', () => {
     let allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
 
+    // Wait for a few blocks to let validator nodes apply the TxPriority rules
+    await applyPriorityRules();
+
     // Send test transactions in a single block
     receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -142,6 +145,9 @@ describe('TxPriority tests', () => {
     receipts = (await batchSendTransactions(transactions)).receipts;
     allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, 'Cannot remove priorities').to.equal(true);
+
+    // Wait for a few blocks to let validator nodes apply the TxPriority rules
+    await applyPriorityRules();
   });
 
   it('Test 2', async function() {
@@ -218,6 +224,9 @@ describe('TxPriority tests', () => {
     let { receipts } = await batchSendTransactions(transactions);
     let allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
+
+    // Wait for a few blocks to let validator nodes apply the TxPriority rules
+    await applyPriorityRules();
 
     // Send test transactions in a single block
     receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -311,6 +320,13 @@ describe('TxPriority tests', () => {
   it('Finish', async function() {
     await waitForNextStakingEpoch(web3);
   });
+
+  async function applyPriorityRules() {
+    const startBlockNumber = await web3.eth.getBlockNumber();
+    do {
+      await sleep(500);
+    } while (await web3.eth.getBlockNumber() - startBlockNumber < 2);
+  }
 
   async function batchSendTransactions(transactions, ensureSingleBlock) {
     // Estimate gas for each transaction
@@ -416,7 +432,7 @@ describe('TxPriority tests', () => {
             let receipt = null;
             // Wait for the receipt during 30 seconds
             while (receipt == null && attempts++ <= 60) {
-              await new Promise(r => setTimeout(r, 500));
+              await sleep(500);
               receipt = await web3.eth.getTransactionReceipt(txHash);
             }
             resolve(receipt);
@@ -484,3 +500,7 @@ describe('TxPriority tests', () => {
   }
 
 });
+
+async function sleep(ms) {
+  await new Promise(r => setTimeout(r, ms));
+}
