@@ -13,6 +13,9 @@ const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web
 const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
 
+// Set to `false` to ignore transactions order when they are in different blocks
+const checkOrderWhenDifferentBlocks = true;
+
 describe('TxPriority tests', () => {
   const gasPrice0 = web3.utils.toWei('0', 'gwei');
   const gasPrice1 = web3.utils.toWei('1', 'gwei');
@@ -119,10 +122,10 @@ describe('TxPriority tests', () => {
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       3, // arbitrary transaction
     ];
-    if (receipts.receiptsInDifferentBlocks) {
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
+    if (checkOrderWhenDifferentBlocks && receipts.receiptsInDifferentBlocks) {
       expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
     }
-    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
 
     // Remove previously set priorities
     ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -191,10 +194,10 @@ describe('TxPriority tests', () => {
       2, // StakingAuRa.setDelegatorMinStake
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
     ];
-    if (receipts.receiptsInDifferentBlocks) {
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
+    if (checkOrderWhenDifferentBlocks && receipts.receiptsInDifferentBlocks) {
       expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
     }
-    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
   });
 
   it('Test 3', async function() {
@@ -268,10 +271,10 @@ describe('TxPriority tests', () => {
       1, // StakingAuRa.setDelegatorMinStake
       2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
     ];
-    if (receipts.receiptsInDifferentBlocks) {
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
+    if (checkOrderWhenDifferentBlocks && receipts.receiptsInDifferentBlocks) {
       expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
     }
-    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
   });
 
   it('Test 4 (depends on Test 3)', async function() {
@@ -311,10 +314,10 @@ describe('TxPriority tests', () => {
       2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       0, // arbitrary transaction
     ];
-    if (receipts.receiptsInDifferentBlocks) {
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
+    if (checkOrderWhenDifferentBlocks && receipts.receiptsInDifferentBlocks) {
       expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
     }
-    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
   });
 
   it('Finish', async function() {

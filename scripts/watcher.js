@@ -28,6 +28,7 @@ contractNameByAddress[validatorSetContract.options.address] = 'ValidatorSetAuRa'
 contractNameByAddress[stakingContract.options.address] = 'StakingAuRa';
 contractNameByAddress[randomContract.options.address] = 'RandomAuRa';
 contractNameByAddress[blockRewardContract.options.address] = 'BlockRewardAuRa';
+contractNameByAddress['0x4100000000000000000000000000000000000000'] = 'TxPriority';
 
 let prevBlock = null;
 
