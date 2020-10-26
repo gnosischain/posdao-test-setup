@@ -475,7 +475,7 @@ describe('TxPriority tests', () => {
     }
 
     for (let t = 0; t < 10 && !results.singleBlock; t++) {
-      console.log('    Transactions were not mined in the same block. Try again...');
+      console.log('      Transactions were not mined in the same block. Retrying...');
       results = await sendTestTransactions();
     }
     if (!results.singleBlock) {
