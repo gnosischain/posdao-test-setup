@@ -110,12 +110,16 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order (will fail on OpenEthereum)
-    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
+    const expectedTxOrder = [
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       3, // arbitrary transaction
-    ]);
+    ];
+    if (receipts.receiptsInDifferentBlocks) {
+      expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
+    }
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
 
     // Remove previously set priorities
     ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -175,12 +179,16 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order
-    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
+    const expectedTxOrder = [
       3, // arbitrary transaction
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
-    ]);
+    ];
+    if (receipts.receiptsInDifferentBlocks) {
+      expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
+    }
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
   });
 
   it('Test 3', async function() {
@@ -245,12 +253,16 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order (will fail on OpenEthereum)
-    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
+    const expectedTxOrder = [
       3, // arbitrary transaction
       0, // StakingAuRa.setCandidateMinStake
       1, // StakingAuRa.setDelegatorMinStake
       2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
-    ]);
+    ];
+    if (receipts.receiptsInDifferentBlocks) {
+      expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
+    }
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
   });
 
   it('Test 4 (depends on Test 3)', async function() {
@@ -286,10 +298,14 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order (will fail on OpenEthereum)
-    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
+    const expectedTxOrder = [
       2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       0, // arbitrary transaction
-    ]);
+    ];
+    if (receipts.receiptsInDifferentBlocks) {
+      expect(sortByTransactionIndex(receipts.receiptsInDifferentBlocks), 'Invalid transactions order in different blocks').to.eql(expectedTxOrder);
+    }
+    expect(sortByTransactionIndex(receipts.receiptsInSingleBlock), 'Invalid transactions order in a single block').to.eql(expectedTxOrder);
   });
 
   it('Finish', async function() {
@@ -433,6 +449,12 @@ describe('TxPriority tests', () => {
 
   async function sendTestTransactionsInSingleBlock(sendTestTransactions) {
     let results = await sendTestTransactions();
+
+    let receiptsInDifferentBlocks = null;
+    if (!results.singleBlock) {
+      receiptsInDifferentBlocks = JSON.parse(JSON.stringify(results.receipts));
+    }
+
     for (let t = 0; t < 10 && !results.singleBlock; t++) {
       console.log('    Transactions were not mined in the same block. Try again...');
       results = await sendTestTransactions();
@@ -440,15 +462,23 @@ describe('TxPriority tests', () => {
     if (!results.singleBlock) {
       expect(false, 'Transactions were not mined in the same block').to.equal(true);
     }
-    return results.receipts;
+    return { receiptsInDifferentBlocks, receiptsInSingleBlock: results.receipts };
   }
 
-  function sortByTransactionIndex(results) {
-    let sortedResults = results.map((receipt, i) => {
-      return { i, transactionIndex: receipt ? receipt.transactionIndex : -1 };
+  function sortByTransactionIndex(receipts) {
+    let sortedResults = receipts.map((receipt, i) => {
+      return {
+        i,
+        transactionIndex: receipt ? receipt.transactionIndex : -1,
+        blockNumber: receipt ? receipt.blockNumber : -1
+      };
     });
     sortedResults = sortedResults.filter(sr => sr.transactionIndex >= 0);
-    sortedResults.sort((a, b) => a.transactionIndex - b.transactionIndex);
+    sortedResults.sort(
+      (a, b) => a.blockNumber != b.blockNumber
+              ? a.blockNumber - b.blockNumber
+              : a.transactionIndex - b.transactionIndex
+    );
     sortedResults = sortedResults.map(r => r.i);
     return sortedResults;
   }
