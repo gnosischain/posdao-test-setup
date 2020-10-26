@@ -47,8 +47,8 @@ describe('TxPriority tests', () => {
         arguments: [web3.utils.toWei('1'), account.address],
         params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
       }];
-      const results = await batchSendTransactions(transactions);
-      const allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
+      const { receipts } = await batchSendTransactions(transactions);
+      const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
       expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
     }
   });
@@ -72,12 +72,12 @@ describe('TxPriority tests', () => {
       arguments: [StakingAuRa.address, '0x48aaa4a2', '1000'],
       params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
     }];
-    let results = await batchSendTransactions(transactions);
-    let allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
+    let { receipts } = await batchSendTransactions(transactions);
+    let allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
 
     // Send test transactions in a single block
-    results = await sendTestTransactionsInSingleBlock(async () => {
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
         // 0. Call StakingAuRa.setCandidateMinStake with non-zero gas price
@@ -110,7 +110,7 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order (will fail on OpenEthereum)
-    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
       1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
@@ -135,14 +135,14 @@ describe('TxPriority tests', () => {
       arguments: [StakingAuRa.address, '0x48aaa4a2'],
       params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
     }];
-    results = await batchSendTransactions(transactions);
-    allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
+    receipts = (await batchSendTransactions(transactions)).receipts;
+    allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, 'Cannot remove priorities').to.equal(true);
   });
 
   it('Test 2', async function() {
     // Send test transactions in a single block
-    const results = await sendTestTransactionsInSingleBlock(async () => {
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
         // 0. Call StakingAuRa.setCandidateMinStake with non-zero gas price
@@ -175,7 +175,7 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order
-    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
       3, // arbitrary transaction
       0, // StakingAuRa.setCandidateMinStake
       2, // StakingAuRa.setDelegatorMinStake
@@ -207,12 +207,12 @@ describe('TxPriority tests', () => {
       arguments: [StakingAuRa.address, '0x48aaa4a2', '1000'],
       params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
     }];
-    let results = await batchSendTransactions(transactions);
-    let allTxSucceeded = results.reduce((acc, receipt) => acc && receipt.status, true);
+    let { receipts } = await batchSendTransactions(transactions);
+    let allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot set priorities`).to.equal(true);
 
     // Send test transactions in a single block
-    results = await sendTestTransactionsInSingleBlock(async () => {
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
         // 0. Call StakingAuRa.setCandidateMinStake with non-zero gas price
@@ -245,7 +245,7 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order (will fail on OpenEthereum)
-    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
       3, // arbitrary transaction
       0, // StakingAuRa.setCandidateMinStake
       1, // StakingAuRa.setDelegatorMinStake
@@ -255,7 +255,7 @@ describe('TxPriority tests', () => {
 
   it('Test 4 (depends on Test 3)', async function() {
     // Send test transactions in a single block
-    const results = await sendTestTransactionsInSingleBlock(async () => {
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
         // 0. The arbitrary account sends a TX
@@ -286,7 +286,7 @@ describe('TxPriority tests', () => {
     });
 
     // Check transactions order (will fail on OpenEthereum)
-    expect(sortByTransactionIndex(results), 'Invalid transactions order').to.eql([
+    expect(sortByTransactionIndex(receipts), 'Invalid transactions order').to.eql([
       2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       0, // arbitrary transaction
     ]);
@@ -319,20 +319,20 @@ describe('TxPriority tests', () => {
     });
     const gas = await Promise.all(promises);
 
-    let results = await executeTransactions(transactions, gas);
+    const receipts = await executeTransactions(transactions, gas);
 
     if (ensureSingleBlock && transactions.length > 0) {
       // Ensure the transactions were mined in the same block
-      let blockNumber = getTransactionsBlockNumber(results);
+      let blockNumber = getTransactionsBlockNumber(receipts);
       if (!blockNumber) {
-        return null;
+        return { receipts, singleBlock: false };
       }
 
       // Check min/max transactionIndex
       let minTransactionIndex = Number.MAX_SAFE_INTEGER;
       let maxTransactionIndex = Number.MIN_SAFE_INTEGER;
       let definedResults = 0;
-      results.forEach(receipt => {
+      receipts.forEach(receipt => {
         if (receipt) {
           minTransactionIndex = Math.min(minTransactionIndex, receipt.transactionIndex);
           maxTransactionIndex = Math.max(maxTransactionIndex, receipt.transactionIndex);
@@ -366,9 +366,11 @@ describe('TxPriority tests', () => {
           }
         }
       }
+
+      return { receipts, singleBlock: true };
     }
 
-    return results;
+    return { receipts };
   }
 
   async function executeTransactions(transactions, gas) {
@@ -412,9 +414,9 @@ describe('TxPriority tests', () => {
     return await Promise.all(promises);
   }
 
-  function getTransactionsBlockNumber(results) {
+  function getTransactionsBlockNumber(receipts) {
     let blockNumber = 0;
-    let blockNumbers = results.map(receipt => receipt ? receipt.blockNumber : 0);
+    let blockNumbers = receipts.map(receipt => receipt ? receipt.blockNumber : 0);
     blockNumbers = blockNumbers.filter((x, i, a) => a.indexOf(x) == i);
     blockNumbers.sort((a, b) => a - b);
     if (blockNumbers.length == 1) {
@@ -431,14 +433,14 @@ describe('TxPriority tests', () => {
 
   async function sendTestTransactionsInSingleBlock(sendTestTransactions) {
     let results = await sendTestTransactions();
-    for (let t = 0; t < 10 && results == null; t++) {
+    for (let t = 0; t < 10 && !results.singleBlock; t++) {
       console.log('    Transactions were not mined in the same block. Try again...');
       results = await sendTestTransactions();
     }
-    if (results == null) {
+    if (!results.singleBlock) {
       expect(false, 'Transactions were not mined in the same block').to.equal(true);
     }
-    return results;
+    return results.receipts;
   }
 
   function sortByTransactionIndex(results) {
