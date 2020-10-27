@@ -58,25 +58,11 @@ describe('TxPriority tests', () => {
 
   it('Test 1', async function() {
     // Set priorities
-    await applyPriorityRules(async () => {
-      let ownerNonce = await web3.eth.getTransactionCount(OWNER);
-      return [{
-        // Set priority for BlockRewardAuRa.setErcToNativeBridgesAllowed
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [BlockRewardAuRa.address, '0x171d54dd', '3000'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Set priority for StakingAuRa.setDelegatorMinStake
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [StakingAuRa.address, '0x2bafde8d', '2000'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Set priority for StakingAuRa.setCandidateMinStake
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [StakingAuRa.address, '0x48aaa4a2', '1000'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }];
-    });
+    await applyPriorityRules('set', [
+      [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [StakingAuRa.address, '0x2bafde8d', '2000'],     // StakingAuRa.setDelegatorMinStake
+      [StakingAuRa.address, '0x48aaa4a2', '1000'],     // StakingAuRa.setCandidateMinStake
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -119,25 +105,11 @@ describe('TxPriority tests', () => {
     ], receipts);
 
     // Remove previously set priorities
-    await applyPriorityRules(async () => {
-      let ownerNonce = await web3.eth.getTransactionCount(OWNER);
-      return [{
-        // Remove priority for BlockRewardAuRa.setErcToNativeBridgesAllowed
-        method: TxPriority.instance.methods.removePriority,
-        arguments: [BlockRewardAuRa.address, '0x171d54dd'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Remove priority for StakingAuRa.setDelegatorMinStake
-        method: TxPriority.instance.methods.removePriority,
-        arguments: [StakingAuRa.address, '0x2bafde8d'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Remove priority for StakingAuRa.setCandidateMinStake
-        method: TxPriority.instance.methods.removePriority,
-        arguments: [StakingAuRa.address, '0x48aaa4a2'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }];
-    });
+    await applyPriorityRules('remove', [
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [StakingAuRa.address, '0x2bafde8d'],     // StakingAuRa.setDelegatorMinStake
+      [StakingAuRa.address, '0x48aaa4a2'],     // StakingAuRa.setCandidateMinStake
+    ]);
   });
 
   it('Test 2', async function() {
@@ -184,30 +156,12 @@ describe('TxPriority tests', () => {
 
   it('Test 3', async function() {
     // Set priorities
-    await applyPriorityRules(async () => {
-      let ownerNonce = await web3.eth.getTransactionCount(OWNER);
-      return [{
-        // Set priority for BlockRewardAuRa.setErcToNativeBridgesAllowed
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [BlockRewardAuRa.address, '0x171d54dd', '3000'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Set priority for StakingAuRa.setDelegatorMinStake
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [StakingAuRa.address, '0x2bafde8d', '2000'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Set priority for the arbitrary address
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [account.address, '0x00000000', '1500'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }, {
-        // Set priority for StakingAuRa.setCandidateMinStake
-        method: TxPriority.instance.methods.setPriority,
-        arguments: [StakingAuRa.address, '0x48aaa4a2', '1000'],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
-      }];
-    });
+    await applyPriorityRules('set', [
+      [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [StakingAuRa.address, '0x2bafde8d', '2000'],     // StakingAuRa.setDelegatorMinStake
+      [account.address, '0x00000000', '1500'],         // arbitrary address
+      [StakingAuRa.address, '0x48aaa4a2', '1000'],     // StakingAuRa.setCandidateMinStake
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -292,12 +246,24 @@ describe('TxPriority tests', () => {
     await waitForNextStakingEpoch(web3);
   });
 
-  async function applyPriorityRules(getTransactions) {
-    const { receipts } = await batchSendTransactions(await getTransactions());
+  async function applyPriorityRules(type, rules) {
+    let ownerNonce = await web3.eth.getTransactionCount(OWNER);
+    const transactions = [];
+    const method = (type == 'set') ? TxPriority.instance.methods.setPriority : TxPriority.instance.methods.removePriority;
+
+    rules.forEach(arguments => {
+      transactions.push({
+        method,
+        arguments,
+        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+      });
+    });
+
+    const { receipts } = await batchSendTransactions(transactions);
     const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot update priorities`).to.equal(true);
 
-    // Wait for a few blocks to let validator nodes apply the TxPriority rules
+    // Wait for a few blocks to let validator nodes apply the rules
     const startBlockNumber = await web3.eth.getBlockNumber();
     do {
       await sleep(500);
