@@ -205,6 +205,12 @@ describe('TxPriority tests', () => {
   });
 
   it('Test 4 (depends on Test 3)', async function() {
+    // Current priorities by weight:
+    //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -239,6 +245,137 @@ describe('TxPriority tests', () => {
     checkTransactionOrder([
       2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       0, // arbitrary transaction
+    ], receipts);
+  });
+
+  it('Test 5 (depends on Test 3)', async function() {
+    // Remove priority for BlockRewardAuRa.setErcToNativeBridgesAllowed
+    await applyPriorityRules('remove', [
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call StakingAuRa.setCandidateMinStake
+        method: StakingAuRa.instance.methods.setCandidateMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 }
+      }, {
+        // 1. Call BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([
+      1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      0, // StakingAuRa.setCandidateMinStake
+    ], receipts);
+  });
+
+  it('Test 6 (depends on Tests 3, 5)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 }
+      }, {
+        // 1. Call StakingAuRa.setCandidateMinStake
+        method: StakingAuRa.instance.methods.setCandidateMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([
+      1, // StakingAuRa.setCandidateMinStake
+      0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ], receipts);
+  });
+
+  it('Test 7 (depends on Test 3)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call StakingAuRa.setDelegatorMinStake
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
+      }, {
+        // 1. Send 0 coins to account.address
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice1,
+          nonce: ownerNonce + 1
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([
+      0, // StakingAuRa.setDelegatorMinStake
+      1, // arbitrary account.address
+    ], receipts);
+  });
+
+  it('Test 8 (depends on Test 3)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Send 0 coins to account.address
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice1,
+          nonce: ownerNonce
+        }
+      }, {
+        // 1. Call StakingAuRa.setDelegatorMinStake
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([
+      0, // arbitrary account.address
+      1, // StakingAuRa.setDelegatorMinStake
     ], receipts);
   });
 
@@ -366,7 +503,7 @@ describe('TxPriority tests', () => {
         // eth_sendTransaction
         send = item.method(...arguments).send;
       } else {
-        // eth_sendRawTransaction
+        // eth_sendRawTransaction or eth_sendTransaction
         send = item.method;
       }
       if (gas[index]) {
