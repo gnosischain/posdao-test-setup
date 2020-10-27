@@ -241,7 +241,7 @@ describe('TxPriority tests', () => {
         arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
       }];
-    });
+    }, 2);
 
     // Here we expect that the most weighted transaction will be picked up
     // when the nonce is the same, and the arbitrary prioritized transaction
@@ -409,7 +409,7 @@ describe('TxPriority tests', () => {
         arguments: [[OWNER]],
         params: { from: OWNER, gasPrice: gasPrice2, nonce } // 2 GWei
       }];
-    });
+    }, 1);
 
     // Here we expect the prioritized transaction to be mined,
     // and the non-prioritized one with the same nonce is rejected
@@ -440,13 +440,48 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
       }];
-    });
+    }, 1);
 
     // Here we expect the prioritized transaction to be mined,
     // and the non-prioritized one with the same nonce is rejected
     // despite that it has a higher gas price
     checkTransactionOrder([
       1, // StakingAuRa.setCandidateMinStake
+    ], receipts);
+  });
+
+  it('Test 11 (depends on Test 3)', async function() { // will fail on OpenEthereum
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const nonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Send 0 coins to a prioritized account.address
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce
+        }
+      }, {
+        // 1. Call a prioritized StakingAuRa.setDelegatorMinStake
+        // with the same nonce but a lower gas price
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
+      }];
+    }, 1);
+
+    // We expect that the more weighted transaction will be mined
+    // despite that it has a lower gas price
+    checkTransactionOrder([
+      1, // StakingAuRa.setDelegatorMinStake
     ], receipts);
   });
 
@@ -478,7 +513,7 @@ describe('TxPriority tests', () => {
     } while (await web3.eth.getBlockNumber() - startBlockNumber < 2);
   }
 
-  async function batchSendTransactions(transactions, ensureSingleBlock) {
+  async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected) {
     // Estimate gas for each transaction
     const promises = [];
     transactions.forEach(item => {
@@ -501,7 +536,7 @@ describe('TxPriority tests', () => {
     });
     const gas = await Promise.all(promises);
 
-    const receipts = await executeTransactions(transactions, gas);
+    const receipts = await executeTransactions(transactions, gas, receiptsExpected);
 
     if (ensureSingleBlock && transactions.length > 0) {
       // Ensure the transactions were mined in the same block
@@ -562,8 +597,13 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function executeTransactions(transactions, gas) {
+  async function executeTransactions(transactions, gas, receiptsExpected) {
     const promises = [];
+
+    let receiptsReceived = 0;
+    if (!receiptsExpected) {
+      receiptsExpected = transactions.length;
+    }
 
     // Prepare transactions for sending in batch
     let batch = new web3.BatchRequest();
@@ -588,9 +628,10 @@ describe('TxPriority tests', () => {
             let attempts = 0;
             let receipt = null;
             // Wait for the receipt during 30 seconds
-            while (receipt == null && attempts++ <= 60) {
+            while (receipt == null && attempts++ <= 60 && receiptsReceived < receiptsExpected) {
               await sleep(500);
               receipt = await web3.eth.getTransactionReceipt(txHash);
+              if (receipt) receiptsReceived++;
             }
             resolve(receipt);
           }
@@ -620,8 +661,8 @@ describe('TxPriority tests', () => {
     return blockNumber;
   }
 
-  async function sendTestTransactionsInSingleBlock(getTransactions) {
-    let results = await batchSendTransactions(await getTransactions(), true);
+  async function sendTestTransactionsInSingleBlock(getTransactions, receiptsExpected) {
+    let results = await batchSendTransactions(await getTransactions(), true, receiptsExpected);
 
     let receiptsInDifferentBlocks = null;
     if (!results.singleBlock) {
@@ -630,7 +671,7 @@ describe('TxPriority tests', () => {
 
     for (let t = 0; t < 10 && !results.singleBlock; t++) {
       console.log('      Transactions were not mined in the same block. Retrying...');
-      results = await batchSendTransactions(await getTransactions(), true);
+      results = await batchSendTransactions(await getTransactions(), true, receiptsExpected);
     }
     if (!results.singleBlock) {
       expect(false, 'Transactions were not mined in the same block').to.equal(true);
