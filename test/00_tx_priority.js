@@ -14,7 +14,7 @@ const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
 
 // Set to `false` to ignore transactions order when they are in different blocks
-const checkOrderWhenDifferentBlocks = true;
+const checkOrderWhenDifferentBlocks = false;
 
 describe('TxPriority tests', () => {
   const gasPrice0 = web3.utils.toWei('0', 'gwei');
