@@ -20,6 +20,7 @@ describe('TxPriority tests', () => {
   const gasPrice0 = web3.utils.toWei('0', 'gwei');
   const gasPrice1 = web3.utils.toWei('1', 'gwei');
   const gasPrice2 = web3.utils.toWei('2', 'gwei');
+  const gasPrice3 = web3.utils.toWei('3', 'gwei');
   const account = web3.eth.accounts.create();
   let candidateMinStake;
   let delegatorMinStake;
@@ -330,7 +331,7 @@ describe('TxPriority tests', () => {
       return [{
         // 0. Call a prioritized StakingAuRa.setDelegatorMinStake
         method: StakingAuRa.instance.methods.setDelegatorMinStake,
-        arguments: [candidateMinStake],
+        arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
       }, {
         // 1. Send 0 coins to a prioritized account.address
@@ -376,7 +377,7 @@ describe('TxPriority tests', () => {
         // 1. Call a prioritized StakingAuRa.setDelegatorMinStake
         // with the same gas price but a higher nonce
         method: StakingAuRa.instance.methods.setDelegatorMinStake,
-        arguments: [candidateMinStake],
+        arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 } // 1 GWei
       }];
     });
@@ -473,7 +474,7 @@ describe('TxPriority tests', () => {
         // 1. Call a prioritized StakingAuRa.setDelegatorMinStake
         // with the same nonce but a lower gas price
         method: StakingAuRa.instance.methods.setDelegatorMinStake,
-        arguments: [candidateMinStake],
+        arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
       }];
     }, 1);
@@ -482,6 +483,264 @@ describe('TxPriority tests', () => {
     // despite that it has a lower gas price
     checkTransactionOrder([
       1, // StakingAuRa.setDelegatorMinStake
+    ], receipts);
+  });
+
+  it('Test 12 (depends on Test 3)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+    //   1000: StakingAuRa.setCandidateMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const nonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized StakingAuRa.setDelegatorMinStake
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [delegatorMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
+      }, {
+        // 1. Send 0 coins to a prioritized account.address
+        // with the same nonce but a higher gas price
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce
+        }
+      }];
+    }, 1);
+
+    // We expect that the more weighted transaction will be mined
+    // despite that it has a lower gas price
+    checkTransactionOrder([ // will fail on OpenEthereum
+      0, // StakingAuRa.setDelegatorMinStake
+    ], receipts);
+  });
+
+  it('Test 13 (depends on Test 3)', async function() {
+    // Remove priority for StakingAuRa.setCandidateMinStake
+    await applyPriorityRules('remove', [
+      [StakingAuRa.address, '0x48aaa4a2'], // StakingAuRa.setCandidateMinStake
+    ]);
+
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const nonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a non-prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
+      }, {
+        // 1. Call a non-prioritized StakingAuRa.setCandidateMinStake
+        // with the same nonce but a higher gas price
+        method: StakingAuRa.instance.methods.setCandidateMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice2, nonce } // 2 GWei
+      }];
+    }, 1);
+
+    // We expect that the transaction with higher gas price will be mined
+    checkTransactionOrder([
+      1, // StakingAuRa.setCandidateMinStake
+    ], receipts);
+  });
+
+  it('Test 14 (depends on Tests 3, 13)', async function() { // will fail on OpenEthereum
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+    //   1500: arbitrary account.address
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const nonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a non-prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
+      }, {
+        // 1. Call a non-prioritized StakingAuRa.setCandidateMinStake
+        // with the same nonce and gas price
+        method: StakingAuRa.instance.methods.setCandidateMinStake,
+        arguments: [candidateMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce } // 1 GWei
+      }];
+    }, 1);
+
+    // We expect that the second transaction will overlap the first one
+    checkTransactionOrder([
+      1, // StakingAuRa.setCandidateMinStake
+    ], receipts);
+  });
+
+  it('Test 15 (depends on Tests 3, 13)', async function() {
+    // Remove priority for arbitrary address
+    await applyPriorityRules('remove', [
+      [account.address, '0x00000000'], // arbitrary address
+    ]);
+
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. The arbitrary account sends a non-prioritized TX
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a non-prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        // with the same gas price
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
+      }, {
+        // 2. Call a prioritized StakingAuRa.setDelegatorMinStake
+        // with incremented nonce and the same gas price
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [delegatorMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 } // 1 GWei
+      }];
+    });
+
+    // Expect these txs to be mined in the same order
+    checkTransactionOrder([
+      0, // arbitrary account.address
+      1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      2, // StakingAuRa.setDelegatorMinStake
+    ], receipts);
+  });
+
+  it('Test 16 (depends on Tests 3, 13, 15)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a non-prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
+      }, {
+        // 1. The arbitrary account sends a non-prioritized TX
+        // with the same gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized StakingAuRa.setDelegatorMinStake
+        // with incremented nonce and the same gas price
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [delegatorMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 } // 1 GWei
+      }];
+    });
+
+    // We expect the following order because the non-prioritized TX from the OWNER
+    // is the first in the list above, and setDelegatorMinStake is prioritized
+    // towards the non-prioritized arbitrary transaction
+    checkTransactionOrder([ // will fail on OpenEthereum
+      0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      2, // StakingAuRa.setDelegatorMinStake
+      1, // arbitrary account.address
+    ], receipts);
+  });
+
+  it('Test 17 (depends on Tests 3, 13, 15)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. The arbitrary account sends a non-prioritized TX
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a non-prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        // with a higher gas price
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice3, nonce: ownerNonce } // 3 GWei
+      }, {
+        // 2. Call a prioritized StakingAuRa.setDelegatorMinStake
+        // with incremented nonce and a lower gas price
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [delegatorMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 } // 1 GWei
+      }];
+    });
+
+    // We expect setErcToNativeBridgesAllowed to be mined first
+    // because it has higher gas price. Then, setDelegatorMinStake
+    // should be mined as it is prioritized towards the
+    // non-prioritized arbitrary transaction
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      2, // StakingAuRa.setDelegatorMinStake
+      0, // arbitrary account.address
+    ], receipts);
+  });
+
+  it('Test 18 (depends on Tests 3, 13, 15)', async function() {
+    // Current priorities by weight:
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a non-prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
+      }, {
+        // 1. The arbitrary account sends a non-prioritized TX
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: account.address,
+          gas: '21000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized StakingAuRa.setDelegatorMinStake
+        method: StakingAuRa.instance.methods.setDelegatorMinStake,
+        arguments: [delegatorMinStake],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce + 1 } // 1 GWei
+      }];
+    });
+
+    // We expect the non-prioritized arbitrary transaction to be mined first
+    // because it has a higher gas price. Then, we expect setErcToNativeBridgesAllowed
+    // to be second because of the nonce.
+    checkTransactionOrder([
+      1, // arbitrary account.address
+      0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      2, // StakingAuRa.setDelegatorMinStake
     ], receipts);
   });
 
