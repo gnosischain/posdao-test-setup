@@ -426,7 +426,7 @@ describe('TxPriority tests', () => {
     ], receipts);
   });
 
-  it('Test 10 (depends on Test 3)', async function() { // will fail on OpenEthereum
+  it('Test 10 (depends on Tests 3, 5)', async function() { // will fail on OpenEthereum
     // Current priorities by weight:
     //   2000: StakingAuRa.setDelegatorMinStake
     //   1500: arbitrary account.address
