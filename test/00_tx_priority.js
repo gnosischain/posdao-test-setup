@@ -744,6 +744,44 @@ describe('TxPriority tests', () => {
     ], receipts);
   });
 
+  it('Test 19', async function() {
+    // Set priorities
+    await applyPriorityRules('set', [
+      [BlockRewardAuRa.address, '0x00000000', '4000'], // BlockRewardAuRa.fallback
+      [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
+    // Current priorities by weight:
+    //   4000: BlockRewardAuRa.fallback
+    //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
+        method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
+        arguments: [[OWNER]],
+        params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
+      }, {
+        // 1. The arbitrary account sends a prioritized TX
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // BlockRewardAuRa.fallback
+      0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ], receipts);
+  });
+
   it('Finish', async function() {
     await waitForNextStakingEpoch(web3);
   });

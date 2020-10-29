@@ -124,7 +124,7 @@ async function main() {
           contractName = contractNameByAddress[tx.to]
         }
         console.log(`  ${tx.from} => ${contractName}`);
-        console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}`);
+        console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}, index: ${tx.receipt.transactionIndex}`);
       });
       console.log('');
     }
@@ -137,7 +137,7 @@ async function main() {
           contractName = contractNameByAddress[tx.to]
         }
         console.log(`  ${tx.from} => ${contractName}`);
-        console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}`);
+        console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}, index: ${tx.receipt.transactionIndex}`);
       });
       console.log('');
     }
