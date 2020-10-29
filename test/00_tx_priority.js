@@ -6,6 +6,7 @@ const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 const expect = require('chai').expect;
 
 const BlockRewardAuRa = require('../utils/getContract')('BlockRewardAuRa', web3);
+const RandomAuRa = require('../utils/getContract')('RandomAuRa', web3);
 const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const TxPriority = require('../utils/getContract')('TxPriority', web3);
 const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3);
