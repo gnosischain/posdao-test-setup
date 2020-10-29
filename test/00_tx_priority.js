@@ -22,6 +22,7 @@ describe('TxPriority tests', () => {
   const gasPrice2 = web3.utils.toWei('2', 'gwei');
   const gasPrice3 = web3.utils.toWei('3', 'gwei');
   const account = web3.eth.accounts.create();
+  const account2 = web3.eth.accounts.create();
   let candidateMinStake;
   let delegatorMinStake;
 
@@ -43,12 +44,17 @@ describe('TxPriority tests', () => {
       }, {
         // Mint coins for the owner
         method: BlockRewardAuRa.instance.methods.addExtraReceiver,
-        arguments: [web3.utils.toWei('1'), OWNER],
+        arguments: [web3.utils.toWei('100'), OWNER],
         params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
       }, {
         // Mint coins for the arbitrary account
         method: BlockRewardAuRa.instance.methods.addExtraReceiver,
-        arguments: [web3.utils.toWei('1'), account.address],
+        arguments: [web3.utils.toWei('100'), account.address],
+        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+      }, {
+        // Mint coins for the arbitrary account2
+        method: BlockRewardAuRa.instance.methods.addExtraReceiver,
+        arguments: [web3.utils.toWei('100'), account2.address],
         params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
       }];
       const { receipts } = await batchSendTransactions(transactions);
@@ -765,7 +771,7 @@ describe('TxPriority tests', () => {
         arguments: [[OWNER]],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
       }, {
-        // 1. The arbitrary account sends a prioritized TX
+        // 1. The arbitrary account sends a prioritized TX to call BlockRewardAuRa.fallback
         method: web3.eth.sendSignedTransaction,
         params: (await account.signTransaction({
           to: BlockRewardAuRa.address,
@@ -779,6 +785,114 @@ describe('TxPriority tests', () => {
     checkTransactionOrder([ // will fail on OpenEthereum
       1, // BlockRewardAuRa.fallback
       0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ], receipts);
+  });
+
+  it('Test 20', async function() {
+    // Set priorities
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '4000'], // ValidatorSetAuRa.fallback
+      [RandomAuRa.address, '0x00000000', '3001'],       // RandomAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
+    ]);
+
+    // Current priorities by weight:
+    //   4000: ValidatorSetAuRa.fallback
+    //   3001: RandomAuRa.fallback
+    //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
+    //   2001: BlockRewardAuRa.fallback
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized RandomAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: RandomAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // ValidatorSetAuRa.fallback
+      1, // RandomAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+  });
+
+  it('Test 21 (depends on Test 20)', async function() {
+    // Set priorities
+    await applyPriorityRules('set', [
+      [BlockRewardAuRa.address, '0x00000000', '5000'],  // BlockRewardAuRa.fallback
+    ]);
+
+    // Current priorities by weight:
+    //   5000: BlockRewardAuRa.fallback
+    //   4000: ValidatorSetAuRa.fallback
+    //   3001: RandomAuRa.fallback
+    //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized RandomAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: RandomAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }, {
+        // 2. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // BlockRewardAuRa.fallback
+      1, // ValidatorSetAuRa.fallback
+      0, // RandomAuRa.fallback
     ], receipts);
   });
 
