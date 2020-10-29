@@ -6,7 +6,6 @@ const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 const expect = require('chai').expect;
 
 const BlockRewardAuRa = require('../utils/getContract')('BlockRewardAuRa', web3);
-const RandomAuRa = require('../utils/getContract')('RandomAuRa', web3);
 const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const TxPriority = require('../utils/getContract')('TxPriority', web3);
 const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3);
@@ -793,13 +792,13 @@ describe('TxPriority tests', () => {
     // Set priorities
     await applyPriorityRules('set', [
       [ValidatorSetAuRa.address, '0x00000000', '4000'], // ValidatorSetAuRa.fallback
-      [RandomAuRa.address, '0x00000000', '3001'],       // RandomAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3001'],      // StakingAuRa.fallback
       [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
     ]);
 
     // Current priorities by weight:
     //   4000: ValidatorSetAuRa.fallback
-    //   3001: RandomAuRa.fallback
+    //   3001: StakingAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2001: BlockRewardAuRa.fallback
     //   2000: StakingAuRa.setDelegatorMinStake
@@ -816,10 +815,10 @@ describe('TxPriority tests', () => {
           gasPrice: gasPrice3 // 3 GWei
         })).rawTransaction
       }, {
-        // 1. Call a prioritized RandomAuRa.fallback
+        // 1. Call a prioritized StakingAuRa.fallback
         method: web3.eth.sendSignedTransaction,
         params: (await account2.signTransaction({
-          to: RandomAuRa.address,
+          to: StakingAuRa.address,
           gas: '100000',
           gasPrice: gasPrice2 // 2 GWei
         })).rawTransaction
@@ -839,7 +838,7 @@ describe('TxPriority tests', () => {
     // Check transactions order
     checkTransactionOrder([ // will fail on OpenEthereum
       2, // ValidatorSetAuRa.fallback
-      1, // RandomAuRa.fallback
+      1, // StakingAuRa.fallback
       0, // BlockRewardAuRa.fallback
     ], receipts);
   });
@@ -853,7 +852,7 @@ describe('TxPriority tests', () => {
     // Current priorities by weight:
     //   5000: BlockRewardAuRa.fallback
     //   4000: ValidatorSetAuRa.fallback
-    //   3001: RandomAuRa.fallback
+    //   3001: StakingAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2000: StakingAuRa.setDelegatorMinStake
 
@@ -861,10 +860,10 @@ describe('TxPriority tests', () => {
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       return [{
-        // 0. Call a prioritized RandomAuRa.fallback
+        // 0. Call a prioritized StakingAuRa.fallback
         method: web3.eth.sendSignedTransaction,
         params: (await account.signTransaction({
-          to: RandomAuRa.address,
+          to: StakingAuRa.address,
           gas: '100000',
           gasPrice: gasPrice1 // 1 GWei
         })).rawTransaction
@@ -893,7 +892,7 @@ describe('TxPriority tests', () => {
     checkTransactionOrder([ // will fail on OpenEthereum
       2, // BlockRewardAuRa.fallback
       1, // ValidatorSetAuRa.fallback
-      0, // RandomAuRa.fallback
+      0, // StakingAuRa.fallback
     ], receipts);
   });
 
