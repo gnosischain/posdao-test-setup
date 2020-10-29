@@ -791,13 +791,13 @@ describe('TxPriority tests', () => {
   it('Test 20', async function() {
     // Set priorities
     await applyPriorityRules('set', [
-      [ValidatorSetAuRa.address, '0x00000000', '4000'], // ValidatorSetAuRa.fallback
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
       [StakingAuRa.address, '0x00000000', '3001'],      // StakingAuRa.fallback
       [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
     ]);
 
     // Current priorities by weight:
-    //   4000: ValidatorSetAuRa.fallback
+    //   4001: ValidatorSetAuRa.fallback
     //   3001: StakingAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2001: BlockRewardAuRa.fallback
@@ -853,7 +853,7 @@ describe('TxPriority tests', () => {
 
     // Current priorities by weight:
     //   5000: BlockRewardAuRa.fallback
-    //   4000: ValidatorSetAuRa.fallback
+    //   4001: ValidatorSetAuRa.fallback
     //   3001: StakingAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2000: StakingAuRa.setDelegatorMinStake
@@ -903,13 +903,13 @@ describe('TxPriority tests', () => {
   it('Test 22', async function() {
     // Set priorities
     await applyPriorityRules('set', [
-      [ValidatorSetAuRa.address, '0x00000000', '4000'], // ValidatorSetAuRa.fallback
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
       [StakingAuRa.address, '0x00000000', '3001'],      // StakingAuRa.fallback
       [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
     ]);
 
     // Current priorities by weight:
-    //   4000: ValidatorSetAuRa.fallback
+    //   4001: ValidatorSetAuRa.fallback
     //   3001: StakingAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2001: BlockRewardAuRa.fallback
@@ -972,7 +972,7 @@ describe('TxPriority tests', () => {
     ]);
 
     // Current priorities by weight:
-    //   4000: ValidatorSetAuRa.fallback
+    //   4001: ValidatorSetAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2001: BlockRewardAuRa.fallback
     //   2000: StakingAuRa.setDelegatorMinStake
