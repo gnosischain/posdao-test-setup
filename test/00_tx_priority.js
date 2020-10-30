@@ -1045,11 +1045,11 @@ describe('TxPriority tests', () => {
     const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot update priorities`).to.equal(true);
 
-    // Wait for a few blocks to let validator nodes apply the rules
+    // Skip a block to let validator nodes apply the rules
     const startBlockNumber = await web3.eth.getBlockNumber();
     do {
       await sleep(500);
-    } while (await web3.eth.getBlockNumber() - startBlockNumber < 2);
+    } while (await web3.eth.getBlockNumber() - startBlockNumber < 1);
   }
 
   async function applySenderWhitelist(senders) {
@@ -1063,11 +1063,11 @@ describe('TxPriority tests', () => {
     const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
     expect(allTxSucceeded, `Cannot update senderWhitelist`).to.equal(true);
 
-    // Wait for a few blocks to let validator nodes apply the whitelist
+    // Skip a block to let validator nodes apply the whitelist
     const startBlockNumber = await web3.eth.getBlockNumber();
     do {
       await sleep(500);
-    } while (await web3.eth.getBlockNumber() - startBlockNumber < 2);
+    } while (await web3.eth.getBlockNumber() - startBlockNumber < 1);
   }
 
   async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected) {
