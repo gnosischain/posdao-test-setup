@@ -63,7 +63,7 @@ async function connect() {
     tryingReconnect = false;
     if (!prevConnected) {
       subscription = web3.eth.subscribe('newBlockHeaders', function(error, result){
-        if (error && error.includes('not supported')) {
+        if (error && error.message.includes('not supported')) {
           scanInterval = setInterval(scanForNewBlock, 500);
         }
       }).on("data", blockHeader => onNewBlock(blockHeader.number));
@@ -74,7 +74,12 @@ async function connect() {
 }
 
 async function onNewBlock(blockNumber) {
-  const block = await web3.eth.getBlock(blockNumber, true);
+  let block;
+  if (isConnected()) {
+    block = await web3.eth.getBlock(blockNumber, true);
+  } else {
+    return;
+  }
 
   console.log(`Block ${block.number}`);
   console.log(`  Gas used:  ${block.gasUsed} [${block.transactions.length} txs]`);
@@ -190,7 +195,13 @@ function isConnected() {
 
 async function scanForNewBlock() {
   if (isConnected()) {
-    const blockNumber = await web3.eth.getBlockNumber();
+    let blockNumber;
+    try {
+      blockNumber = await web3.eth.getBlockNumber();
+    } catch (e) {
+      prevBlock = null;
+      return;
+    }
     if (!prevBlock || blockNumber > prevBlock.number) {
       await onNewBlock(blockNumber);
     }
