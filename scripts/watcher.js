@@ -63,7 +63,7 @@ async function connect() {
     tryingReconnect = false;
     if (!prevConnected) {
       subscription = web3.eth.subscribe('newBlockHeaders', function(error, result){
-        if (error && error.contains('not supported')) {
+        if (error && error.includes('not supported')) {
           scanInterval = setInterval(scanForNewBlock, 500);
         }
       }).on("data", blockHeader => onNewBlock(blockHeader.number));
