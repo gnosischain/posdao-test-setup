@@ -218,6 +218,13 @@ describe('TxPriority tests', () => {
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
 
+    await ensurePriorityRules([
+      [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [StakingAuRa.address, '0x2bafde8d', '2000'],     // StakingAuRa.setDelegatorMinStake
+      [account.address, '0x00000000', '1500'],         // arbitrary address
+      [StakingAuRa.address, '0x48aaa4a2', '1000'],     // StakingAuRa.setCandidateMinStake
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -270,6 +277,12 @@ describe('TxPriority tests', () => {
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
 
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x48aaa4a2', '1000'], // StakingAuRa.setCandidateMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -301,6 +314,12 @@ describe('TxPriority tests', () => {
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
 
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x48aaa4a2', '1000'], // StakingAuRa.setCandidateMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -330,6 +349,11 @@ describe('TxPriority tests', () => {
     //   2000: StakingAuRa.setDelegatorMinStake
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
+
+    await ensurePriorityRules([
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+      [account.address, '0x00000000', '1500'],     // arbitrary address
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -366,6 +390,11 @@ describe('TxPriority tests', () => {
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
 
+    await ensurePriorityRules([
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+      [account.address, '0x00000000', '1500'],     // arbitrary address
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -401,6 +430,12 @@ describe('TxPriority tests', () => {
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
 
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x48aaa4a2', '1000'], // StakingAuRa.setCandidateMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const nonce = await web3.eth.getTransactionCount(OWNER);
@@ -432,6 +467,12 @@ describe('TxPriority tests', () => {
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
 
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x48aaa4a2', '1000'], // StakingAuRa.setCandidateMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const nonce = await web3.eth.getTransactionCount(OWNER);
@@ -462,6 +503,11 @@ describe('TxPriority tests', () => {
     //   2000: StakingAuRa.setDelegatorMinStake
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
+
+    await ensurePriorityRules([
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+      [account.address, '0x00000000', '1500'],     // arbitrary account.address
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -497,6 +543,11 @@ describe('TxPriority tests', () => {
     //   2000: StakingAuRa.setDelegatorMinStake
     //   1500: arbitrary account.address
     //   1000: StakingAuRa.setCandidateMinStake
+
+    await ensurePriorityRules([
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+      [account.address, '0x00000000', '1500'],     // arbitrary account.address
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -537,6 +588,11 @@ describe('TxPriority tests', () => {
     //   2000: StakingAuRa.setDelegatorMinStake
     //   1500: arbitrary account.address
 
+    await ensurePriorityRules(null, [
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [StakingAuRa.address, '0x48aaa4a2'], // StakingAuRa.setCandidateMinStake
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const nonce = await web3.eth.getTransactionCount(OWNER);
@@ -564,6 +620,11 @@ describe('TxPriority tests', () => {
     // Current priorities by weight:
     //   2000: StakingAuRa.setDelegatorMinStake
     //   1500: arbitrary account.address
+
+    await ensurePriorityRules(null, [
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [StakingAuRa.address, '0x48aaa4a2'], // StakingAuRa.setCandidateMinStake
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -596,6 +657,13 @@ describe('TxPriority tests', () => {
 
     // Current priorities by weight:
     //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [account.address, '0x00000000'], // arbitrary address
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -634,6 +702,13 @@ describe('TxPriority tests', () => {
   it('Test 16 (depends on Tests 3, 13, 15)', async function() {
     // Current priorities by weight:
     //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [account.address, '0x00000000'], // arbitrary address
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -675,6 +750,13 @@ describe('TxPriority tests', () => {
     // Current priorities by weight:
     //   2000: StakingAuRa.setDelegatorMinStake
 
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [account.address, '0x00000000'], // arbitrary address
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -715,6 +797,13 @@ describe('TxPriority tests', () => {
   it('Test 18 (depends on Tests 3, 13, 15)', async function() {
     // Current priorities by weight:
     //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([ // should exist:
+      [StakingAuRa.address, '0x2bafde8d', '2000'], // StakingAuRa.setDelegatorMinStake
+    ], [ // should not exist:
+      [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+      [account.address, '0x00000000'], // arbitrary address
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -762,6 +851,11 @@ describe('TxPriority tests', () => {
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2000: StakingAuRa.setDelegatorMinStake
 
+    await ensurePriorityRules([
+      [BlockRewardAuRa.address, '0x00000000', '4000'], // BlockRewardAuRa.fallback
+      [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -802,6 +896,12 @@ describe('TxPriority tests', () => {
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2001: BlockRewardAuRa.fallback
     //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3001'],      // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -857,6 +957,12 @@ describe('TxPriority tests', () => {
     //   3001: StakingAuRa.fallback
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([
+      [BlockRewardAuRa.address, '0x00000000', '5000'],  // BlockRewardAuRa.fallback
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3001'],      // StakingAuRa.fallback
+    ]);
 
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -914,6 +1020,12 @@ describe('TxPriority tests', () => {
     //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
     //   2001: BlockRewardAuRa.fallback
     //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3001'],      // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
+    ]);
 
     // Set sender whitelist
     await applySenderWhitelist([account.address, account2.address]);
@@ -977,6 +1089,13 @@ describe('TxPriority tests', () => {
     //   2001: BlockRewardAuRa.fallback
     //   2000: StakingAuRa.setDelegatorMinStake
 
+    await ensurePriorityRules([ // should exist:
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
+    ], [ // should not exist:
+      [StakingAuRa.address, '0x00000000'], // StakingAuRa.fallback
+    ]);
+
     // Send test transactions in a single block
     const receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
@@ -1021,6 +1140,68 @@ describe('TxPriority tests', () => {
       0, // BlockReward.fallback
       1, // StakingAuRa.fallback
       2, // ValidatorSetAuRa.fallback
+    ], receipts);
+  });
+
+  it('Test 24 (depends on Tests 22, 23)', async function() {
+    // Current priorities by weight:
+    //   4001: ValidatorSetAuRa.fallback
+    //   3000: BlockRewardAuRa.setErcToNativeBridgesAllowed
+    //   2001: BlockRewardAuRa.fallback
+    //   2000: StakingAuRa.setDelegatorMinStake
+
+    await ensurePriorityRules([ // should exist:
+      [ValidatorSetAuRa.address, '0x00000000', '4001'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2001'],  // BlockRewardAuRa.fallback
+    ], [ // should not exist:
+      [StakingAuRa.address, '0x00000000'], // StakingAuRa.fallback
+    ]);
+
+    // Set sender whitelist
+    await applySenderWhitelist([account.address]);
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        // by a whitelisted sender
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a non-prioritized StakingAuRa.fallback
+        // by another whitelisted sender with a higher gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        // by another non-whitelisted account
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // We expect BlockReward.fallback to be first as its sender is whitelisted.
+    // The ValidatorSetAuRa.fallback is the second because it is prioritized
+    // in comparison to the StakingAuRa.fallback which is not prioritized.
+    checkTransactionOrder([ // will fail on OpenEthereum
+      0, // BlockReward.fallback
+      2, // ValidatorSetAuRa.fallback
+      1, // StakingAuRa.fallback
     ], receipts);
   });
 
@@ -1141,6 +1322,21 @@ describe('TxPriority tests', () => {
     if (checkOrderWhenDifferentBlocks && receipts.receiptsInDifferentBlocks) {
       results = sortByTransactionIndex(receipts.receiptsInDifferentBlocks);
       expect(results.map(r => r.i), `Invalid transactions order in different blocks. TX hashes: ${JSON.stringify(results.map(r => r.transactionHash))}`).to.eql(expectedTxOrder);
+    }
+  }
+
+  async function ensurePriorityRules(rulesToBeExistent, rulesToBeNonExistent) {
+    const priorities = await TxPriority.instance.methods.getPriorities().call();
+    const exceptionMessage = `Current priority rules do not converge. Current priorities: ${JSON.stringify(priorities)}`;
+    if (rulesToBeExistent) {
+      expect(rulesToBeExistent.every(rule => {
+        return priorities.some(priority => rule.every((r, i) => r === priority[i]));
+      }), exceptionMessage).to.equal(true);
+    }
+    if (rulesToBeNonExistent) {
+      expect(rulesToBeNonExistent.some(rule => {
+        return priorities.some(priority => rule.every((r, i) => r === priority[i]));
+      }), exceptionMessage).to.equal(false);
     }
   }
 
