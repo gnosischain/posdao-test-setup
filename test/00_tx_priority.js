@@ -1367,7 +1367,7 @@ describe('TxPriority tests', () => {
     // Remove MinGasPrice rule for StakingAuRa.setDelegatorMinStake
     await applyMinGasPrices('remove', [
       [StakingAuRa.address, '0x2bafde8d'], // StakingAuRa.setDelegatorMinStake
-    ]);
+    ], gasPrice3);
     ownerNonce = await web3.eth.getTransactionCount(OWNER);
 
     // The owner successfully calls StakingAuRa.setDelegatorMinStake
@@ -1472,16 +1472,20 @@ describe('TxPriority tests', () => {
     expect(allTxSucceeded, `Cannot update senderWhitelist`).to.equal(true);
   }
 
-  async function applyMinGasPrices(type, rules) {
+  async function applyMinGasPrices(type, rules, gasPrice) {
     let ownerNonce = await web3.eth.getTransactionCount(OWNER);
     const transactions = [];
     const method = (type == 'set') ? TxPriority.instance.methods.setMinGasPrice : TxPriority.instance.methods.removeMinGasPrice;
+
+    if (!gasPrice) {
+      gasPrice = gasPrice0;
+    }
 
     rules.forEach(arguments => {
       transactions.push({
         method,
         arguments,
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice, nonce: ownerNonce++ }
       });
     });
 
