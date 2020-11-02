@@ -1393,7 +1393,7 @@ describe('TxPriority tests', () => {
     // Remove MinGasPrice rule for StakingAuRa.setCandidateMinStake
     await applyMinGasPrices('remove', [
       [StakingAuRa.address, '0x48aaa4a2'], // StakingAuRa.setCandidateMinStake
-    ]);
+    ], gasPrice2);
     ownerNonce = await web3.eth.getTransactionCount(OWNER);
 
     // The owner successfully calls StakingAuRa.setCandidateMinStake
@@ -1425,7 +1425,7 @@ describe('TxPriority tests', () => {
     // Update the existing MinGasPrice rule for StakingAuRa.setCandidateMinStake
     await applyMinGasPrices('set', [
       [StakingAuRa.address, '0x48aaa4a2', gasPrice2], // StakingAuRa.setCandidateMinStake
-    ]);
+    ], gasPrice3);
     ownerNonce = await web3.eth.getTransactionCount(OWNER);
 
     // The owner successfully calls StakingAuRa.setCandidateMinStake
