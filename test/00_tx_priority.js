@@ -1283,8 +1283,8 @@ describe('TxPriority tests', () => {
     const gasPrice05 = web3.utils.toWei('0.5', 'gwei');
 
     // Ensure the configured MinGasPrice is correct
-    expect((new BN(gasPrice05)).lt(new BN(configMinGasPrice)), `Config MinGasPrice is less than ${gasPrice05}`).to.equal(true);
-    expect((new BN(gasPrice2)).gt(new BN(configMinGasPrice)), `Config MinGasPrice is greater than or equal to ${gasPrice2}`).to.equal(true);
+    expect((new BN(gasPrice05)).lt(new BN(configMinGasPrice)), `Config MinGasPrice is less than ${gasPrice05} wei`).to.equal(true);
+    expect((new BN(gasPrice2)).gt(new BN(configMinGasPrice)), `Config MinGasPrice is greater than or equal to ${gasPrice2} wei`).to.equal(true);
 
     // Set MinGasPrice rules
     await applyMinGasPrices('set', [
@@ -1293,7 +1293,7 @@ describe('TxPriority tests', () => {
     ]);
 
     // The owner successfully calls StakingAuRa.setDelegatorMinStake and StakingAuRa.setCandidateMinStake
-    // with zero gas price as they are certified
+    // with zero gas price because the owner is certified
     let ownerNonce = await web3.eth.getTransactionCount(OWNER);
     let results = await batchSendTransactions([{
       method: StakingAuRa.instance.methods.setDelegatorMinStake,
@@ -1308,13 +1308,15 @@ describe('TxPriority tests', () => {
     expect(allTxSucceeded, `The owner failed when using zero gas price`).to.equal(true);
 
     // The owner tries to call StakingAuRa.setDelegatorMinStake with gas price
-    // which is less than the MinGasPrice from the config
+    // which is less than the MinGasPrice from the config, but fails
+    // because the gas price cannot be less than the configured MinGasPrice
     results = await batchSendTransactions([{
       method: StakingAuRa.instance.methods.setDelegatorMinStake,
       arguments: [delegatorMinStake],
       params: { from: OWNER, gasPrice: gasPrice05, nonce: ownerNonce++ }
     }]);
-    expect(results.receipts[0].status, `The owner succeeded when using disallowed gas price of ${gasPrice05}`).to.equal(false);
+    // Will fail on OpenEthereum
+    expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice05} wei`).to.equal(null);
   });
 
   it('Finish', async function() {
