@@ -1313,10 +1313,129 @@ describe('TxPriority tests', () => {
     results = await batchSendTransactions([{
       method: StakingAuRa.instance.methods.setDelegatorMinStake,
       arguments: [delegatorMinStake],
-      params: { from: OWNER, gasPrice: gasPrice05, nonce: ownerNonce++ }
+      params: { from: OWNER, gasPrice: gasPrice05, nonce: ownerNonce }
     }]);
     // Will fail on OpenEthereum
     expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice05} wei`).to.equal(null);
+
+    // The owner successfully calls StakingAuRa.setDelegatorMinStake
+    // with the allowed gas price equal to MinGasPrice from the config
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setDelegatorMinStake,
+      arguments: [delegatorMinStake],
+      params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce++ }
+    }]);
+    expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice1} wei`).to.equal(true);
+
+    // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
+    // which is less than the MinGasPrice from TxPriority, but fails
+    // because the gas price cannot be less than the defined in TxPriority
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
+    }]);
+    // Will fail on OpenEthereum
+    expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei`).to.equal(null);
+
+    // The owner successfully calls StakingAuRa.setCandidateMinStake
+    // with the allowed gas price equal to MinGasPrice from TxPriority
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
+    }]);
+    expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+
+    // Increase MinGasPrice for StakingAuRa.setDelegatorMinStake
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x2bafde8d', gasPrice3], // StakingAuRa.setDelegatorMinStake
+    ]);
+    ownerNonce = await web3.eth.getTransactionCount(OWNER);
+
+    // The owner tries to call StakingAuRa.setDelegatorMinStake with gas price
+    // which is less than the MinGasPrice from TxPriority, but fails
+    // because the gas price cannot be less than the defined in TxPriority
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setDelegatorMinStake,
+      arguments: [delegatorMinStake],
+      params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce }
+    }]);
+    // Will fail on OpenEthereum
+    expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice2} wei`).to.equal(null);
+
+    // Remove MinGasPrice rule for StakingAuRa.setDelegatorMinStake
+    await applyMinGasPrices('remove', [
+      [StakingAuRa.address, '0x2bafde8d'], // StakingAuRa.setDelegatorMinStake
+    ]);
+    ownerNonce = await web3.eth.getTransactionCount(OWNER);
+
+    // The owner successfully calls StakingAuRa.setDelegatorMinStake
+    // with the allowed gas price greater than the MinGasPrice from the config
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setDelegatorMinStake,
+      arguments: [delegatorMinStake],
+      params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
+    }]);
+    expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+
+    // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
+    // which is less than the MinGasPrice from TxPriority and equal to config's, but fails
+    // because the gas price cannot be less than the defined in TxPriority
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
+    }]);
+    // Will fail on OpenEthereum
+    expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei`).to.equal(null);
+
+    // Remove MinGasPrice rule for StakingAuRa.setCandidateMinStake
+    await applyMinGasPrices('remove', [
+      [StakingAuRa.address, '0x48aaa4a2'], // StakingAuRa.setCandidateMinStake
+    ]);
+    ownerNonce = await web3.eth.getTransactionCount(OWNER);
+
+    // The owner successfully calls StakingAuRa.setCandidateMinStake
+    // with the allowed gas price equal to MinGasPrice from the config
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce++ }
+    }]);
+    expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice1} wei`).to.equal(true);
+
+    // Set a new MinGasPrice rule for StakingAuRa.setCandidateMinStake
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x48aaa4a2', gasPrice3], // StakingAuRa.setCandidateMinStake
+    ]);
+    ownerNonce = await web3.eth.getTransactionCount(OWNER);
+
+    // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
+    // which is less than the MinGasPrice from TxPriority and greater than config's, but fails
+    // because the gas price cannot be less than the defined in TxPriority
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce }
+    }]);
+    // Will fail on OpenEthereum
+    expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice2} wei`).to.equal(null);
+
+    // Update the existing MinGasPrice rule for StakingAuRa.setCandidateMinStake
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x48aaa4a2', gasPrice2], // StakingAuRa.setCandidateMinStake
+    ]);
+    ownerNonce = await web3.eth.getTransactionCount(OWNER);
+
+    // The owner successfully calls StakingAuRa.setCandidateMinStake
+    // with the allowed gas price equal to MinGasPrice from TxPriority
+    results = await batchSendTransactions([{
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
+    }]);
+    expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
   });
 
   it('Finish', async function() {
