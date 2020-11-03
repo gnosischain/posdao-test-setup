@@ -36,7 +36,8 @@
   {
     "ForceSealing": true,
     "AllowAuRaPrivateChains": true,
-    "TxPriorityContractAddress": "0x4100000000000000000000000000000000000000"
+    "TxPriorityContractAddress": "0x4100000000000000000000000000000000000000",
+    "TxPriorityConfigFilePath": "./config/TxPriority.json"
   },
   "KeyStore":
   {
