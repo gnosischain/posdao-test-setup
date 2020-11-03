@@ -11,12 +11,21 @@ module.exports = function (contractName, web3) {
                 abi: abi,
                 instance: new web3.eth.Contract(abi, constants.RANDOM_AURA_ADDRESS),
             };
+
         case 'BlockRewardAuRa':
             abi = require('../posdao-contracts/build/contracts/BlockRewardAuRa').abi;
             return {
                 address: constants.BLOCK_REWARD_ADDRESS,
                 abi: abi,
                 instance: new web3.eth.Contract(abi, constants.BLOCK_REWARD_ADDRESS),
+            };
+
+        case 'Certifier':
+            abi = require('../posdao-contracts/build/contracts/Certifier').abi;
+            return {
+                address: constants.CERTIFIER_ADDRESS,
+                abi: abi,
+                instance: new web3.eth.Contract(abi, constants.CERTIFIER_ADDRESS),
             };
 
         case 'ValidatorSetAuRa':

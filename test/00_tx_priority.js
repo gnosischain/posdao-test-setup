@@ -7,6 +7,7 @@ const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 const expect = require('chai').expect;
 
 const BlockRewardAuRa = require('../utils/getContract')('BlockRewardAuRa', web3);
+const Certifier = require('../utils/getContract')('Certifier', web3);
 const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const TxPriority = require('../utils/getContract')('TxPriority', web3);
 const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3);
@@ -1436,6 +1437,33 @@ describe('TxPriority tests', () => {
       params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
     }]);
     expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+  });
+
+  it('Test 27', async function() {
+    // Ensure the account.address is not certified
+    expect(await Certifier.instance.methods.certifiedExplicitly(account.address).call()).to.equal(false);
+
+    // Try to send an arbitrary transaction with zero gas price from account.address
+    let results = await batchSendTransactions([{
+      method: web3.eth.sendSignedTransaction,
+      params: (await account.signTransaction({
+        to: '0x0000000000000000000000000000000000000000',
+        gas: '21000',
+        gasPrice: gasPrice0
+      })).rawTransaction
+    }]);
+    expect(results.receipts[0], 'A non-certified arbitrary account succeeded when using zero gas price').to.equal(null);
+
+    // Try to send an arbitrary transaction with non-zero gas price from account.address
+    results = await batchSendTransactions([{
+      method: web3.eth.sendSignedTransaction,
+      params: (await account.signTransaction({
+        to: '0x0000000000000000000000000000000000000000',
+        gas: '21000',
+        gasPrice: gasPrice1
+      })).rawTransaction
+    }]);
+    expect(results.receipts[0].status, 'An arbitrary account failed when using a non-zero gas price').to.equal(true);
   });
 
   it('Finish', async function() {
