@@ -29,7 +29,7 @@ describe('TxPriority tests', () => {
   const account2 = web3.eth.accounts.create();
   let candidateMinStake;
   let delegatorMinStake;
-  let isLocalConfig = false;
+  let isLocalConfig = true;
   let step;
 
   before(async function() {
@@ -1818,7 +1818,7 @@ describe('TxPriority tests', () => {
   }
 
   function testName(name) {
-    return name + ' - ' + (step === 1 ? 'local config' : 'TxPriority contract');
+    return name + ' - ' + (step === 0 ? 'local config' : 'TxPriority contract');
   }
 
 });
