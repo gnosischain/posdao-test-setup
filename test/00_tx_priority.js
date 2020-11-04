@@ -15,6 +15,8 @@ const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web
 const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
 
+const configFilepath = `${__dirname}/../config/TxPriority.json`;
+
 // Set to `false` to ignore transactions order when they are in different blocks
 const checkOrderWhenDifferentBlocks = false;
 
@@ -27,7 +29,8 @@ describe('TxPriority tests', () => {
   const account2 = web3.eth.accounts.create();
   let candidateMinStake;
   let delegatorMinStake;
-  let isLocalConfig;
+  let isLocalConfig = false;
+  let step;
 
   before(async function() {
     const nodeInfo = await web3.eth.getNodeInfo();
@@ -66,13 +69,7 @@ describe('TxPriority tests', () => {
     }
   });
 
-  for (let step = 0; step < 2; step++) {
-    isLocalConfig = (step == 1);
-
-    if (isLocalConfig) {
-      break; // as we haven't implemented it yet
-    }
-
+  for (step = 0; step < 2; step++) {
     it(testName('Test 1'), async function() {
       // Set priorities
       await applyPriorityRules('set', [
@@ -1448,27 +1445,34 @@ describe('TxPriority tests', () => {
     });
 
     it(testName('Clear priority rules'), async function() {
-      let removeRules = [];
-      let items = await TxPriority.instance.methods.getPriorities().call();
-      items.forEach(rule => {
-        removeRules.push([rule['target'], rule['fnSignature']]);
-      });
-      await applyPriorityRules('remove', removeRules);
-      items = await TxPriority.instance.methods.getPriorities().call();
-      expect(items.length, 'Cannot remove priority rules from TxPriority contract').to.equal(0);
+      if (isLocalConfig) {
+        const config = { whitelist: [], priorities: [], minGasPrices: [] };
+        fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      } else {
+        let removeRules = [];
+        let items = await TxPriority.instance.methods.getPriorities().call();
+        items.forEach(rule => {
+          removeRules.push([rule['target'], rule['fnSignature']]);
+        });
+        await applyPriorityRules('remove', removeRules);
+        items = await TxPriority.instance.methods.getPriorities().call();
+        expect(items.length, 'Cannot remove priority rules').to.equal(0);
 
-      removeRules = [];
-      items = await TxPriority.instance.methods.getMinGasPrices().call();
-      items.forEach(rule => {
-        removeRules.push([rule['target'], rule['fnSignature']]);
-      });
-      await applyMinGasPrices('remove', removeRules);
-      items = await TxPriority.instance.methods.getMinGasPrices().call();
-      expect(items.length, 'Cannot remove MinGasPrice rules from TxPriority contract').to.equal(0);
+        removeRules = [];
+        items = await TxPriority.instance.methods.getMinGasPrices().call();
+        items.forEach(rule => {
+          removeRules.push([rule['target'], rule['fnSignature']]);
+        });
+        await applyMinGasPrices('remove', removeRules);
+        items = await TxPriority.instance.methods.getMinGasPrices().call();
+        expect(items.length, 'Cannot remove MinGasPrice rules').to.equal(0);
 
-      await applySenderWhitelist([]);
-      items = await TxPriority.instance.methods.getSendersWhitelist().call();
-      expect(items.length, 'Cannot remove SendersWhitelist from TxPriority contract').to.equal(0);
+        await applySenderWhitelist([]);
+        items = await TxPriority.instance.methods.getSendersWhitelist().call();
+        expect(items.length, 'Cannot remove SendersWhitelist').to.equal(0);
+      }
+
+      isLocalConfig = !isLocalConfig;
     });
   }
 
@@ -1506,57 +1510,104 @@ describe('TxPriority tests', () => {
   async function applyPriorityRules(type, rules) {
     if (!rules || !rules.length) return;
 
-    let ownerNonce = await web3.eth.getTransactionCount(OWNER);
-    const transactions = [];
-    const method = (type == 'set') ? TxPriority.instance.methods.setPriority : TxPriority.instance.methods.removePriority;
-
-    rules.forEach(arguments => {
-      transactions.push({
-        method,
-        arguments,
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+    if (isLocalConfig) {
+      let config = require(configFilepath);
+      rules.forEach(rule => {
+        const target = rule[0].toLowerCase();
+        const fnSignature = rule[1].toLowerCase();
+        if (type == 'set') {
+          const value = rule[2].toLowerCase();
+          expect(config.priorities.some(p => p.value.toLowerCase() == value && (p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature)), 'Priority weight must be unique').to.equal(false);
+          const index = config.priorities.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
+          if (index < 0) {
+            config.priorities.push({ target, fnSignature, value });
+          } else {
+            config.priorities[index] = { target, fnSignature, value };
+          }
+        } else {
+          config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
+        }
       });
-    });
+      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+    } else {
+      let ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      const transactions = [];
+      const method = (type == 'set') ? TxPriority.instance.methods.setPriority : TxPriority.instance.methods.removePriority;
 
-    const { receipts } = await batchSendTransactions(transactions);
-    const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
-    expect(allTxSucceeded, `Cannot update priorities`).to.equal(true);
+      rules.forEach(arguments => {
+        transactions.push({
+          method,
+          arguments,
+          params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+        });
+      });
+
+      const { receipts } = await batchSendTransactions(transactions);
+      const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
+      expect(allTxSucceeded, `Cannot update priorities`).to.equal(true);
+    }
   }
 
   async function applySenderWhitelist(senders) {
-    const nonce = await web3.eth.getTransactionCount(OWNER);
-    const transactions = [{
-      method: TxPriority.instance.methods.setSendersWhitelist,
-      arguments: [senders],
-      params: { from: OWNER, gasPrice: gasPrice0, nonce }
-    }];
-    const { receipts } = await batchSendTransactions(transactions);
-    const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
-    expect(allTxSucceeded, `Cannot update senderWhitelist`).to.equal(true);
+    if (isLocalConfig) {
+      let config = require(configFilepath);
+      config.whitelist = senders;
+      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+    } else {
+      const nonce = await web3.eth.getTransactionCount(OWNER);
+      const transactions = [{
+        method: TxPriority.instance.methods.setSendersWhitelist,
+        arguments: [senders],
+        params: { from: OWNER, gasPrice: gasPrice0, nonce }
+      }];
+      const { receipts } = await batchSendTransactions(transactions);
+      const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
+      expect(allTxSucceeded, `Cannot update senderWhitelist`).to.equal(true);
+    }
   }
 
   async function applyMinGasPrices(type, rules, gasPrice) {
     if (!rules || !rules.length) return;
 
-    let ownerNonce = await web3.eth.getTransactionCount(OWNER);
-    const transactions = [];
-    const method = (type == 'set') ? TxPriority.instance.methods.setMinGasPrice : TxPriority.instance.methods.removeMinGasPrice;
-
-    if (!gasPrice) {
-      gasPrice = gasPrice0;
-    }
-
-    rules.forEach(arguments => {
-      transactions.push({
-        method,
-        arguments,
-        params: { from: OWNER, gasPrice, nonce: ownerNonce++ }
+    if (isLocalConfig) {
+      let config = require(configFilepath);
+      rules.forEach(rule => {
+        const target = rule[0].toLowerCase();
+        const fnSignature = rule[1].toLowerCase();
+        if (type == 'set') {
+          const value = rule[2].toLowerCase();
+          const index = config.priorities.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
+          if (index < 0) {
+            config.priorities.push({ target, fnSignature, value });
+          } else {
+            config.priorities[index] = { target, fnSignature, value };
+          }
+        } else {
+          config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
+        }
       });
-    });
+      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+    } else {
+      let ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      const transactions = [];
+      const method = (type == 'set') ? TxPriority.instance.methods.setMinGasPrice : TxPriority.instance.methods.removeMinGasPrice;
 
-    const { receipts } = await batchSendTransactions(transactions);
-    const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
-    expect(allTxSucceeded, `Cannot update min gas prices`).to.equal(true);
+      if (!gasPrice) {
+        gasPrice = gasPrice0;
+      }
+
+      rules.forEach(arguments => {
+        transactions.push({
+          method,
+          arguments,
+          params: { from: OWNER, gasPrice, nonce: ownerNonce++ }
+        });
+      });
+
+      const { receipts } = await batchSendTransactions(transactions);
+      const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
+      expect(allTxSucceeded, `Cannot update min gas prices`).to.equal(true);
+    }
   }
 
   async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected) {
@@ -1646,16 +1697,21 @@ describe('TxPriority tests', () => {
   }
 
   async function ensurePriorityRules(rulesToBeExistent, rulesToBeNonExistent) {
-    const priorities = await TxPriority.instance.methods.getPriorities().call();
+    let priorities;
+    if (isLocalConfig) {
+      priorities = require(configFilepath).priorities.map(p => [p.target, p.fnSignature, p.value]);
+    } else {
+      priorities = await TxPriority.instance.methods.getPriorities().call();
+    }
     const exceptionMessage = `Current priority rules do not converge. Current priorities: ${JSON.stringify(priorities)}`;
     if (rulesToBeExistent) {
       expect(rulesToBeExistent.every(rule => {
-        return priorities.some(priority => rule.every((r, i) => r === priority[i]));
+        return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
       }), exceptionMessage).to.equal(true);
     }
     if (rulesToBeNonExistent) {
       expect(rulesToBeNonExistent.some(rule => {
-        return priorities.some(priority => rule.every((r, i) => r === priority[i]));
+        return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
       }), exceptionMessage).to.equal(false);
     }
   }
@@ -1762,7 +1818,7 @@ describe('TxPriority tests', () => {
   }
 
   function testName(name) {
-    return name + ' - ' + (isLocalConfig ? 'local config' : 'TxPriority contract');
+    return name + ' - ' + (step === 1 ? 'local config' : 'TxPriority contract');
   }
 
 });
