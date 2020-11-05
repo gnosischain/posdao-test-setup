@@ -46,7 +46,7 @@
     "UnlockAccounts": ["0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441"],
     "KeyStoreDirectory": "./data/node2/keys/DPoSChain"
   },
-  "MiningConfig":
+  "Mining":
   {
     "MinGasPrice": "1000000000",
     "TargetBlockGasLimit": "12000000"
