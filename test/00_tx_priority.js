@@ -1280,7 +1280,7 @@ describe('TxPriority tests', () => {
       let minGasPrices = [];
       configFiles.forEach(configFile => {
         const configJson = require(`${configPath}/${configFile}`);
-        minGasPrices.push(configJson.MiningConfig.MinGasPrice);
+        minGasPrices.push(configJson.Mining.MinGasPrice);
       });
       minGasPrices = minGasPrices.filter((value, index, self) => self.indexOf(value) === index);
       expect(minGasPrices.length, 'Validators have different MinGasPrice in their configs').to.equal(1);
