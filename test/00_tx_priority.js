@@ -1322,7 +1322,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice05, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice05} wei`).to.equal(null);
+      let receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice05} wei. Tx hash: ${receipt.transactionHash}`).to.equal(null);
 
       // The owner successfully calls StakingAuRa.setDelegatorMinStake
       // with the allowed gas price equal to MinGasPrice from the config
@@ -1331,7 +1332,8 @@ describe('TxPriority tests', () => {
         arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice1} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice1} wei. Tx hash: ${receipt.transactionHash}`).to.equal(true);
 
       // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
       // which is less than the MinGasPrice from TxPriority, but fails
@@ -1342,7 +1344,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice1} wei. Tx hash: ${receipt.transactionHash}`).to.equal(null);
 
       // The owner successfully calls StakingAuRa.setCandidateMinStake
       // with the allowed gas price equal to MinGasPrice from TxPriority
@@ -1351,7 +1354,8 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt.transactionHash}`).to.equal(true);
 
       // Increase MinGasPrice for StakingAuRa.setDelegatorMinStake
       await applyMinGasPrices('set', [
@@ -1368,7 +1372,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice2} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice2} wei. Tx hash: ${receipt.transactionHash}`).to.equal(null);
 
       // Remove MinGasPrice rule for StakingAuRa.setDelegatorMinStake
       await applyMinGasPrices('remove', [
@@ -1383,7 +1388,8 @@ describe('TxPriority tests', () => {
         arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt.transactionHash}`).to.equal(true);
 
       // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
       // which is less than the MinGasPrice from TxPriority and equal to config's, but fails
@@ -1394,7 +1400,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice1} wei. Tx hash: ${receipt.transactionHash}`).to.equal(null);
 
       // Remove MinGasPrice rule for StakingAuRa.setCandidateMinStake
       await applyMinGasPrices('remove', [
@@ -1409,7 +1416,8 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice1} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice1} wei. Tx hash: ${receipt.transactionHash}`).to.equal(true);
 
       // Set a new MinGasPrice rule for StakingAuRa.setCandidateMinStake
       await applyMinGasPrices('set', [
@@ -1426,7 +1434,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice2} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice2} wei. Tx hash: ${receipt.transactionHash}`).to.equal(null);
 
       // Update the existing MinGasPrice rule for StakingAuRa.setCandidateMinStake
       await applyMinGasPrices('set', [
@@ -1441,7 +1450,8 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt.transactionHash}`).to.equal(true);
     });
 
     it(testName('Clear priority rules'), async function() {
