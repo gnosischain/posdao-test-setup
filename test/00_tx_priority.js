@@ -1447,7 +1447,7 @@ describe('TxPriority tests', () => {
     it(testName('Clear priority rules'), async function() {
       if (isLocalConfig) {
         const config = { whitelist: [], priorities: [], minGasPrices: [] };
-        fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+        await saveConfigFile(config);
       } else {
         let removeRules = [];
         let items = await TxPriority.instance.methods.getPriorities().call();
@@ -1528,7 +1528,7 @@ describe('TxPriority tests', () => {
           config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
         }
       });
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      await saveConfigFile(config);
     } else {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [];
@@ -1552,7 +1552,7 @@ describe('TxPriority tests', () => {
     if (isLocalConfig) {
       let config = require(configFilepath);
       config.whitelist = senders;
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      await saveConfigFile(config);
     } else {
       const nonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
@@ -1586,7 +1586,7 @@ describe('TxPriority tests', () => {
           config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
         }
       });
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      await saveConfigFile(config);
     } else {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [];
@@ -1822,6 +1822,23 @@ describe('TxPriority tests', () => {
   }
 
 });
+
+async function saveConfigFile(config) {
+  const attempts = 3;
+  for (let t = 0; t < attempts; t++) {
+    try {
+      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+    } catch (e) {
+      if (e.code == 'EBUSY') {
+        if (t < attempts - 1) {
+          await sleep(1000); // wait for 1s and try again
+          continue;
+        }
+      }
+      throw e;
+    }
+  }
+}
 
 async function sleep(ms) {
   await new Promise(r => setTimeout(r, ms));
