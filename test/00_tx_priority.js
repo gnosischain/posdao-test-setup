@@ -1280,7 +1280,7 @@ describe('TxPriority tests', () => {
       let minGasPrices = [];
       configFiles.forEach(configFile => {
         const configJson = require(`${configPath}/${configFile}`);
-        minGasPrices.push(configJson.MiningConfig.MinGasPrice);
+        minGasPrices.push(configJson.Mining.MinGasPrice);
       });
       minGasPrices = minGasPrices.filter((value, index, self) => self.indexOf(value) === index);
       expect(minGasPrices.length, 'Validators have different MinGasPrice in their configs').to.equal(1);
@@ -1322,7 +1322,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice05, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice05} wei`).to.equal(null);
+      let receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice05} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(null);
 
       // The owner successfully calls StakingAuRa.setDelegatorMinStake
       // with the allowed gas price equal to MinGasPrice from the config
@@ -1331,7 +1332,8 @@ describe('TxPriority tests', () => {
         arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice1} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice1} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
 
       // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
       // which is less than the MinGasPrice from TxPriority, but fails
@@ -1342,7 +1344,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice1} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(null);
 
       // The owner successfully calls StakingAuRa.setCandidateMinStake
       // with the allowed gas price equal to MinGasPrice from TxPriority
@@ -1351,7 +1354,8 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
 
       // Increase MinGasPrice for StakingAuRa.setDelegatorMinStake
       await applyMinGasPrices('set', [
@@ -1368,7 +1372,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice2} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(null);
 
       // Remove MinGasPrice rule for StakingAuRa.setDelegatorMinStake
       await applyMinGasPrices('remove', [
@@ -1383,7 +1388,8 @@ describe('TxPriority tests', () => {
         arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
 
       // The owner tries to call StakingAuRa.setCandidateMinStake with gas price
       // which is less than the MinGasPrice from TxPriority and equal to config's, but fails
@@ -1394,7 +1400,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice1} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(null);
 
       // Remove MinGasPrice rule for StakingAuRa.setCandidateMinStake
       await applyMinGasPrices('remove', [
@@ -1409,7 +1416,8 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice1} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice1} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
 
       // Set a new MinGasPrice rule for StakingAuRa.setCandidateMinStake
       await applyMinGasPrices('set', [
@@ -1426,7 +1434,8 @@ describe('TxPriority tests', () => {
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce }
       }]);
       // Will fail on OpenEthereum
-      expect(results.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice2} wei`).to.equal(null);
+      receipt = results.receipts[0];
+      expect(receipt, `The owner succeeded when using disallowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(null);
 
       // Update the existing MinGasPrice rule for StakingAuRa.setCandidateMinStake
       await applyMinGasPrices('set', [
@@ -1441,13 +1450,14 @@ describe('TxPriority tests', () => {
         arguments: [candidateMinStake],
         params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce++ }
       }]);
-      expect(results.receipts[0].status, `The owner failed when using allowed gas price of ${gasPrice2} wei`).to.equal(true);
+      receipt = results.receipts[0];
+      expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
     });
 
     it(testName('Clear priority rules'), async function() {
       if (isLocalConfig) {
         const config = { whitelist: [], priorities: [], minGasPrices: [] };
-        fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+        await saveConfigFile(config);
       } else {
         let removeRules = [];
         let items = await TxPriority.instance.methods.getPriorities().call();
@@ -1528,7 +1538,7 @@ describe('TxPriority tests', () => {
           config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
         }
       });
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      await saveConfigFile(config);
     } else {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [];
@@ -1552,7 +1562,7 @@ describe('TxPriority tests', () => {
     if (isLocalConfig) {
       let config = require(configFilepath);
       config.whitelist = senders;
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      await saveConfigFile(config);
     } else {
       const nonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
@@ -1576,17 +1586,17 @@ describe('TxPriority tests', () => {
         const fnSignature = rule[1].toLowerCase();
         if (type == 'set') {
           const value = rule[2].toLowerCase();
-          const index = config.priorities.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
+          const index = config.minGasPrices.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
           if (index < 0) {
-            config.priorities.push({ target, fnSignature, value });
+            config.minGasPrices.push({ target, fnSignature, value });
           } else {
-            config.priorities[index] = { target, fnSignature, value };
+            config.minGasPrices[index] = { target, fnSignature, value };
           }
         } else {
-          config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
+          config.minGasPrices = config.minGasPrices.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
         }
       });
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      await saveConfigFile(config);
     } else {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [];
@@ -1822,6 +1832,24 @@ describe('TxPriority tests', () => {
   }
 
 });
+
+async function saveConfigFile(config) {
+  const attempts = 3;
+  for (let t = 0; t < attempts; t++) {
+    try {
+      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      break;
+    } catch (e) {
+      if (e.code == 'EBUSY') {
+        if (t < attempts - 1) {
+          await sleep(1000); // wait for 1s and try again
+          continue;
+        }
+      }
+      throw e;
+    }
+  }
+}
 
 async function sleep(ms) {
   await new Promise(r => setTimeout(r, ms));
