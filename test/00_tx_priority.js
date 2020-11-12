@@ -1586,14 +1586,14 @@ describe('TxPriority tests', () => {
         const fnSignature = rule[1].toLowerCase();
         if (type == 'set') {
           const value = rule[2].toLowerCase();
-          const index = config.priorities.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
+          const index = config.minGasPrices.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
           if (index < 0) {
-            config.priorities.push({ target, fnSignature, value });
+            config.minGasPrices.push({ target, fnSignature, value });
           } else {
-            config.priorities[index] = { target, fnSignature, value };
+            config.minGasPrices[index] = { target, fnSignature, value };
           }
         } else {
-          config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
+          config.minGasPrices = config.minGasPrices.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
         }
       });
       await saveConfigFile(config);
@@ -1838,6 +1838,7 @@ async function saveConfigFile(config) {
   for (let t = 0; t < attempts; t++) {
     try {
       fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+      break;
     } catch (e) {
       if (e.code == 'EBUSY') {
         if (t < attempts - 1) {
