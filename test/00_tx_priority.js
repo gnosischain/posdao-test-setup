@@ -460,11 +460,11 @@ describe('TxPriority tests', () => {
         }];
       }, 1);
 
-      // Here we expect the prioritized transaction to be mined,
-      // and the non-prioritized one with the same nonce is rejected
-      // despite that it has a higher gas price
-      checkTransactionOrder([ // will fail on OpenEthereum
-        0, // StakingAuRa.setCandidateMinStake
+      // Here we expect the non-prioritized transaction to be mined,
+      // and the prioritized one from the same sender with the same nonce
+      // is rejected because it has a lower gas price
+      checkTransactionOrder([
+        1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       ], receipts);
     });
 
@@ -497,11 +497,11 @@ describe('TxPriority tests', () => {
         }];
       }, 1);
 
-      // Here we expect the prioritized transaction to be mined,
-      // and the non-prioritized one with the same nonce is rejected
-      // despite that it has a higher gas price
+      // Here we expect the non-prioritized transaction to be mined,
+      // and the prioritized one from the same sender with the same nonce
+      // is rejected because it has a lower gas price
       checkTransactionOrder([
-        1, // StakingAuRa.setCandidateMinStake
+        0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
       ], receipts);
     });
 
@@ -538,10 +538,10 @@ describe('TxPriority tests', () => {
         }];
       }, 1);
 
-      // We expect that the more weighted transaction will be mined
-      // despite that it has a lower gas price
+      // We expect that the more weighted transaction from the same sender
+      // with the same nonce won't be mined since it has a lower gas price
       checkTransactionOrder([
-        1, // StakingAuRa.setDelegatorMinStake
+        0, // arbitrary account.address
       ], receipts);
     });
 
@@ -578,10 +578,10 @@ describe('TxPriority tests', () => {
         }];
       }, 1);
 
-      // We expect that the more weighted transaction will be mined
-      // despite that it has a lower gas price
-      checkTransactionOrder([ // will fail on OpenEthereum
-        0, // StakingAuRa.setDelegatorMinStake
+      // We expect that the more weighted transaction from the same sender
+      // with the same nonce won't be mined since it has a lower gas price
+      checkTransactionOrder([
+        1, // arbitrary account.address
       ], receipts);
     });
 
@@ -617,7 +617,7 @@ describe('TxPriority tests', () => {
         }];
       }, 1);
 
-      // We expect that the transaction with higher gas price will be mined
+      // We expect that the transaction with a higher gas price will be mined
       checkTransactionOrder([
         1, // StakingAuRa.setCandidateMinStake
       ], receipts);
@@ -650,10 +650,18 @@ describe('TxPriority tests', () => {
         }];
       }, 1);
 
-      // We expect that the second transaction will overlap the first one
-      checkTransactionOrder([
-        1, // StakingAuRa.setCandidateMinStake
-      ], receipts);
+      try {
+        // We expect that the second transaction overlaps the first one
+        // since it is sent after the first one
+        checkTransactionOrder([
+          1, // StakingAuRa.setCandidateMinStake
+        ], receipts);
+      } catch(e) {
+        // If the order differs, we don't treat this as an error
+        // because both transactions are non-prioritized and both have
+        // the same gas price and nonce, so they can be taken in random order
+        console.log('    Warning:', e);
+      }
     });
 
     it(testName('Test 15 (depends on Tests 3, 13)'), async function() {
@@ -698,12 +706,32 @@ describe('TxPriority tests', () => {
         }];
       });
 
-      // Expect these txs to be mined in the same order
-      checkTransactionOrder([
-        0, // arbitrary account.address
-        1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
-        2, // StakingAuRa.setDelegatorMinStake
-      ], receipts);
+      let firstCheckIsFine = true;
+
+      try {
+        // Expect these txs to be mined in the same order because
+        // the second non-prioritized transaction is sent after the first one
+        // according to the above order
+        checkTransactionOrder([
+          0, // arbitrary account.address
+          1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+          2, // StakingAuRa.setDelegatorMinStake
+        ], receipts);
+      } catch (e) {
+        console.log('    Warning:', e);
+        firstCheckIsFine = false;
+      }
+
+      if (!firstCheckIsFine) {
+        // This order can also be treated as correct because the first
+        // non-prioritized transaction can be taken later than the second one
+        // despite their order above
+        checkTransactionOrder([
+          1, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+          2, // StakingAuRa.setDelegatorMinStake
+          0, // arbitrary account.address
+        ], receipts);
+      }
     });
 
     it(testName('Test 16 (depends on Tests 3, 13, 15)'), async function() {
@@ -743,14 +771,32 @@ describe('TxPriority tests', () => {
         }];
       });
 
-      // We expect the following order because the non-prioritized TX from the OWNER
-      // is the first in the list above, and setDelegatorMinStake is prioritized
-      // towards the non-prioritized arbitrary transaction
-      checkTransactionOrder([ // will fail on OpenEthereum
-        0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
-        2, // StakingAuRa.setDelegatorMinStake
-        1, // arbitrary account.address
-      ], receipts);
+      let firstCheckIsFine = true;
+
+      try {
+        // We expect the following order because the non-prioritized TX from the OWNER
+        // is the first in the list above, and setDelegatorMinStake is prioritized
+        // towards the non-prioritized arbitrary transaction
+        checkTransactionOrder([ // will fail on OpenEthereum
+          0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+          2, // StakingAuRa.setDelegatorMinStake
+          1, // arbitrary account.address
+        ], receipts);
+      } catch (e) {
+        console.log('    Warning:', e);
+        firstCheckIsFine = false;
+      }
+
+      if (!firstCheckIsFine) {
+        // This order can also be treated as correct because the first
+        // non-prioritized transaction can be taken later than the second one
+        // despite their order above
+        checkTransactionOrder([ // will fail on OpenEthereum
+          1, // arbitrary account.address
+          0, // BlockRewardAuRa.setErcToNativeBridgesAllowed
+          2, // StakingAuRa.setDelegatorMinStake
+        ], receipts);
+      }
     });
 
     it(testName('Test 17 (depends on Tests 3, 13, 15)'), async function() {
@@ -791,7 +837,7 @@ describe('TxPriority tests', () => {
       });
 
       // We expect setErcToNativeBridgesAllowed to be mined first
-      // because it has higher gas price. Then, setDelegatorMinStake
+      // because it has a higher gas price. Then, setDelegatorMinStake
       // should be mined as it is prioritized towards the
       // non-prioritized arbitrary transaction
       checkTransactionOrder([ // will fail on OpenEthereum
