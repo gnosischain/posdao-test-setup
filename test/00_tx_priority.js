@@ -1884,6 +1884,7 @@ async function saveConfigFile(config) {
   for (let t = 0; t < attempts; t++) {
     try {
       fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
+	  await sleep(500);
       break;
     } catch (e) {
       if (e.code == 'EBUSY') {
