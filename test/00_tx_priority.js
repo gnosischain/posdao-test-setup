@@ -14,8 +14,12 @@ const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web
 
 const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
+const NUMBER_OF_VALIDATORS = 3;
 
-const configFilepath = `${__dirname}/../config/TxPriority.json`;
+const configFilepath = [];
+for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+  configFilepath[nodeNumber] = `${__dirname}/../config/TxPriority${nodeNumber}.json`;
+}
 
 // Set to `false` to ignore transactions order when they are in different blocks
 const checkOrderWhenDifferentBlocks = false;
@@ -1503,7 +1507,11 @@ describe('TxPriority tests', () => {
     it(testName('Clear priority rules'), async function() {
       if (isLocalConfig) {
         const config = { whitelist: [], priorities: [], minGasPrices: [] };
-        await saveConfigFile(config);
+        const promises = [];
+        for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+          promises.push(saveConfigFile(config, nodeNumber));
+        }
+        await Promise.all(promises);
       } else {
         let removeRules = [];
         let items = await TxPriority.instance.methods.getPriorities().call();
@@ -1567,24 +1575,28 @@ describe('TxPriority tests', () => {
     if (!rules || !rules.length) return;
 
     if (isLocalConfig) {
-      let config = require(configFilepath);
-      rules.forEach(rule => {
-        const target = rule[0].toLowerCase();
-        const fnSignature = rule[1].toLowerCase();
-        if (type == 'set') {
-          const value = rule[2].toLowerCase();
-          expect(config.priorities.some(p => p.value.toLowerCase() == value && (p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature)), 'Priority weight must be unique').to.equal(false);
-          const index = config.priorities.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
-          if (index < 0) {
-            config.priorities.push({ target, fnSignature, value });
+      const promises = [];
+      for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+        let config = require(configFilepath[nodeNumber]);
+        rules.forEach(rule => {
+          const target = rule[0].toLowerCase();
+          const fnSignature = rule[1].toLowerCase();
+          if (type == 'set') {
+            const value = rule[2].toLowerCase();
+            expect(config.priorities.some(p => p.value.toLowerCase() == value && (p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature)), 'Priority weight must be unique').to.equal(false);
+            const index = config.priorities.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
+            if (index < 0) {
+              config.priorities.push({ target, fnSignature, value });
+            } else {
+              config.priorities[index] = { target, fnSignature, value };
+            }
           } else {
-            config.priorities[index] = { target, fnSignature, value };
+            config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
           }
-        } else {
-          config.priorities = config.priorities.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
-        }
-      });
-      await saveConfigFile(config);
+        });
+        promises.push(saveConfigFile(config, nodeNumber));
+      }
+      await Promise.all(promises);
     } else {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [];
@@ -1606,9 +1618,13 @@ describe('TxPriority tests', () => {
 
   async function applySenderWhitelist(senders) {
     if (isLocalConfig) {
-      let config = require(configFilepath);
-      config.whitelist = senders;
-      await saveConfigFile(config);
+      const promises = [];
+      for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+        let config = require(configFilepath[nodeNumber]);
+        config.whitelist = senders;
+        promises.push(saveConfigFile(config, nodeNumber));
+      }
+      await Promise.all(promises);
     } else {
       const nonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [{
@@ -1626,23 +1642,27 @@ describe('TxPriority tests', () => {
     if (!rules || !rules.length) return;
 
     if (isLocalConfig) {
-      let config = require(configFilepath);
-      rules.forEach(rule => {
-        const target = rule[0].toLowerCase();
-        const fnSignature = rule[1].toLowerCase();
-        if (type == 'set') {
-          const value = rule[2].toLowerCase();
-          const index = config.minGasPrices.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
-          if (index < 0) {
-            config.minGasPrices.push({ target, fnSignature, value });
+      const promises = [];
+      for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+        let config = require(configFilepath[nodeNumber]);
+        rules.forEach(rule => {
+          const target = rule[0].toLowerCase();
+          const fnSignature = rule[1].toLowerCase();
+          if (type == 'set') {
+            const value = rule[2].toLowerCase();
+            const index = config.minGasPrices.findIndex(p => p.target.toLowerCase() == target && p.fnSignature.toLowerCase() == fnSignature);
+            if (index < 0) {
+              config.minGasPrices.push({ target, fnSignature, value });
+            } else {
+              config.minGasPrices[index] = { target, fnSignature, value };
+            }
           } else {
-            config.minGasPrices[index] = { target, fnSignature, value };
+            config.minGasPrices = config.minGasPrices.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
           }
-        } else {
-          config.minGasPrices = config.minGasPrices.filter(p => p.target.toLowerCase() != target || p.fnSignature.toLowerCase() != fnSignature);
-        }
-      });
-      await saveConfigFile(config);
+        });
+        promises.push(saveConfigFile(config, nodeNumber));
+      }
+      await Promise.all(promises);
     } else {
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
       const transactions = [];
@@ -1753,22 +1773,27 @@ describe('TxPriority tests', () => {
   }
 
   async function ensurePriorityRules(rulesToBeExistent, rulesToBeNonExistent) {
-    let priorities;
-    if (isLocalConfig) {
-      priorities = require(configFilepath).priorities.map(p => [p.target, p.fnSignature, p.value]);
-    } else {
-      priorities = await TxPriority.instance.methods.getPriorities().call();
-    }
-    const exceptionMessage = `Current priority rules do not converge. Current priorities: ${JSON.stringify(priorities)}`;
-    if (rulesToBeExistent) {
-      expect(rulesToBeExistent.every(rule => {
-        return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
-      }), exceptionMessage).to.equal(true);
-    }
-    if (rulesToBeNonExistent) {
-      expect(rulesToBeNonExistent.some(rule => {
-        return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
-      }), exceptionMessage).to.equal(false);
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      let priorities;
+      if (isLocalConfig) {
+        priorities = require(configFilepath[nodeNumber]).priorities.map(p => [p.target, p.fnSignature, p.value]);
+      } else {
+        priorities = await TxPriority.instance.methods.getPriorities().call();
+      }
+      const exceptionMessage = `Current priority rules do not converge. Current priorities: ${JSON.stringify(priorities)}`;
+      if (rulesToBeExistent) {
+        expect(rulesToBeExistent.every(rule => {
+          return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
+        }), exceptionMessage).to.equal(true);
+      }
+      if (rulesToBeNonExistent) {
+        expect(rulesToBeNonExistent.some(rule => {
+          return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
+        }), exceptionMessage).to.equal(false);
+      }
+      if (!isLocalConfig) {
+        break;
+      }
     }
   }
 
@@ -1879,12 +1904,12 @@ describe('TxPriority tests', () => {
 
 });
 
-async function saveConfigFile(config) {
+async function saveConfigFile(config, nodeNumber) {
   const attempts = 3;
   for (let t = 0; t < attempts; t++) {
     try {
-      fs.writeFileSync(configFilepath, JSON.stringify(config, null, 2));
-	  await sleep(500);
+      fs.writeFileSync(configFilepath[nodeNumber], JSON.stringify(config, null, 2));
+      await sleep(500); // wait for 0.5s
       break;
     } catch (e) {
       if (e.code == 'EBUSY') {

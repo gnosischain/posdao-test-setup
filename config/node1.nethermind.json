@@ -1,9 +1,9 @@
 {
   "Init": {
     "WebSocketsEnabled": true,
-    "StoreReceipts" : true,    
+    "StoreReceipts" : true,
     "IsMining": true,
-    "ChainSpecPath": "./data/spec.json",  
+    "ChainSpecPath": "./data/spec.json",
     "GenesisHash": "0x06bcc4ab6d275d24d068fcb1ec3cbf3a6cf443092470147a1f9663af0882e9a1",
     "BaseDbPath": "./data/node1",
     "LogDirectory": "./data/node1",
@@ -27,7 +27,7 @@
     "CacheIndexAndFilterBlocks": true,
     "BlockInfosDbCacheIndexAndFilterBlocks": false,
     "HeadersDbCacheIndexAndFilterBlocks": false,
-    "BlocksDbCacheIndexAndFilterBlocks": false    
+    "BlocksDbCacheIndexAndFilterBlocks": false
   },
   "Sync": {
     "FastSync": false
@@ -37,7 +37,7 @@
     "ForceSealing": true,
     "AllowAuRaPrivateChains": true,
     "TxPriorityContractAddress": "0x4100000000000000000000000000000000000000",
-    "TxPriorityConfigFilePath": "./config/TxPriority.json"
+    "TxPriorityConfigFilePath": "./config/TxPriority1.json"
   },
   "KeyStore":
   {
