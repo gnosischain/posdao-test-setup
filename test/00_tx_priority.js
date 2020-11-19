@@ -1909,7 +1909,7 @@ async function saveConfigFile(config, nodeNumber) {
   for (let t = 0; t < attempts; t++) {
     try {
       fs.writeFileSync(configFilepath[nodeNumber], JSON.stringify(config, null, 2));
-      await sleep(500); // wait for 0.5s
+      await sleep(1000); // wait for 1s
       break;
     } catch (e) {
       if (e.code == 'EBUSY') {
