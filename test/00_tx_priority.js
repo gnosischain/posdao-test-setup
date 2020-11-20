@@ -76,11 +76,12 @@ describe('TxPriority tests', () => {
   for (step = 0; step < 2; step++) {
     it(testName('Test 1'), async function() {
       // Set priorities
-      await applyPriorityRules('set', [
+      const priorityRules = [
         [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
         [StakingAuRa.address, '0x2bafde8d', '2000'],     // StakingAuRa.setDelegatorMinStake
         [StakingAuRa.address, '0x48aaa4a2', '1000'],     // StakingAuRa.setCandidateMinStake
-      ]);
+      ];
+      await applyPriorityRules('set', priorityRules);
 
       // Send test transactions in a single block
       const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -123,11 +124,7 @@ describe('TxPriority tests', () => {
       ], receipts);
 
       // Remove previously set priorities
-      await applyPriorityRules('remove', [
-        [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
-        [StakingAuRa.address, '0x2bafde8d'],     // StakingAuRa.setDelegatorMinStake
-        [StakingAuRa.address, '0x48aaa4a2'],     // StakingAuRa.setCandidateMinStake
-      ]);
+      await applyPriorityRules('remove', priorityRules);
     });
 
     it(testName('Test 2'), async function() {
@@ -1329,7 +1326,7 @@ describe('TxPriority tests', () => {
       configFiles = configFiles.filter(f => f.includes('nethermind') && !f.includes('node0'));
       let minGasPrices = [];
       configFiles.forEach(configFile => {
-        const configJson = require(`${configPath}/${configFile}`);
+        const configJson = JSON.parse(fs.readFileSync(`${configPath}/${configFile}`, 'utf8'));
         minGasPrices.push(configJson.Mining.MinGasPrice);
       });
       minGasPrices = minGasPrices.filter((value, index, self) => self.indexOf(value) === index);
@@ -1506,10 +1503,9 @@ describe('TxPriority tests', () => {
 
     it(testName('Clear priority rules'), async function() {
       if (isLocalConfig) {
-        const config = { whitelist: [], priorities: [], minGasPrices: [] };
         const promises = [];
         for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-          promises.push(saveConfigFile(config, nodeNumber));
+          promises.push(saveConfigFile(null, nodeNumber));
         }
         await Promise.all(promises);
       } else {
@@ -1567,17 +1563,180 @@ describe('TxPriority tests', () => {
     expect(results.receipts[0].status, 'An arbitrary account failed when using a non-zero gas price').to.equal(true);
   });
 
+  it('Test different rules on different validators', async function() {
+    const node1 = 1;
+    const node2 = 2;
+    const node3 = 3;
+
+    isLocalConfig = true;
+
+    // Set local priority rules for node2
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '4'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3'],      // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ], node2);
+
+    // Set different local priority rules for node3
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '2'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3'],      // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '4'],  // BlockRewardAuRa.fallback
+    ], node3);
+
+    // To make only node2 mine these transactions, we need to temporarily
+    // disallow them for node1 and node3
+    const gasPrice100 = web3.utils.toWei('100', 'gwei');
+    const restrictionRules = [
+      [ValidatorSetAuRa.address, '0x00000000', gasPrice100],
+      [StakingAuRa.address, '0x00000000', gasPrice100],
+      [BlockRewardAuRa.address, '0x00000000', gasPrice100],
+    ];
+    await applyMinGasPrices('set', restrictionRules, null, node1);
+    await applyMinGasPrices('set', restrictionRules, null, node3);
+
+    // Send test transactions in a single block
+    let receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // ValidatorSetAuRa.fallback
+      1, // StakingAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Ensure the transactions were mined by the node2
+    let block = await web3.eth.getBlock(receipts.receiptsInSingleBlock[0].blockNumber);
+    expect(block.miner.toLowerCase(), 'Unexpected validator mined the transactions').to.equal(
+      JSON.parse(fs.readFileSync(`${__dirname}/../config/node2.nethermind.json`, 'utf8')).KeyStore.BlockAuthorAccount.toLowerCase()
+    );
+
+    // To make only node3 mine these transactions, we need to temporarily
+    // disallow them for node1 and node2.
+    // For node1 they have already been disallowed above
+    await applyMinGasPrices('remove', restrictionRules, null, node3);
+    await applyMinGasPrices('set', restrictionRules, null, node2);
+
+    // Send test transactions in a single block
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized ValidatorSetAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3, // 3 GWei
+          nonce: ownerNonce
+        }
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // BlockRewardAuRa.fallback
+      1, // StakingAuRa.fallback
+      0, // ValidatorSetAuRa.fallback
+    ], receipts);
+
+    // Ensure the transactions were mined by the node3
+    block = await web3.eth.getBlock(receipts.receiptsInSingleBlock[0].blockNumber);
+    expect(block.miner.toLowerCase(), 'Unexpected validator mined the transactions').to.equal(
+      JSON.parse(fs.readFileSync(`${__dirname}/../config/node3.nethermind.json`, 'utf8')).KeyStore.BlockAuthorAccount.toLowerCase()
+    );
+
+    // Clear the rules for all nodes
+    await saveConfigFile(null, node1);
+    await saveConfigFile(null, node2);
+    await saveConfigFile(null, node3);
+
+    // Check for the next 10 AuRa rounds to ensure the validators
+    // didn't go out of consensus
+    const auraRoundsToCheck = 10;
+    const startBlock = await web3.eth.getBlock('latest');
+    const validators = await ValidatorSetAuRa.instance.methods.getValidators().call();
+    const endBlockNumber = startBlock.number + auraRoundsToCheck * validators.length;
+    let prevBlock = startBlock;
+    let prevIndex = validators.findIndex(v => v.toLowerCase() == prevBlock.miner.toLowerCase());
+    console.log(`**** Checking ${auraRoundsToCheck} AuRa rounds (till the block ${endBlockNumber})`)
+    while (prevBlock.number < endBlockNumber) {
+      // wait for the next block
+      await sleep(500);
+      const currentBlock = await web3.eth.getBlock('latest');
+      if (currentBlock.number > prevBlock.number) {
+        const currentIndex = validators.findIndex(v => v.toLowerCase() == currentBlock.miner.toLowerCase());
+        const expectedIndex = (prevIndex + 1) % validators.length;
+        expect(currentIndex, `Validator ${currentBlock.miner} produced the block ${currentBlock.number} instead of expected ${validators[expectedIndex]}`).to.equal(expectedIndex);
+        prevBlock = currentBlock;
+        prevIndex = currentIndex;
+      }
+    }
+  });
+
   it('Finish', async function() {
     await waitForNextStakingEpoch(web3);
   });
 
-  async function applyPriorityRules(type, rules) {
+  async function applyPriorityRules(type, rules, onlySpecifiedNode) {
     if (!rules || !rules.length) return;
 
     if (isLocalConfig) {
       const promises = [];
       for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-        let config = require(configFilepath[nodeNumber]);
+        if (onlySpecifiedNode && nodeNumber != onlySpecifiedNode) {
+          continue;
+        }
+        let config = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8'));
         rules.forEach(rule => {
           const target = rule[0].toLowerCase();
           const fnSignature = rule[1].toLowerCase();
@@ -1620,7 +1779,7 @@ describe('TxPriority tests', () => {
     if (isLocalConfig) {
       const promises = [];
       for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-        let config = require(configFilepath[nodeNumber]);
+        let config = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8'));
         config.whitelist = senders;
         promises.push(saveConfigFile(config, nodeNumber));
       }
@@ -1638,13 +1797,16 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function applyMinGasPrices(type, rules, gasPrice) {
+  async function applyMinGasPrices(type, rules, gasPrice, onlySpecifiedNode) {
     if (!rules || !rules.length) return;
 
     if (isLocalConfig) {
       const promises = [];
       for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-        let config = require(configFilepath[nodeNumber]);
+        if (onlySpecifiedNode && nodeNumber != onlySpecifiedNode) {
+          continue;
+        }
+        let config = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8'));
         rules.forEach(rule => {
           const target = rule[0].toLowerCase();
           const fnSignature = rule[1].toLowerCase();
@@ -1776,7 +1938,7 @@ describe('TxPriority tests', () => {
     for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
       let priorities;
       if (isLocalConfig) {
-        priorities = require(configFilepath[nodeNumber]).priorities.map(p => [p.target, p.fnSignature, p.value]);
+        priorities = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8')).priorities.map(p => [p.target, p.fnSignature, p.value]);
       } else {
         priorities = await TxPriority.instance.methods.getPriorities().call();
       }
@@ -1906,6 +2068,7 @@ describe('TxPriority tests', () => {
 
 async function saveConfigFile(config, nodeNumber) {
   const attempts = 3;
+  config = config || { whitelist: [], priorities: [], minGasPrices: [] };
   for (let t = 0; t < attempts; t++) {
     try {
       fs.writeFileSync(configFilepath[nodeNumber], JSON.stringify(config, null, 2));
