@@ -31,6 +31,7 @@ describe('TxPriority tests', () => {
   const gasPrice1 = web3.utils.toWei('1', 'gwei');
   const gasPrice2 = web3.utils.toWei('2', 'gwei');
   const gasPrice3 = web3.utils.toWei('3', 'gwei');
+  const gasPrice100 = web3.utils.toWei('100', 'gwei');
   const account = web3.eth.accounts.create();
   const account2 = web3.eth.accounts.create();
   let candidateMinStake;
@@ -1563,7 +1564,6 @@ describe('TxPriority tests', () => {
 
     // To make only node2 mine these transactions, we need to temporarily
     // disallow them for node1 and node3
-    const gasPrice100 = web3.utils.toWei('100', 'gwei');
     const restrictionRules = [
       [ValidatorSetAuRa.address, '0x00000000', gasPrice100],
       [StakingAuRa.address, '0x00000000', gasPrice100],
@@ -1710,6 +1710,138 @@ describe('TxPriority tests', () => {
     await applyPriorityRules('set', [
       [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
       [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
+  });
+
+  it('Local rules should rewrite TxPriority contract rules', async function() {
+    // Set rules in TxPriority contract
+    isLocalConfig = false;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '1'], // StakingAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x00000000', gasPrice100], // StakingAuRa.fallback
+    ]);
+
+    // Set local priority rules
+    // (and rewriting the contract rule for StakingAuRa.fallback)
+    isLocalConfig = true;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '4'],      // StakingAuRa.fallback
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x00000000', gasPrice1], // StakingAuRa.fallback
+    ]);
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
+  });
+
+  it('TxPriority contract rules should not rewrite the local rules', async function() {
+    // Set local priority rules
+    isLocalConfig = true;
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [BlockRewardAuRa.address, '0x00000000', gasPrice3], // BlockRewardAuRa.fallback
+    ]);
+
+    // Set rules in TxPriority contract
+    // (and trying to rewrite the local rules for BlockRewardAuRa.fallback)
+    isLocalConfig = false;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '4'],     // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '5'], // BlockRewardAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [BlockRewardAuRa.address, '0x00000000', gasPrice100], // BlockRewardAuRa.fallback
     ]);
 
     // Send test transactions in a single block
