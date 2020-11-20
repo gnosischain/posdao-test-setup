@@ -1970,6 +1970,9 @@ describe('TxPriority tests', () => {
   }
 
   async function clearContractRules() {
+    const _isLocalConfig = isLocalConfig;
+    isLocalConfig = false;
+
     let removeRules = [];
     let items = await TxPriority.instance.methods.getPriorities().call();
     items.forEach(rule => {
@@ -1991,6 +1994,8 @@ describe('TxPriority tests', () => {
     await applySenderWhitelist([]);
     items = await TxPriority.instance.methods.getSendersWhitelist().call();
     expect(items.length, 'Cannot remove SendersWhitelist').to.equal(0);
+
+    isLocalConfig = _isLocalConfig;
   }
 
   async function clearLocalRules() {
