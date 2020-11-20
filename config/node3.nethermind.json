@@ -43,7 +43,7 @@
   {
     "BlockAuthorAccount": "0x522df396ae70a058bd69778408630fdb023389b2",
     "PasswordFiles": ["./config/password"],
-    "UnlockAccounts": ["0x522df396ae70a058bd69778408630fdb023389b2"],
+    "UnlockAccounts": ["0x522df396ae70a058bd69778408630fdb023389b2", "0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24"],
     "KeyStoreDirectory": "./data/node3/keys/DPoSChain"
   },
   "Mining":

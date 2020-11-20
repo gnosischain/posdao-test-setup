@@ -1,6 +1,8 @@
 const fs = require('fs');
 const Web3 = require('web3');
 const web3 = new Web3('http://localhost:8541');
+const web3_2 = new Web3('http://localhost:8542');
+const web3_3 = new Web3('http://localhost:8543');
 web3.eth.transactionConfirmationBlocks = 1;
 const constants = require('../utils/constants');
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
@@ -1595,7 +1597,7 @@ describe('TxPriority tests', () => {
     await applyMinGasPrices('set', restrictionRules, null, node1);
     await applyMinGasPrices('set', restrictionRules, null, node3);
 
-    // Send test transactions in a single block
+    // Send test transactions to node2 in a single block
     let receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       return [{
@@ -1627,7 +1629,7 @@ describe('TxPriority tests', () => {
           nonce: ownerNonce
         }
       }];
-    });
+    }, null, web3_2);
 
     // Check transactions order
     checkTransactionOrder([ // will fail on OpenEthereum
@@ -1648,7 +1650,7 @@ describe('TxPriority tests', () => {
     await applyMinGasPrices('remove', restrictionRules, null, node3);
     await applyMinGasPrices('set', restrictionRules, null, node2);
 
-    // Send test transactions in a single block
+    // Send test transactions to node3 in a single block
     receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       return [{
@@ -1680,7 +1682,7 @@ describe('TxPriority tests', () => {
           gasPrice: gasPrice1 // 1 GWei
         })).rawTransaction
       }];
-    });
+    }, null, web3_3);
 
     // Check transactions order
     checkTransactionOrder([ // will fail on OpenEthereum
@@ -1850,7 +1852,7 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected) {
+  async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected, web3Local) {
     // Estimate gas for each transaction
     const promises = [];
     transactions.forEach(item => {
@@ -1873,7 +1875,7 @@ describe('TxPriority tests', () => {
     });
     const gas = await Promise.all(promises);
 
-    const receipts = await executeTransactions(transactions, gas, receiptsExpected);
+    const receipts = await executeTransactions(transactions, gas, receiptsExpected, web3Local);
 
     if (ensureSingleBlock && transactions.length > 0) {
       // Ensure the transactions were mined in the same block
@@ -1961,7 +1963,7 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function executeTransactions(transactions, gas, receiptsExpected) {
+  async function executeTransactions(transactions, gas, receiptsExpected, web3Local) {
     const promises = [];
 
     let receiptsReceived = 0;
@@ -1969,8 +1971,10 @@ describe('TxPriority tests', () => {
       receiptsExpected = transactions.length;
     }
 
+    web3Local = web3Local || web3;
+
     // Prepare transactions for sending in batch
-    let batch = new web3.BatchRequest();
+    let batch = new web3Local.BatchRequest();
     transactions.forEach((item, index) => {
       const arguments = item.arguments;
       let send;
@@ -1994,7 +1998,7 @@ describe('TxPriority tests', () => {
             // Wait for the receipt during 30 seconds
             while (receipt == null && attempts++ <= 60 && receiptsReceived < receiptsExpected) {
               await sleep(500);
-              receipt = await web3.eth.getTransactionReceipt(txHash);
+              receipt = await web3Local.eth.getTransactionReceipt(txHash);
               if (receipt) receiptsReceived++;
             }
             resolve(receipt);
@@ -2025,8 +2029,8 @@ describe('TxPriority tests', () => {
     return blockNumber;
   }
 
-  async function sendTestTransactionsInSingleBlock(getTransactions, receiptsExpected) {
-    let results = await batchSendTransactions(await getTransactions(), true, receiptsExpected);
+  async function sendTestTransactionsInSingleBlock(getTransactions, receiptsExpected, web3Local) {
+    let results = await batchSendTransactions(await getTransactions(), true, receiptsExpected, web3Local);
 
     let receiptsInDifferentBlocks = null;
     if (!results.singleBlock) {
@@ -2036,7 +2040,7 @@ describe('TxPriority tests', () => {
     for (let t = 0; t < 10 && !results.singleBlock; t++) {
       console.log('      Transactions were not mined in the same block. Retrying...');
       console.log('      Receipts:', JSON.stringify(results.receipts));
-      results = await batchSendTransactions(await getTransactions(), true, receiptsExpected);
+      results = await batchSendTransactions(await getTransactions(), true, receiptsExpected, web3Local);
     }
     if (!results.singleBlock) {
       expect(false, 'Transactions were not mined in the same block').to.equal(true);
