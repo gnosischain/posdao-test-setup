@@ -1505,35 +1505,10 @@ describe('TxPriority tests', () => {
 
     it(testName('Clear priority rules'), async function() {
       if (isLocalConfig) {
-        const promises = [];
-        for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-          promises.push(saveConfigFile(null, nodeNumber));
-        }
-        await Promise.all(promises);
+        await clearLocalRules();
       } else {
-        let removeRules = [];
-        let items = await TxPriority.instance.methods.getPriorities().call();
-        items.forEach(rule => {
-          removeRules.push([rule['target'], rule['fnSignature']]);
-        });
-        await applyPriorityRules('remove', removeRules);
-        items = await TxPriority.instance.methods.getPriorities().call();
-        expect(items.length, 'Cannot remove priority rules').to.equal(0);
-
-        removeRules = [];
-        items = await TxPriority.instance.methods.getMinGasPrices().call();
-        items.forEach(rule => {
-          removeRules.push([rule['target'], rule['fnSignature']]);
-        });
-        await applyMinGasPrices('remove', removeRules);
-        items = await TxPriority.instance.methods.getMinGasPrices().call();
-        expect(items.length, 'Cannot remove MinGasPrice rules').to.equal(0);
-
-        await applySenderWhitelist([]);
-        items = await TxPriority.instance.methods.getSendersWhitelist().call();
-        expect(items.length, 'Cannot remove SendersWhitelist').to.equal(0);
+        await clearContractRules();
       }
-
       isLocalConfig = !isLocalConfig;
     });
   }
@@ -1655,7 +1630,6 @@ describe('TxPriority tests', () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       return [{
         // 0. Call a prioritized ValidatorSetAuRa.fallback
-        // by another account with a lower gas price
         method: web3.eth.sendTransaction,
         params: {
           from: OWNER,
@@ -1675,6 +1649,7 @@ describe('TxPriority tests', () => {
         })).rawTransaction
       }, {
         // 2. Call a prioritized BlockRewardAuRa.fallback
+        // by another account with a lower gas price
         method: web3.eth.sendSignedTransaction,
         params: (await account.signTransaction({
           to: BlockRewardAuRa.address,
@@ -1698,9 +1673,7 @@ describe('TxPriority tests', () => {
     );
 
     // Clear the rules for all nodes
-    await saveConfigFile(null, node1);
-    await saveConfigFile(null, node2);
-    await saveConfigFile(null, node3);
+    await clearLocalRules();
 
     // Check for the next 10 AuRa rounds to ensure the validators
     // didn't go out of consensus
@@ -1723,6 +1696,64 @@ describe('TxPriority tests', () => {
         prevIndex = currentIndex;
       }
     }
+  });
+
+  it('Test joining local rules with the rules from TxPriority contract', async function() {
+    // Set rules in TxPriority contract
+    isLocalConfig = false;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
+    ]);
+
+    // Set local priority rules
+    isLocalConfig = true;
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
   });
 
   it('Finish', async function() {
@@ -1936,6 +1967,38 @@ describe('TxPriority tests', () => {
       results = sortByTransactionIndex(receipts.receiptsInDifferentBlocks);
       expect(results.map(r => r.i), `Invalid transactions order in different blocks. TX hashes: ${JSON.stringify(results.map(r => r.transactionHash))}`).to.eql(expectedTxOrder);
     }
+  }
+
+  async function clearContractRules() {
+    let removeRules = [];
+    let items = await TxPriority.instance.methods.getPriorities().call();
+    items.forEach(rule => {
+      removeRules.push([rule['target'], rule['fnSignature']]);
+    });
+    await applyPriorityRules('remove', removeRules);
+    items = await TxPriority.instance.methods.getPriorities().call();
+    expect(items.length, 'Cannot remove priority rules').to.equal(0);
+
+    removeRules = [];
+    items = await TxPriority.instance.methods.getMinGasPrices().call();
+    items.forEach(rule => {
+      removeRules.push([rule['target'], rule['fnSignature']]);
+    });
+    await applyMinGasPrices('remove', removeRules);
+    items = await TxPriority.instance.methods.getMinGasPrices().call();
+    expect(items.length, 'Cannot remove MinGasPrice rules').to.equal(0);
+
+    await applySenderWhitelist([]);
+    items = await TxPriority.instance.methods.getSendersWhitelist().call();
+    expect(items.length, 'Cannot remove SendersWhitelist').to.equal(0);
+  }
+
+  async function clearLocalRules() {
+    const promises = [];
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      promises.push(saveConfigFile(null, nodeNumber));
+    }
+    await Promise.all(promises);
   }
 
   async function ensurePriorityRules(rulesToBeExistent, rulesToBeNonExistent) {
