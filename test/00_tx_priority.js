@@ -1762,9 +1762,10 @@ describe('TxPriority tests', () => {
       const method = (type == 'set') ? TxPriority.instance.methods.setPriority : TxPriority.instance.methods.removePriority;
 
       rules.forEach(arguments => {
+        const filteredArguments = (type == 'remove') ? arguments.slice(0, 2) : arguments;
         transactions.push({
           method,
-          arguments,
+          arguments: filteredArguments,
           params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
         });
       });
@@ -1835,9 +1836,10 @@ describe('TxPriority tests', () => {
       }
 
       rules.forEach(arguments => {
+        const filteredArguments = (type == 'remove') ? arguments.slice(0, 2) : arguments;
         transactions.push({
           method,
-          arguments,
+          arguments: filteredArguments,
           params: { from: OWNER, gasPrice, nonce: ownerNonce++ }
         });
       });
