@@ -9,7 +9,7 @@ To test a migration from POA to POSDAO, please use another branch: [`migrate-poa
 
 ### OpenEthereum
 
-To integrate with [OpenEthereum](https://github.com/openethereum/openethereum), the following structure of folders is assumed:
+To integrate with [OpenEthereum](https://github.com/openethereum/parity-ethereum), the following structure of folders is assumed:
 ```
 .
 ├── openethereum
@@ -21,11 +21,12 @@ If you want to compile a specific branch/version of `OpenEthereum`, you can clon
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
-$ git clone https://github.com/openethereum/openethereum
+$ git clone https://github.com/openethereum/parity-ethereum
+$ mv parity-ethereum openethereum
 $ cd openethereum
 #
 # Next step assumes you have Rust and required dependencies installed,
-# for details please check https://github.com/openethereum/openethereum#readme
+# for details please check https://github.com/openethereum/parity-ethereum#readme
 # Note that you can instruct Rust to always use the latest stable version for this project by running
 #     $ rustup override set stable
 # in `openethereum` folder.
@@ -34,16 +35,16 @@ $ cd openethereum
 $ cargo build --release --features final
 ```
 
-To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/openethereum/releases) (v3.0 is supported). But you still need to maintain directory structure and naming conventions:
+To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/parity-ethereum/releases) (v3.0.x is supported). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
 $ mkdir -p openethereum/target/release/
 # an example for macOS binary
-$ curl -SfL 'https://github.com/openethereum/openethereum/releases/download/v3.0.0/openethereum-macos-v3.0.0.zip' -o openethereum/target/release/openethereum.zip
+$ curl -SfL 'https://github.com/openethereum/parity-ethereum/releases/download/v3.0.1/openethereum-macos-v3.0.1.zip' -o openethereum/target/release/openethereum.zip
 $ unzip openethereum/target/release/openethereum.zip -d openethereum/target/release
 $ chmod +x openethereum/target/release/openethereum
-# check that it works and version is correct (compare the version from the binary with version on the release page)
+# check that it works and the version is correct (compare the version from the binary with version on the release page)
 $ openethereum/target/release/openethereum --version
 ```
 
@@ -57,13 +58,13 @@ To integrate with [Nethermind](https://github.com/NethermindEth/nethermind), the
 ```
 So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `nethermind` folder, namely the binary is assumed to be at `../nethermind/bin/Nethermind.Runner` relative to `posdao-test-setup` root.
 
-A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (> v1.9.14 is supported). You need to maintain directory structure and naming conventions:
+A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.9.37 is supported). You need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
 $ mkdir -p nethermind/bin
 # an example for Linux binary
-$ curl -SfL 'https://nethdev.blob.core.windows.net/builds/nethermind-linux-amd64-1.9.14-25aab82.zip' -o nethermind/bin/nethermind.zip
+$ curl -SfL 'https://github.com/NethermindEth/nethermind/releases/download/1.9.37/nethermind-linux-amd64-1.9.37-d83d23a-20201121.zip' -o nethermind/bin/nethermind.zip
 $ unzip nethermind/bin/nethermind.zip -d nethermind/bin
 $ chmod +x nethermind/bin/Nethermind.Runner
 # check that it works and version is correct (compare the version from the binary with version on the release page)
