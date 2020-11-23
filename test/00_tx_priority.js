@@ -1713,7 +1713,7 @@ describe('TxPriority tests', () => {
     ]);
 
     // Send test transactions in a single block
-    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+    let receipts = await sendTestTransactionsInSingleBlock(async () => {
       const ownerNonce = await web3.eth.getTransactionCount(OWNER);
       return [{
         // 0. Call a prioritized BlockRewardAuRa.fallback
@@ -1749,6 +1749,51 @@ describe('TxPriority tests', () => {
       1, // StakingAuRa.fallback
       2, // ValidatorSetAuRa.fallback
       0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Set top priority senders
+    isLocalConfig = false;
+    await applySenderWhitelist([OWNER]);
+    isLocalConfig = true;
+    await applySenderWhitelist([account.address]);
+
+    // Send test transactions in a single block
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+      1, // StakingAuRa.fallback
     ], receipts);
 
     // Clear all rules
