@@ -82,13 +82,14 @@ describe('TxPriority tests', () => {
     // Set rules in TxPriority contract
     isLocalConfig = false;
 
-    await applyPriorityRules('set', [
-      [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
-    ]);
-    await applySenderWhitelist([OWNER]);
-    await applyMinGasPrices('set', [
-      [StakingAuRa.address, '0x48aaa4a2', gasPrice100] // StakingAuRa.setCandidateMinStake
-    ]);
+    // These rules are set in genesis block, see https://github.com/poanetwork/posdao-contracts/blob/f02fd45c68122b0e508fb8ceb4e12e28e1dc4327/test/mockContracts/TxPriorityMock.sol#L11-L17
+    // await applyPriorityRules('set', [
+    //   [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
+    // ]);
+    // await applySenderWhitelist([OWNER]);
+    // await applyMinGasPrices('set', [
+    //   [StakingAuRa.address, '0x48aaa4a2', gasPrice100] // StakingAuRa.setCandidateMinStake
+    // ]);
 
     await ensurePriorityRules([
       [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
@@ -101,14 +102,15 @@ describe('TxPriority tests', () => {
     // Set local rules
     isLocalConfig = true;
 
-    await applyPriorityRules('set', [
-      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
-      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
-    ]);
-    await applySenderWhitelist([account.address]);
-    await applyMinGasPrices('set', [
-      [account.address, '0x00000000', gasPrice100]
-    ]);
+    // These rules are set in local config/TxPriority*.json files
+    // await applyPriorityRules('set', [
+    //   [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+    //   [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    // ]);
+    // await applySenderWhitelist([account.address]);
+    // await applyMinGasPrices('set', [
+    //   [account.address, '0x00000000', gasPrice100]
+    // ]);
 
     await ensurePriorityRules([
       [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
