@@ -32,8 +32,8 @@ describe('TxPriority tests', () => {
   const gasPrice2 = web3.utils.toWei('2', 'gwei');
   const gasPrice3 = web3.utils.toWei('3', 'gwei');
   const gasPrice100 = web3.utils.toWei('100', 'gwei');
-  const account = web3.eth.accounts.create();
-  const account2 = web3.eth.accounts.create();
+  const account = web3.eth.accounts.privateKeyToAccount('0x3bdd2176' + '1a483f71' + '054e14f5' + 'b8272135' + '67971c67' + '6928d9a1' + '808cbfa4' + 'b7501204');
+  const account2 = web3.eth.accounts.privateKeyToAccount('0x4bdd2176' + '1a483f71' + '054e14f5' + 'b8272135' + '67971c67' + '6928d9a1' + '808cbfa4' + 'b7501205');
   let candidateMinStake;
   let delegatorMinStake;
   let isLocalConfig = true;
@@ -74,6 +74,161 @@ describe('TxPriority tests', () => {
       const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
       expect(allTxSucceeded, `Cannot mint coins for the owner and an arbitrary account`).to.equal(true);
     }
+  });
+
+  it('Test joining local rules with the rules from TxPriority contract', async function() {
+    const _isLocalConfig = isLocalConfig;
+
+    // Set rules in TxPriority contract
+    isLocalConfig = false;
+
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
+    ]);
+    await applySenderWhitelist([OWNER]);
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x48aaa4a2', gasPrice100] // StakingAuRa.setCandidateMinStake
+    ]);
+
+    await ensurePriorityRules([
+      [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
+    ]);
+    await ensureSenderWhitelist([OWNER]);
+    await ensureMinGasPrices([
+      [StakingAuRa.address, '0x48aaa4a2', gasPrice100] // StakingAuRa.setCandidateMinStake
+    ]);
+
+    // Set local rules
+    isLocalConfig = true;
+
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await applySenderWhitelist([account.address]);
+    await applyMinGasPrices('set', [
+      [account.address, '0x00000000', gasPrice100]
+    ]);
+
+    await ensurePriorityRules([
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await ensureSenderWhitelist([account.address]);
+    await ensureMinGasPrices([
+      [account.address, '0x00000000', gasPrice100]
+    ]);
+
+    // Send test transactions in a single block
+    let receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+      1, // StakingAuRa.fallback
+    ], receipts);
+
+    // Try to send not allowed test transactions (because of MinGasPrice)
+    const nonceForOwner = await web3.eth.getTransactionCount(OWNER);
+    const result = await batchSendTransactions([{
+      // 0. Call a non-prioritized StakingAuRa.setCandidateMinStake
+      // with not allowed gas price
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice1, nonce: nonceForOwner } // 1 GWei
+    }, {
+      // 1. Another account sends a non-prioritized TX
+      // with not allowed gas price
+      method: web3.eth.sendSignedTransaction,
+      params: (await account.signTransaction({
+        to: account.address,
+        gas: '21000',
+        gasPrice: gasPrice1 // 1 GWei
+      })).rawTransaction
+    }]);
+    expect(result.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei.`).to.equal(null);
+    expect(result.receipts[1], `An address ${account.address} succeeded when using disallowed gas price of ${gasPrice1} wei.`).to.equal(null);
+
+    // Clear sender whitelist
+    isLocalConfig = false;
+    await applySenderWhitelist([]);
+    isLocalConfig = true;
+    await applySenderWhitelist([]);
+
+    // Send test transactions in a single block
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    isLocalConfig = _isLocalConfig;
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
   });
 
   for (step = 0; step < 2; step++) {
@@ -1698,109 +1853,6 @@ describe('TxPriority tests', () => {
     }
   });
 
-  it('Test joining local rules with the rules from TxPriority contract', async function() {
-    // Set rules in TxPriority contract
-    isLocalConfig = false;
-    await applyPriorityRules('set', [
-      [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
-    ]);
-
-    // Set local priority rules
-    isLocalConfig = true;
-    await applyPriorityRules('set', [
-      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
-      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
-    ]);
-
-    // Send test transactions in a single block
-    let receipts = await sendTestTransactionsInSingleBlock(async () => {
-      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
-      return [{
-        // 0. Call a prioritized BlockRewardAuRa.fallback
-        method: web3.eth.sendSignedTransaction,
-        params: (await account.signTransaction({
-          to: BlockRewardAuRa.address,
-          gas: '100000',
-          gasPrice: gasPrice3 // 3 GWei
-        })).rawTransaction
-      }, {
-        // 1. Call a prioritized StakingAuRa.fallback
-        method: web3.eth.sendSignedTransaction,
-        params: (await account2.signTransaction({
-          to: StakingAuRa.address,
-          gas: '100000',
-          gasPrice: gasPrice1 // 1 GWei
-        })).rawTransaction
-      }, {
-        // 2. Call a prioritized ValidatorSetAuRa.fallback
-        method: web3.eth.sendTransaction,
-        params: {
-          from: OWNER,
-          to: ValidatorSetAuRa.address,
-          gas: '100000',
-          gasPrice: gasPrice2, // 2 GWei
-          nonce: ownerNonce
-        }
-      }];
-    });
-
-    // Check transactions order
-    checkTransactionOrder([ // will fail on OpenEthereum
-      1, // StakingAuRa.fallback
-      2, // ValidatorSetAuRa.fallback
-      0, // BlockRewardAuRa.fallback
-    ], receipts);
-
-    // Set top priority senders
-    isLocalConfig = false;
-    await applySenderWhitelist([OWNER]);
-    isLocalConfig = true;
-    await applySenderWhitelist([account.address]);
-
-    // Send test transactions in a single block
-    receipts = await sendTestTransactionsInSingleBlock(async () => {
-      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
-      return [{
-        // 0. Call a prioritized BlockRewardAuRa.fallback
-        method: web3.eth.sendSignedTransaction,
-        params: (await account.signTransaction({
-          to: BlockRewardAuRa.address,
-          gas: '100000',
-          gasPrice: gasPrice2 // 2 GWei
-        })).rawTransaction
-      }, {
-        // 1. Call a prioritized StakingAuRa.fallback
-        method: web3.eth.sendSignedTransaction,
-        params: (await account2.signTransaction({
-          to: StakingAuRa.address,
-          gas: '100000',
-          gasPrice: gasPrice3 // 3 GWei
-        })).rawTransaction
-      }, {
-        // 2. Call a prioritized ValidatorSetAuRa.fallback
-        method: web3.eth.sendTransaction,
-        params: {
-          from: OWNER,
-          to: ValidatorSetAuRa.address,
-          gas: '100000',
-          gasPrice: gasPrice1, // 1 GWei
-          nonce: ownerNonce
-        }
-      }];
-    });
-
-    // Check transactions order
-    checkTransactionOrder([ // will fail on OpenEthereum
-      2, // ValidatorSetAuRa.fallback
-      0, // BlockRewardAuRa.fallback
-      1, // StakingAuRa.fallback
-    ], receipts);
-
-    // Clear all rules
-    await clearContractRules();
-    await clearLocalRules();
-  });
-
   it('Local rules should rewrite TxPriority contract rules', async function() {
     // Set rules in TxPriority contract
     isLocalConfig = false;
@@ -2200,6 +2252,49 @@ describe('TxPriority tests', () => {
       if (rulesToBeNonExistent) {
         expect(rulesToBeNonExistent.some(rule => {
           return priorities.some(priority => rule.every((r, i) => r.toLowerCase() === priority[i].toLowerCase()));
+        }), exceptionMessage).to.equal(false);
+      }
+      if (!isLocalConfig) {
+        break;
+      }
+    }
+  }
+
+  async function ensureSenderWhitelist(addressesToBeExistent) {
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      let whitelist;
+      if (isLocalConfig) {
+        whitelist = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8')).whitelist;
+      } else {
+        whitelist = await TxPriority.instance.methods.getSendersWhitelist().call();
+      }
+      whitelist = whitelist.map(i => i.toLowerCase());
+      expect(addressesToBeExistent.every(address => {
+        return whitelist.indexOf(address.toLowerCase()) >= 0;
+      }), `Current senders whitelist does not converge. Current whitelist: ${JSON.stringify(whitelist)}`).to.equal(true);
+      if (!isLocalConfig) {
+        break;
+      }
+    }
+  }
+
+  async function ensureMinGasPrices(rulesToBeExistent, rulesToBeNonExistent) {
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      let minGasPrices;
+      if (isLocalConfig) {
+        minGasPrices = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8')).minGasPrices.map(p => [p.target, p.fnSignature, p.value]);
+      } else {
+        minGasPrices = await TxPriority.instance.methods.getMinGasPrices().call();
+      }
+      const exceptionMessage = `Current MinGasPrices do not converge. Current MinGasPrices: ${JSON.stringify(minGasPrices)}`;
+      if (rulesToBeExistent) {
+        expect(rulesToBeExistent.every(rule => {
+          return minGasPrices.some(mgp => rule.every((r, i) => r.toLowerCase() === mgp[i].toLowerCase()));
+        }), exceptionMessage).to.equal(true);
+      }
+      if (rulesToBeNonExistent) {
+        expect(rulesToBeNonExistent.some(rule => {
+          return minGasPrices.some(mgp => rule.every((r, i) => r.toLowerCase() === mgp[i].toLowerCase()));
         }), exceptionMessage).to.equal(false);
       }
       if (!isLocalConfig) {
