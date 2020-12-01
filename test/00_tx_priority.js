@@ -1,6 +1,8 @@
 const fs = require('fs');
 const Web3 = require('web3');
 const web3 = new Web3('http://localhost:8541');
+const web3_2 = new Web3('http://localhost:8542');
+const web3_3 = new Web3('http://localhost:8543');
 web3.eth.transactionConfirmationBlocks = 1;
 const constants = require('../utils/constants');
 const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
@@ -29,8 +31,9 @@ describe('TxPriority tests', () => {
   const gasPrice1 = web3.utils.toWei('1', 'gwei');
   const gasPrice2 = web3.utils.toWei('2', 'gwei');
   const gasPrice3 = web3.utils.toWei('3', 'gwei');
-  const account = web3.eth.accounts.create();
-  const account2 = web3.eth.accounts.create();
+  const gasPrice100 = web3.utils.toWei('100', 'gwei');
+  const account = web3.eth.accounts.privateKeyToAccount('0x3bdd2176' + '1a483f71' + '054e14f5' + 'b8272135' + '67971c67' + '6928d9a1' + '808cbfa4' + 'b7501204');
+  const account2 = web3.eth.accounts.privateKeyToAccount('0x4bdd2176' + '1a483f71' + '054e14f5' + 'b8272135' + '67971c67' + '6928d9a1' + '808cbfa4' + 'b7501205');
   let candidateMinStake;
   let delegatorMinStake;
   let isLocalConfig = true;
@@ -73,14 +76,172 @@ describe('TxPriority tests', () => {
     }
   });
 
+  it('Test joining local rules with the rules from TxPriority contract', async function() {
+    const _isLocalConfig = isLocalConfig;
+
+    // Set rules in TxPriority contract
+    isLocalConfig = false;
+
+    // These rules are set in genesis block, see https://github.com/poanetwork/posdao-contracts/blob/f02fd45c68122b0e508fb8ceb4e12e28e1dc4327/test/mockContracts/TxPriorityMock.sol#L11-L17
+    // await applyPriorityRules('set', [
+    //   [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
+    // ]);
+    // await applySenderWhitelist([OWNER]);
+    // await applyMinGasPrices('set', [
+    //   [StakingAuRa.address, '0x48aaa4a2', gasPrice100] // StakingAuRa.setCandidateMinStake
+    // ]);
+
+    await ensurePriorityRules([
+      [StakingAuRa.address, '0x00000000', '4'], // StakingAuRa.fallback
+    ]);
+    await ensureSenderWhitelist([OWNER]);
+    await ensureMinGasPrices([
+      [StakingAuRa.address, '0x48aaa4a2', gasPrice100] // StakingAuRa.setCandidateMinStake
+    ]);
+
+    // Set local rules
+    isLocalConfig = true;
+
+    // These rules are set in local config/TxPriority*.json files
+    // await applyPriorityRules('set', [
+    //   [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+    //   [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    // ]);
+    // await applySenderWhitelist([account.address]);
+    // await applyMinGasPrices('set', [
+    //   [account.address, '0x00000000', gasPrice100]
+    // ]);
+
+    await ensurePriorityRules([
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await ensureSenderWhitelist([account.address]);
+    await ensureMinGasPrices([
+      [account.address, '0x00000000', gasPrice100]
+    ]);
+
+    // Send test transactions in a single block
+    let receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+      1, // StakingAuRa.fallback
+    ], receipts);
+
+    // Try to send not allowed test transactions (because of MinGasPrice)
+    const nonceForOwner = await web3.eth.getTransactionCount(OWNER);
+    const result = await batchSendTransactions([{
+      // 0. Call a non-prioritized StakingAuRa.setCandidateMinStake
+      // with not allowed gas price
+      method: StakingAuRa.instance.methods.setCandidateMinStake,
+      arguments: [candidateMinStake],
+      params: { from: OWNER, gasPrice: gasPrice1, nonce: nonceForOwner } // 1 GWei
+    }, {
+      // 1. Another account sends a non-prioritized TX
+      // with not allowed gas price
+      method: web3.eth.sendSignedTransaction,
+      params: (await account.signTransaction({
+        to: account.address,
+        gas: '21000',
+        gasPrice: gasPrice1 // 1 GWei
+      })).rawTransaction
+    }]);
+    expect(result.receipts[0], `The owner succeeded when using disallowed gas price of ${gasPrice1} wei.`).to.equal(null);
+    expect(result.receipts[1], `An address ${account.address} succeeded when using disallowed gas price of ${gasPrice1} wei.`).to.equal(null);
+
+    // Clear sender whitelist
+    isLocalConfig = false;
+    await applySenderWhitelist([]);
+    isLocalConfig = true;
+    await applySenderWhitelist([]);
+
+    // Send test transactions in a single block
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    isLocalConfig = _isLocalConfig;
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
+  });
+
   for (step = 0; step < 2; step++) {
     it(testName('Test 1'), async function() {
       // Set priorities
-      await applyPriorityRules('set', [
+      const priorityRules = [
         [BlockRewardAuRa.address, '0x171d54dd', '3000'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
         [StakingAuRa.address, '0x2bafde8d', '2000'],     // StakingAuRa.setDelegatorMinStake
         [StakingAuRa.address, '0x48aaa4a2', '1000'],     // StakingAuRa.setCandidateMinStake
-      ]);
+      ];
+      await applyPriorityRules('set', priorityRules);
 
       // Send test transactions in a single block
       const receipts = await sendTestTransactionsInSingleBlock(async () => {
@@ -123,11 +284,7 @@ describe('TxPriority tests', () => {
       ], receipts);
 
       // Remove previously set priorities
-      await applyPriorityRules('remove', [
-        [BlockRewardAuRa.address, '0x171d54dd'], // BlockRewardAuRa.setErcToNativeBridgesAllowed
-        [StakingAuRa.address, '0x2bafde8d'],     // StakingAuRa.setDelegatorMinStake
-        [StakingAuRa.address, '0x48aaa4a2'],     // StakingAuRa.setCandidateMinStake
-      ]);
+      await applyPriorityRules('remove', priorityRules);
     });
 
     it(testName('Test 2'), async function() {
@@ -1329,7 +1486,7 @@ describe('TxPriority tests', () => {
       configFiles = configFiles.filter(f => f.includes('nethermind') && !f.includes('node0'));
       let minGasPrices = [];
       configFiles.forEach(configFile => {
-        const configJson = require(`${configPath}/${configFile}`);
+        const configJson = JSON.parse(fs.readFileSync(`${configPath}/${configFile}`, 'utf8'));
         minGasPrices.push(configJson.Mining.MinGasPrice);
       });
       minGasPrices = minGasPrices.filter((value, index, self) => self.indexOf(value) === index);
@@ -1506,36 +1663,10 @@ describe('TxPriority tests', () => {
 
     it(testName('Clear priority rules'), async function() {
       if (isLocalConfig) {
-        const config = { whitelist: [], priorities: [], minGasPrices: [] };
-        const promises = [];
-        for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-          promises.push(saveConfigFile(config, nodeNumber));
-        }
-        await Promise.all(promises);
+        await clearLocalRules();
       } else {
-        let removeRules = [];
-        let items = await TxPriority.instance.methods.getPriorities().call();
-        items.forEach(rule => {
-          removeRules.push([rule['target'], rule['fnSignature']]);
-        });
-        await applyPriorityRules('remove', removeRules);
-        items = await TxPriority.instance.methods.getPriorities().call();
-        expect(items.length, 'Cannot remove priority rules').to.equal(0);
-
-        removeRules = [];
-        items = await TxPriority.instance.methods.getMinGasPrices().call();
-        items.forEach(rule => {
-          removeRules.push([rule['target'], rule['fnSignature']]);
-        });
-        await applyMinGasPrices('remove', removeRules);
-        items = await TxPriority.instance.methods.getMinGasPrices().call();
-        expect(items.length, 'Cannot remove MinGasPrice rules').to.equal(0);
-
-        await applySenderWhitelist([]);
-        items = await TxPriority.instance.methods.getSendersWhitelist().call();
-        expect(items.length, 'Cannot remove SendersWhitelist').to.equal(0);
+        await clearContractRules();
       }
-
       isLocalConfig = !isLocalConfig;
     });
   }
@@ -1567,17 +1698,309 @@ describe('TxPriority tests', () => {
     expect(results.receipts[0].status, 'An arbitrary account failed when using a non-zero gas price').to.equal(true);
   });
 
+  it('Test different rules on different validators', async function() {
+    const node1 = 1;
+    const node2 = 2;
+    const node3 = 3;
+
+    isLocalConfig = true;
+
+    // Set local priority rules for node2
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '4'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3'],      // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ], node2);
+
+    // Set different local priority rules for node3
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '2'], // ValidatorSetAuRa.fallback
+      [StakingAuRa.address, '0x00000000', '3'],      // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '4'],  // BlockRewardAuRa.fallback
+    ], node3);
+
+    // To make only node2 mine these transactions, we need to temporarily
+    // disallow them for node1 and node3
+    const restrictionRules = [
+      [ValidatorSetAuRa.address, '0x00000000', gasPrice100],
+      [StakingAuRa.address, '0x00000000', gasPrice100],
+      [BlockRewardAuRa.address, '0x00000000', gasPrice100],
+    ];
+    await applyMinGasPrices('set', restrictionRules, null, node1);
+    await applyMinGasPrices('set', restrictionRules, null, node3);
+
+    // Send test transactions to node2 in a single block
+    let receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1, // 1 GWei
+          nonce: ownerNonce
+        }
+      }];
+    }, null, web3_2);
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // ValidatorSetAuRa.fallback
+      1, // StakingAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Ensure the transactions were mined by the node2
+    let block = await web3.eth.getBlock(receipts.receiptsInSingleBlock[0].blockNumber);
+    expect(block.miner.toLowerCase(), 'Unexpected validator mined the transactions').to.equal(
+      JSON.parse(fs.readFileSync(`${__dirname}/../config/node2.nethermind.json`, 'utf8')).KeyStore.BlockAuthorAccount.toLowerCase()
+    );
+
+    // To make only node3 mine these transactions, we need to temporarily
+    // disallow them for node1 and node2.
+    // For node1 they have already been disallowed above
+    await applyMinGasPrices('remove', restrictionRules, null, node3);
+    await applyMinGasPrices('set', restrictionRules, null, node2);
+
+    // Send test transactions to node3 in a single block
+    receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3, // 3 GWei
+          nonce: ownerNonce
+        }
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2 // 2 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized BlockRewardAuRa.fallback
+        // by another account with a lower gas price
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }];
+    }, null, web3_3);
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      2, // BlockRewardAuRa.fallback
+      1, // StakingAuRa.fallback
+      0, // ValidatorSetAuRa.fallback
+    ], receipts);
+
+    // Ensure the transactions were mined by the node3
+    block = await web3.eth.getBlock(receipts.receiptsInSingleBlock[0].blockNumber);
+    expect(block.miner.toLowerCase(), 'Unexpected validator mined the transactions').to.equal(
+      JSON.parse(fs.readFileSync(`${__dirname}/../config/node3.nethermind.json`, 'utf8')).KeyStore.BlockAuthorAccount.toLowerCase()
+    );
+
+    // Clear the rules for all nodes
+    await clearLocalRules();
+
+    // Check for the next 10 AuRa rounds to ensure the validators
+    // didn't go out of consensus
+    const auraRoundsToCheck = 10;
+    const startBlock = await web3.eth.getBlock('latest');
+    const validators = await ValidatorSetAuRa.instance.methods.getValidators().call();
+    const endBlockNumber = startBlock.number + auraRoundsToCheck * validators.length;
+    let prevBlock = startBlock;
+    let prevIndex = validators.findIndex(v => v.toLowerCase() == prevBlock.miner.toLowerCase());
+    console.log(`**** Checking ${auraRoundsToCheck} AuRa rounds (till the block ${endBlockNumber})`)
+    while (prevBlock.number < endBlockNumber) {
+      // wait for the next block
+      await sleep(500);
+      const currentBlock = await web3.eth.getBlock('latest');
+      if (currentBlock.number > prevBlock.number) {
+        const currentIndex = validators.findIndex(v => v.toLowerCase() == currentBlock.miner.toLowerCase());
+        const expectedIndex = (prevIndex + 1) % validators.length;
+        expect(currentIndex, `Validator ${currentBlock.miner} produced the block ${currentBlock.number} instead of expected ${validators[expectedIndex]}`).to.equal(expectedIndex);
+        prevBlock = currentBlock;
+        prevIndex = currentIndex;
+      }
+    }
+  });
+
+  it('Local rules should rewrite TxPriority contract rules', async function() {
+    // Set rules in TxPriority contract
+    isLocalConfig = false;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '1'], // StakingAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x00000000', gasPrice100], // StakingAuRa.fallback
+    ]);
+
+    // Set local priority rules
+    // (and rewriting the contract rule for StakingAuRa.fallback)
+    isLocalConfig = true;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '4'],      // StakingAuRa.fallback
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [StakingAuRa.address, '0x00000000', gasPrice1], // StakingAuRa.fallback
+    ]);
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
+  });
+
+  it('TxPriority contract rules should not rewrite the local rules', async function() {
+    // Set local priority rules
+    isLocalConfig = true;
+    await applyPriorityRules('set', [
+      [ValidatorSetAuRa.address, '0x00000000', '3'], // ValidatorSetAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '2'],  // BlockRewardAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [BlockRewardAuRa.address, '0x00000000', gasPrice3], // BlockRewardAuRa.fallback
+    ]);
+
+    // Set rules in TxPriority contract
+    // (and trying to rewrite the local rules for BlockRewardAuRa.fallback)
+    isLocalConfig = false;
+    await applyPriorityRules('set', [
+      [StakingAuRa.address, '0x00000000', '4'],     // StakingAuRa.fallback
+      [BlockRewardAuRa.address, '0x00000000', '5'], // BlockRewardAuRa.fallback
+    ]);
+    await applyMinGasPrices('set', [
+      [BlockRewardAuRa.address, '0x00000000', gasPrice100], // BlockRewardAuRa.fallback
+    ]);
+
+    // Send test transactions in a single block
+    const receipts = await sendTestTransactionsInSingleBlock(async () => {
+      const ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      return [{
+        // 0. Call a prioritized BlockRewardAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account.signTransaction({
+          to: BlockRewardAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice3 // 3 GWei
+        })).rawTransaction
+      }, {
+        // 1. Call a prioritized StakingAuRa.fallback
+        method: web3.eth.sendSignedTransaction,
+        params: (await account2.signTransaction({
+          to: StakingAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice1 // 1 GWei
+        })).rawTransaction
+      }, {
+        // 2. Call a prioritized ValidatorSetAuRa.fallback
+        method: web3.eth.sendTransaction,
+        params: {
+          from: OWNER,
+          to: ValidatorSetAuRa.address,
+          gas: '100000',
+          gasPrice: gasPrice2, // 2 GWei
+          nonce: ownerNonce
+        }
+      }];
+    });
+
+    // Check transactions order
+    checkTransactionOrder([ // will fail on OpenEthereum
+      1, // StakingAuRa.fallback
+      2, // ValidatorSetAuRa.fallback
+      0, // BlockRewardAuRa.fallback
+    ], receipts);
+
+    // Clear all rules
+    await clearContractRules();
+    await clearLocalRules();
+  });
+
   it('Finish', async function() {
     await waitForNextStakingEpoch(web3);
   });
 
-  async function applyPriorityRules(type, rules) {
+  async function applyPriorityRules(type, rules, onlySpecifiedNode) {
     if (!rules || !rules.length) return;
 
     if (isLocalConfig) {
       const promises = [];
       for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-        let config = require(configFilepath[nodeNumber]);
+        if (onlySpecifiedNode && nodeNumber != onlySpecifiedNode) {
+          continue;
+        }
+        let config = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8'));
         rules.forEach(rule => {
           const target = rule[0].toLowerCase();
           const fnSignature = rule[1].toLowerCase();
@@ -1603,9 +2026,10 @@ describe('TxPriority tests', () => {
       const method = (type == 'set') ? TxPriority.instance.methods.setPriority : TxPriority.instance.methods.removePriority;
 
       rules.forEach(arguments => {
+        const filteredArguments = (type == 'remove') ? arguments.slice(0, 2) : arguments;
         transactions.push({
           method,
-          arguments,
+          arguments: filteredArguments,
           params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
         });
       });
@@ -1620,7 +2044,7 @@ describe('TxPriority tests', () => {
     if (isLocalConfig) {
       const promises = [];
       for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-        let config = require(configFilepath[nodeNumber]);
+        let config = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8'));
         config.whitelist = senders;
         promises.push(saveConfigFile(config, nodeNumber));
       }
@@ -1638,13 +2062,16 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function applyMinGasPrices(type, rules, gasPrice) {
+  async function applyMinGasPrices(type, rules, gasPrice, onlySpecifiedNode) {
     if (!rules || !rules.length) return;
 
     if (isLocalConfig) {
       const promises = [];
       for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
-        let config = require(configFilepath[nodeNumber]);
+        if (onlySpecifiedNode && nodeNumber != onlySpecifiedNode) {
+          continue;
+        }
+        let config = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8'));
         rules.forEach(rule => {
           const target = rule[0].toLowerCase();
           const fnSignature = rule[1].toLowerCase();
@@ -1673,9 +2100,10 @@ describe('TxPriority tests', () => {
       }
 
       rules.forEach(arguments => {
+        const filteredArguments = (type == 'remove') ? arguments.slice(0, 2) : arguments;
         transactions.push({
           method,
-          arguments,
+          arguments: filteredArguments,
           params: { from: OWNER, gasPrice, nonce: ownerNonce++ }
         });
       });
@@ -1686,7 +2114,7 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected) {
+  async function batchSendTransactions(transactions, ensureSingleBlock, receiptsExpected, web3Local) {
     // Estimate gas for each transaction
     const promises = [];
     transactions.forEach(item => {
@@ -1709,7 +2137,7 @@ describe('TxPriority tests', () => {
     });
     const gas = await Promise.all(promises);
 
-    const receipts = await executeTransactions(transactions, gas, receiptsExpected);
+    const receipts = await executeTransactions(transactions, gas, receiptsExpected, web3Local);
 
     if (ensureSingleBlock && transactions.length > 0) {
       // Ensure the transactions were mined in the same block
@@ -1772,11 +2200,48 @@ describe('TxPriority tests', () => {
     }
   }
 
+  async function clearContractRules() {
+    const _isLocalConfig = isLocalConfig;
+    isLocalConfig = false;
+
+    let removeRules = [];
+    let items = await TxPriority.instance.methods.getPriorities().call();
+    items.forEach(rule => {
+      removeRules.push([rule['target'], rule['fnSignature']]);
+    });
+    await applyPriorityRules('remove', removeRules);
+    items = await TxPriority.instance.methods.getPriorities().call();
+    expect(items.length, 'Cannot remove priority rules').to.equal(0);
+
+    removeRules = [];
+    items = await TxPriority.instance.methods.getMinGasPrices().call();
+    items.forEach(rule => {
+      removeRules.push([rule['target'], rule['fnSignature']]);
+    });
+    await applyMinGasPrices('remove', removeRules);
+    items = await TxPriority.instance.methods.getMinGasPrices().call();
+    expect(items.length, 'Cannot remove MinGasPrice rules').to.equal(0);
+
+    await applySenderWhitelist([]);
+    items = await TxPriority.instance.methods.getSendersWhitelist().call();
+    expect(items.length, 'Cannot remove SendersWhitelist').to.equal(0);
+
+    isLocalConfig = _isLocalConfig;
+  }
+
+  async function clearLocalRules() {
+    const promises = [];
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      promises.push(saveConfigFile(null, nodeNumber));
+    }
+    await Promise.all(promises);
+  }
+
   async function ensurePriorityRules(rulesToBeExistent, rulesToBeNonExistent) {
     for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
       let priorities;
       if (isLocalConfig) {
-        priorities = require(configFilepath[nodeNumber]).priorities.map(p => [p.target, p.fnSignature, p.value]);
+        priorities = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8')).priorities.map(p => [p.target, p.fnSignature, p.value]);
       } else {
         priorities = await TxPriority.instance.methods.getPriorities().call();
       }
@@ -1797,7 +2262,50 @@ describe('TxPriority tests', () => {
     }
   }
 
-  async function executeTransactions(transactions, gas, receiptsExpected) {
+  async function ensureSenderWhitelist(addressesToBeExistent) {
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      let whitelist;
+      if (isLocalConfig) {
+        whitelist = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8')).whitelist;
+      } else {
+        whitelist = await TxPriority.instance.methods.getSendersWhitelist().call();
+      }
+      whitelist = whitelist.map(i => i.toLowerCase());
+      expect(addressesToBeExistent.every(address => {
+        return whitelist.indexOf(address.toLowerCase()) >= 0;
+      }), `Current senders whitelist does not converge. Current whitelist: ${JSON.stringify(whitelist)}`).to.equal(true);
+      if (!isLocalConfig) {
+        break;
+      }
+    }
+  }
+
+  async function ensureMinGasPrices(rulesToBeExistent, rulesToBeNonExistent) {
+    for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
+      let minGasPrices;
+      if (isLocalConfig) {
+        minGasPrices = JSON.parse(fs.readFileSync(configFilepath[nodeNumber], 'utf8')).minGasPrices.map(p => [p.target, p.fnSignature, p.value]);
+      } else {
+        minGasPrices = await TxPriority.instance.methods.getMinGasPrices().call();
+      }
+      const exceptionMessage = `Current MinGasPrices do not converge. Current MinGasPrices: ${JSON.stringify(minGasPrices)}`;
+      if (rulesToBeExistent) {
+        expect(rulesToBeExistent.every(rule => {
+          return minGasPrices.some(mgp => rule.every((r, i) => r.toLowerCase() === mgp[i].toLowerCase()));
+        }), exceptionMessage).to.equal(true);
+      }
+      if (rulesToBeNonExistent) {
+        expect(rulesToBeNonExistent.some(rule => {
+          return minGasPrices.some(mgp => rule.every((r, i) => r.toLowerCase() === mgp[i].toLowerCase()));
+        }), exceptionMessage).to.equal(false);
+      }
+      if (!isLocalConfig) {
+        break;
+      }
+    }
+  }
+
+  async function executeTransactions(transactions, gas, receiptsExpected, web3Local) {
     const promises = [];
 
     let receiptsReceived = 0;
@@ -1805,8 +2313,10 @@ describe('TxPriority tests', () => {
       receiptsExpected = transactions.length;
     }
 
+    web3Local = web3Local || web3;
+
     // Prepare transactions for sending in batch
-    let batch = new web3.BatchRequest();
+    let batch = new web3Local.BatchRequest();
     transactions.forEach((item, index) => {
       const arguments = item.arguments;
       let send;
@@ -1830,7 +2340,7 @@ describe('TxPriority tests', () => {
             // Wait for the receipt during 30 seconds
             while (receipt == null && attempts++ <= 60 && receiptsReceived < receiptsExpected) {
               await sleep(500);
-              receipt = await web3.eth.getTransactionReceipt(txHash);
+              receipt = await web3Local.eth.getTransactionReceipt(txHash);
               if (receipt) receiptsReceived++;
             }
             resolve(receipt);
@@ -1861,8 +2371,8 @@ describe('TxPriority tests', () => {
     return blockNumber;
   }
 
-  async function sendTestTransactionsInSingleBlock(getTransactions, receiptsExpected) {
-    let results = await batchSendTransactions(await getTransactions(), true, receiptsExpected);
+  async function sendTestTransactionsInSingleBlock(getTransactions, receiptsExpected, web3Local) {
+    let results = await batchSendTransactions(await getTransactions(), true, receiptsExpected, web3Local);
 
     let receiptsInDifferentBlocks = null;
     if (!results.singleBlock) {
@@ -1872,7 +2382,7 @@ describe('TxPriority tests', () => {
     for (let t = 0; t < 10 && !results.singleBlock; t++) {
       console.log('      Transactions were not mined in the same block. Retrying...');
       console.log('      Receipts:', JSON.stringify(results.receipts));
-      results = await batchSendTransactions(await getTransactions(), true, receiptsExpected);
+      results = await batchSendTransactions(await getTransactions(), true, receiptsExpected, web3Local);
     }
     if (!results.singleBlock) {
       expect(false, 'Transactions were not mined in the same block').to.equal(true);
@@ -1906,6 +2416,7 @@ describe('TxPriority tests', () => {
 
 async function saveConfigFile(config, nodeNumber) {
   const attempts = 3;
+  config = config || { whitelist: [], priorities: [], minGasPrices: [] };
   for (let t = 0; t < attempts; t++) {
     try {
       fs.writeFileSync(configFilepath[nodeNumber], JSON.stringify(config, null, 2));

@@ -1,5 +1,22 @@
 {
-  "whitelist": [],
-  "priorities": [],
-  "minGasPrices": []
+  "whitelist": ["0x15B5c5A3D4bF2F2Dfc356A442f72Df372743d7cB"],
+  "priorities": [
+  	{
+      "target": "0x1000000000000000000000000000000000000001",
+      "fnSignature": "0x00000000",
+      "value": "3"
+    },
+    {
+      "target": "0x2000000000000000000000000000000000000001",
+      "fnSignature": "0x00000000",
+      "value": "2"
+    }
+  ],
+  "minGasPrices": [
+  	{
+      "target": "0x15B5c5A3D4bF2F2Dfc356A442f72Df372743d7cB",
+      "fnSignature": "0x00000000",
+      "value": "100000000000"
+    }
+  ]
 }
