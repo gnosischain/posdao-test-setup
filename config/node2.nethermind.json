@@ -7,8 +7,7 @@
     "GenesisHash": "0x06bcc4ab6d275d24d068fcb1ec3cbf3a6cf443092470147a1f9663af0882e9a1",
     "BaseDbPath": "./data/node2",
     "LogDirectory": "./data/node2",
-    "LogFileName": "nethermind.logs.txt",
-    "StaticNodesPath": "./data/reserved-peers"
+    "LogFileName": "nethermind.logs.txt"    
   },
   "Network": {
     "DiscoveryPort": 30302,
@@ -42,6 +41,7 @@
   "KeyStore":
   {
     "BlockAuthorAccount": "0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441",
+	"EnodeAccount": "0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441",
     "PasswordFiles": ["./config/password"],
     "UnlockAccounts": ["0x75df42383afe6bf5194aa8fa0e9b3d5f9e869441", "0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24"],
     "KeyStoreDirectory": "./data/node2/keys/DPoSChain"
@@ -50,5 +50,9 @@
   {
     "MinGasPrice": "1000000000",
     "TargetBlockGasLimit": "12000000"
-  }
+  },
+  "Discovery":
+  {
+    "Bootnodes": "enode://0e0b862960ff8a8c4b81c22284b8d97d00a53ec1cde2a3eaf59c45e16b1cce670d16c5de5381f8d2d100550a709936396ed30aa2007d5ad91238a842edf88391@127.0.0.1:30301, enode://d08575d1d7b59ba9fafc7da277abaedef80d010cd1abc1e14338240f3df6feb3f18911fe92b9c01a6dd75c1784850d2ecef84a18946e4f10c4d2a584c414e91e@127.0.0.1:30303, enode://81c7e4d405776c066e04a1cdd7a437b6ddbae84b83033fdf1c4ea0ff966c810768921be258d916a8824f1a265cdf86f9be9a0db17ba24402beaa4293223d914e@127.0.0.1:30304, enode://0fc6e39b097898c3ab1a7c2c40379a359b925956449a6367fba8227f672b382aa0e9dbd95c0c4daa5f64672985956a77de5da271f71fc0e565768466d342fe1a@127.0.0.1:30305, enode://62c6adb203f4401cefcbfe39a34a3eef9291a6cdcb85402a037feec3d05ebc0fae280cd48c8492a4575c91154cdb1d4cd13bb5cde021ca09117e1443e974a589@127.0.0.1:30306"
+  } 
 }
