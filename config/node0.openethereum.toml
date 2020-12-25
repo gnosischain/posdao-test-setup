@@ -2,9 +2,6 @@
 chain = "./data/spec.json"
 base_path = "data/node0"
 
-[ui]
-disable = true
-
 [network]
 port = 30300
 discovery = true
@@ -12,7 +9,7 @@ nat = "none"
 interface = "local"
 
 [rpc]
-apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
 port = 8540
 
 [websockets]
