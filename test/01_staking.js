@@ -102,6 +102,7 @@ describe('Candidates place stakes on themselves', () => {
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining),
                     gasPrice: '1000000000',
+                    gasLimit: '500000',
                 });
             });
             pp.tx(tx);
@@ -125,6 +126,7 @@ describe('Candidates place stakes on themselves', () => {
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
                     gasPrice: '1000000000',
+                    gasLimit: '300000',
                 });
             });
             pp.tx(tx);
@@ -241,7 +243,8 @@ describe('Candidates place stakes on themselves', () => {
             from: delegator,
             to: StakingAuRa.address,
             method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minDelegatorStakeBN.toString()),
-            gasPrice: '1000000000'
+            gasPrice: '1000000000',
+            gasLimit: '500000',
         });
         expect(tx.status, `Tx to move stake failed: ${tx.transactionHash}`).to.equal(true);
 
@@ -263,7 +266,8 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.moveStake(candidate_rec, candidate_rec, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000'
+                gasPrice: '1000000000',
+                gasLimit: '500000',
             });
             expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
         }
@@ -278,7 +282,8 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000'
+                gasPrice: '1000000000',
+                gasLimit: '500000',
             });
             expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
         }
