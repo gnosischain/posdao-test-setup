@@ -94,7 +94,7 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
@@ -107,7 +107,7 @@ describe('Candidates place stakes on themselves', () => {
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
@@ -118,7 +118,7 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
@@ -131,7 +131,7 @@ describe('Candidates place stakes on themselves', () => {
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
+            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
