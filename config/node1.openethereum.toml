@@ -2,9 +2,6 @@
 chain = "./data/spec.json"
 base_path = "data/node1"
 
-[ui]
-disable = true
-
 [network]
 port = 30301
 nat = "none"
@@ -14,7 +11,7 @@ reserved_peers="data/reserved-peers"
 [rpc]
 cors = ["all"]
 hosts = ["all"]
-apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces", "rpc", "shh", "shh_pubsub"]
+apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
 port = 8541
 
 [websockets]

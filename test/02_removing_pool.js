@@ -33,7 +33,8 @@ describe('Pool removal and validator set change', () => {
             from: tiredValidator.staking,
             to: StakingAuRa.address,
             method: StakingAuRa.instance.methods.removeMyPool(),
-            gasPrice: '1000000000'
+            gasPrice: '1000000000',
+            gasLimit: '300000',
         });
         pp.tx(tx);
         expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -72,6 +73,7 @@ describe('Unremovable validator removes his pool', () => {
             to: ValidatorSetAuRa.address,
             method: ValidatorSetAuRa.instance.methods.clearUnremovableValidator(),
             gasPrice: '0',
+            gasLimit: '300000',
         });
         pp.tx(tx);
         expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -93,7 +95,8 @@ describe('Unremovable validator removes his pool', () => {
             from: unremovableValidator.staking,
             to: StakingAuRa.address,
             method: StakingAuRa.instance.methods.removeMyPool(),
-            gasPrice: '1000000000'
+            gasPrice: '1000000000',
+            gasLimit: '300000',
         });
         pp.tx(tx);
         expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
