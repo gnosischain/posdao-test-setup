@@ -2170,6 +2170,7 @@ describe('TxPriority tests', () => {
         // There must be emitInitiateChange and/or randomness transaction
         // at the beginning of the block
         const block = await web3.eth.getBlock(blockNumber, true);
+        expect(block, `Block ${blockNumber} is null`).not.to.eql(null);
         expect(block.transactions.length).to.be.at.least(maxTransactionIndex + 1);
         for (let i = 0; i < block.transactions.length; i++) {
           const superiorTx = block.transactions[i];
