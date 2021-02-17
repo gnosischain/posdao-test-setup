@@ -316,7 +316,7 @@ describe('Candidates place stakes on themselves', () => {
         let validators = {};
         for (mining of miningAddresses) {
             const staking = (await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call()).toLowerCase();
-            const balance = await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, mining).call();
+            const balance = await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, staking).call();
             if (staking == unremovableValidator) {
                 // don't check unremovable validator because they didn't stake
                 continue;
@@ -359,7 +359,7 @@ describe('Candidates place stakes on themselves', () => {
                 .to.be.bignumber.above(iBlockRewardAuRaBalance);
         console.log(`**** BlockRewardAuRa had ${iBlockRewardAuRaBalance} tokens before and ${fBlockRewardAuRaBalance} tokens after.`);
         for (mining in validators) {
-            const new_balance = new BN(await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, mining).call());
+            const new_balance = new BN(await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, validators[mining].staking).call());
             expect(new_balance, `Pool with mining address ${mining} did not receive minted tokens`)
                 .to.be.bignumber.above(validators[mining].balance);
             console.log(`**** the pool ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
