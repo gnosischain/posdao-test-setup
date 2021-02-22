@@ -102,7 +102,7 @@ describe('Candidates place stakes on themselves', () => {
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining),
                     gasPrice: '1000000000',
-                    gasLimit: '500000',
+                    gasLimit: '600000',
                 });
             });
             pp.tx(tx);
