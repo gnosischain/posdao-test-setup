@@ -1825,6 +1825,17 @@ describe('TxPriority tests', () => {
 
     // Ensure the transactions were mined by the node3
     block = await web3.eth.getBlock(receipts.receiptsInSingleBlock[0].blockNumber);
+    if (!block) {
+      console.log('web3.eth.getBlock returned empty result');
+      console.log('receipts:');
+      console.log(receipts);
+      console.log('receipts.receiptsInSingleBlock:');
+      console.log(receipts.receiptsInSingleBlock);
+    } else if (!block.hasOwnProperty('miner')) {
+      console.log('miner field is not found in the result returned by web3.eth.getBlock');
+      console.log('block:');
+      console.log(block);
+    }
     expect(block.miner.toLowerCase(), 'Unexpected validator mined the transactions').to.equal(
       JSON.parse(fs.readFileSync(`${__dirname}/../config/node3.nethermind.json`, 'utf8')).KeyStore.BlockAuthorAccount.toLowerCase()
     );
