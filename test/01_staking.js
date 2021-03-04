@@ -94,7 +94,8 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
+            let candidatePoolId = await ValidatorSetAuRa.instance.methods.idByStakingAddress(candidate.staking).call();
+            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
@@ -107,7 +108,8 @@ describe('Candidates place stakes on themselves', () => {
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
+            candidatePoolId = await ValidatorSetAuRa.instance.methods.idByStakingAddress(candidate.staking).call();
+            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
@@ -118,7 +120,8 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
-            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
+            let candidatePoolId = await ValidatorSetAuRa.instance.methods.idByStakingAddress(candidate.staking).call();
+            let iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
@@ -131,7 +134,7 @@ describe('Candidates place stakes on themselves', () => {
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate.staking, '0x0000000000000000000000000000000000000000').call();
+            let fStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate.staking} didn't increase`).to.be.bignumber.equal(iStakeBN.add(stakeBN));
         }
@@ -139,6 +142,7 @@ describe('Candidates place stakes on themselves', () => {
 
     it('Delegators place stakes into the second candidate\'s pool', async () => {
         const candidate = constants.CANDIDATES[1].staking;
+        const candidatePoolId = await ValidatorSetAuRa.instance.methods.idByStakingAddress(candidate).call();
 
         let promises;
         let nonce;
@@ -221,7 +225,7 @@ describe('Candidates place stakes on themselves', () => {
         }
 
         for (let i = 0; i < delegatorsNumber; i++) {
-            const fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegators[i]).call();
+            const fStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, delegators[i]).call();
             const fStakeBN = new BN(fStake.toString());
             expect(fStakeBN, `Stake on candidate ${candidate} didn't increase`).to.be.bignumber.equal(minDelegatorStakeBN);
         }
@@ -229,14 +233,15 @@ describe('Candidates place stakes on themselves', () => {
         // Test moving of stakes
         console.log('**** One of delegators moves their stake to another candidate');
         let candidate_rec = constants.CANDIDATES[2].staking;
+        let candidate_rec_id = await ValidatorSetAuRa.instance.methods.idByStakingAddress(constants.CANDIDATES[2].staking).call();
         let delegator = delegators[0];
 
         // initial stake on the initial candidate
-        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, delegator).call();
         let iStakeBN = new BN(iStake.toString());
 
         // initial stake on the target candidate
-        let iStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
+        let iStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec_id, delegator).call();
         let iStake_recBN = new BN(iStake_rec.toString());
 
         let tx = await SnS(web3, {
@@ -249,13 +254,13 @@ describe('Candidates place stakes on themselves', () => {
         expect(tx.status, `Tx to move stake failed: ${tx.transactionHash}`).to.equal(true);
 
         // final stake on the initial candidate (should have decreased)
-        let fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        let fStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, delegator).call();
         let fStakeBN = new BN(fStake.toString());
         let dStakeBN = fStakeBN.sub(iStakeBN);
         expect(dStakeBN, `Stake on initial candidate ${candidate} didn't decrease`).to.be.bignumber.equal(minDelegatorStakeBN.neg()); // x.neg() == -x
 
         // final stake on the target candidate (should have increased)
-        let fStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec, delegator).call();
+        let fStake_rec = await StakingAuRa.instance.methods.stakeAmount(candidate_rec_id, delegator).call();
         let fStake_recBN = new BN(fStake_rec.toString());
         let dStake_recBN = fStake_recBN.sub(iStake_recBN);
         expect(dStake_recBN, `Stake on target candidate ${candidate_rec} didn't increase`).to.be.bignumber.equal(minDelegatorStakeBN);
@@ -306,8 +311,9 @@ describe('Candidates place stakes on themselves', () => {
 
     it('New tokens are minted and deposited to the BlockRewardAuRa contract; delegator claims ordered withdrawal', async () => {
         const miningAddresses = await ValidatorSetAuRa.instance.methods.getValidators().call();
-        const unremovableValidator = (await ValidatorSetAuRa.instance.methods.unremovableValidator().call()).toLowerCase();
+        const unremovableValidator = await ValidatorSetAuRa.instance.methods.unremovableValidator().call();
         const candidate = constants.CANDIDATES[2].staking;
+        const candidatePoolId = await ValidatorSetAuRa.instance.methods.idByStakingAddress(constants.CANDIDATES[2].staking).call();
         const delegator = delegators[0];
 
         const stakingEpoch = await StakingAuRa.instance.methods.stakingEpoch().call();
@@ -315,20 +321,22 @@ describe('Candidates place stakes on themselves', () => {
 
         let validators = {};
         for (mining of miningAddresses) {
+            const poolId = await ValidatorSetAuRa.instance.methods.idByMiningAddress(mining).call();
             const staking = (await ValidatorSetAuRa.instance.methods.stakingByMiningAddress(mining).call()).toLowerCase();
-            const balance = await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, staking).call();
-            if (staking == unremovableValidator) {
+            const balance = await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, poolId).call();
+            if (poolId == unremovableValidator) {
                 // don't check unremovable validator because they didn't stake
                 continue;
             }
             validators[mining] = {
+                poolId,
                 staking: staking,
                 balance: new BN(balance.toString())
             };
         }
 
         // initial stake on the candidate
-        const iStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        const iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, delegator).call();
         const iStakeBN = new BN(iStake.toString());
         console.log(`***** Initial stake of delegator ${delegator} on candidate ${candidate} is ${iStakeBN.toString()}, going to order withdrawal of ${minDelegatorStakeBN.toString()}`);
         const tx = await sendInStakingWindow(web3, async () => {
@@ -342,7 +350,7 @@ describe('Candidates place stakes on themselves', () => {
         pp.tx(tx);
         expect(tx.status, `Tx to order withdrawal failed: ${tx.transactionHash}`).to.equal(true);
 
-        const fStake = await StakingAuRa.instance.methods.stakeAmount(candidate, delegator).call();
+        const fStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, delegator).call();
         const fStakeBN = new BN(fStake.toString());
 
         expect(fStakeBN, `Delegator\'s stake didn\'t decrease correctly after they (${delegator}) ordered the withdrawal: ` +
@@ -359,13 +367,13 @@ describe('Candidates place stakes on themselves', () => {
                 .to.be.bignumber.above(iBlockRewardAuRaBalance);
         console.log(`**** BlockRewardAuRa had ${iBlockRewardAuRaBalance} tokens before and ${fBlockRewardAuRaBalance} tokens after.`);
         for (mining in validators) {
-            const new_balance = new BN(await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, validators[mining].staking).call());
+            const new_balance = new BN(await BlockRewardAuRa.instance.methods.epochPoolTokenReward(stakingEpoch, validators[mining].poolId).call());
             expect(new_balance, `Pool with mining address ${mining} did not receive minted tokens`)
                 .to.be.bignumber.above(validators[mining].balance);
             console.log(`**** the pool ${mining} had ${validators[mining].balance} tokens before and ${new_balance} tokens after.`);
         }
 
-        const iOrdered = await StakingAuRa.instance.methods.orderedWithdrawAmount(candidate, delegator).call();
+        const iOrdered = await StakingAuRa.instance.methods.orderedWithdrawAmount(candidatePoolId, delegator).call();
         const iOrderedBN = new BN(iOrdered.toString());
 
         console.log('***** Claiming ordered withdrawal');
@@ -379,7 +387,7 @@ describe('Candidates place stakes on themselves', () => {
         });
         pp.tx(tx2);
 
-        const fOrdered = await StakingAuRa.instance.methods.orderedWithdrawAmount(candidate, delegator).call();
+        const fOrdered = await StakingAuRa.instance.methods.orderedWithdrawAmount(candidatePoolId, delegator).call();
         const fOrderedBN = new BN(fOrdered.toString());
 
         expect(fOrderedBN, `Delegator\'s ordered amount didn\'t decrease correctly after they (${delegator}) claimed the withdrawal: ` +
