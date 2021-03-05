@@ -6,8 +6,7 @@
     "ChainSpecPath": "./data/spec.json",  
     "BaseDbPath": "./data/node0",
     "LogDirectory": "./data/node0",
-    "LogFileName": "nethermind.logs.txt",
-    "StaticNodesPath": "./data/reserved-peers"
+    "LogFileName": "nethermind.logs.txt"
   },
   "Network": {
     "DiscoveryPort": 30300,
