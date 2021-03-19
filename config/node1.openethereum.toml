@@ -36,6 +36,8 @@ gas_floor_target = "12000000"
 engine_signer = "0xbbcaa8d48289bb1ffcf9808d9aa4b1d215054c78"
 reseal_on_txs = "none"
 extra_data = "Parity"
+tx_gas_limit="7500000"
+tx_time_limit=1000
 
 [misc]
 logging = "engine=trace,miner=trace,reward=trace"

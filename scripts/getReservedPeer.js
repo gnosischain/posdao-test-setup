@@ -8,7 +8,7 @@ main();
 async function main() {
   const maxAttempts = 50;
   var node_index = process.argv[2].toString();
-  console.log("Registering node " + node_index + " as reserved peer");
+  console.log("Registering node " + node_index + " as bootnode");
   const cmd = `curl --data '{"method":"parity_enode","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:854`
         + node_index
         + ` 2>/dev/null`;
@@ -18,6 +18,23 @@ async function main() {
       const enodeURL = await getEnodeURL(cmd);
       console.log("enode URL: " + enodeURL);
       fs.appendFileSync("data/reserved-peers", enodeURL + os.EOL);
+
+      const bootnodes = fs.readFileSync("data/reserved-peers", 'utf-8').trim().split(os.EOL);
+
+      const tomlFilepath = `config/node${node_index - 0 + 1}.openethereum.toml`;
+      if (fs.existsSync(tomlFilepath)) {
+        let toml = fs.readFileSync(tomlFilepath, 'utf-8');
+        toml = toml.replace('reserved_peers="data/reserved-peers"', `bootnodes = ${JSON.stringify(bootnodes)}`);
+        fs.writeFileSync(tomlFilepath, toml, 'utf-8');
+      }
+      const jsonFilepath = `config/node${node_index - 0 + 1}.nethermind.json`;
+      if (fs.existsSync(jsonFilepath)) {
+        let json = JSON.parse(fs.readFileSync(jsonFilepath, 'utf-8'));
+        delete json.Init.StaticNodesPath;
+        json.Discovery = {"Bootnodes" : bootnodes.join(',')};
+        fs.writeFileSync(jsonFilepath, JSON.stringify(json, null, 2), 'utf-8');
+      }
+
       break;
     } catch(e) {
       if (i <= maxAttempts) {

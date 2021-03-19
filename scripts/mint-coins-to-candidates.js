@@ -16,10 +16,11 @@ const coins = constants.CANDIDATE_INITIAL_BALANCE;
 
 module.exports = async function () {
     const unremovableValidator = await ValidatorSetAuRa.instance.methods.unremovableValidator().call();
-    const unremovableValidatorExists = unremovableValidator != '0x0000000000000000000000000000000000000000';
+    const unremovableValidatorExists = unremovableValidator != '0';
+    const unremovableValidatorStakingAddress = await ValidatorSetAuRa.instance.methods.stakingAddressById(unremovableValidator).call();
     let toWhom = [...constants.CANDIDATES.map(c => c.staking)];
     if (unremovableValidatorExists) {
-        toWhom.push(unremovableValidator);
+        toWhom.push(unremovableValidatorStakingAddress);
     }
     const txs = await mintCoins(web3, constants.OWNER, toWhom, coins);
     for (const tx of txs) {
@@ -33,9 +34,9 @@ module.exports = async function () {
         ).to.be.equal(coins);
     }
     if (unremovableValidatorExists) {
-        const balanceBN = await web3.eth.getBalance(unremovableValidator);
+        const balanceBN = await web3.eth.getBalance(unremovableValidatorStakingAddress);
         expect(balanceBN,
-            `Amount initial coins minted to unremovable validator (${unremovableValidator}) is incorrect: expected ${coins}, but got ${balanceBN.toString()}`
+            `Amount initial coins minted to unremovable validator (${unremovableValidatorStakingAddress}) is incorrect: expected ${coins}, but got ${balanceBN.toString()}`
         ).to.be.equal(coins);
     }
 }

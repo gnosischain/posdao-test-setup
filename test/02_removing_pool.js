@@ -54,10 +54,11 @@ describe('Unremovable validator removes his pool', () => {
     let unremovableValidator = {};
 
     it('Owner calls ValidatorSetAuRa.clearUnremovableValidator', async () => {
-        unremovableValidator.staking = (await ValidatorSetAuRa.instance.methods.unremovableValidator().call()).toLowerCase();
-        unremovableValidator.mining = (await ValidatorSetAuRa.instance.methods.miningByStakingAddress(unremovableValidator.staking).call()).toLowerCase();
+        unremovableValidator.poolId = await ValidatorSetAuRa.instance.methods.unremovableValidator().call();
+        unremovableValidator.staking = (await ValidatorSetAuRa.instance.methods.stakingAddressById(unremovableValidator.poolId).call()).toLowerCase();
+        unremovableValidator.mining = (await ValidatorSetAuRa.instance.methods.miningAddressById(unremovableValidator.poolId).call()).toLowerCase();
 
-        if (unremovableValidator.staking == '0x0000000000000000000000000000000000000000') {
+        if (unremovableValidator.poolId == '0') {
             console.log('***** Unremovable validator doesn\'t exist. Skip this test');
             return;
         }
@@ -80,12 +81,12 @@ describe('Unremovable validator removes his pool', () => {
 
         const check_unremovableValidator = await ValidatorSetAuRa.instance.methods.unremovableValidator().call();
         console.log('***** ValidatorSetAuRa.unremovableValidator after the call: ' + check_unremovableValidator);
-        expect(check_unremovableValidator == '0x0000000000000000000000000000000000000000', 'Unremovable validator is not cleared')
+        expect(check_unremovableValidator == '0', 'Unremovable validator is not cleared')
             .to.equal(true);
     });
 
     it('Ex unremovable validator removes his pool', async() => {
-        if (unremovableValidator.staking == '0x0000000000000000000000000000000000000000') {
+        if (unremovableValidator.poolId == '0') {
             console.log('***** Unremovable validator doesn\'t exist. Skip this test');
             return;
         }
@@ -102,7 +103,7 @@ describe('Unremovable validator removes his pool', () => {
         expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
 
         const pools = await StakingAuRa.instance.methods.getPools().call();
-        const poolFound = pools.filter(pool => pool.toLowerCase() == unremovableValidator.staking).length > 0;
+        const poolFound = pools.filter(pool => pool == unremovableValidator.poolId).length > 0;
         expect(poolFound, 'Unremovable validator\'s pool still exists').to.equal(false);
 
         const validatorsList = await waitForValidatorSetChange(web3);
