@@ -94,14 +94,17 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** stake = ' + stakeBN.toString());
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
+            let poolId = (await ValidatorSetAuRa.instance.methods.lastPoolId().call()) - 0 + 1;
             let candidatePoolId = await ValidatorSetAuRa.instance.methods.idByStakingAddress(candidate.staking).call();
             let iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
+            let poolName = `Pool ${poolId}`;
+            let poolDescription = `Pool ${poolId} description`;
             let tx = await sendInStakingWindow(web3, async () => {
                 return SnS(web3, {
                     from: candidate.staking,
                     to: StakingAuRa.address,
-                    method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining),
+                    method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining, poolName, poolDescription),
                     gasPrice: '1000000000',
                     gasLimit: '600000',
                 });
