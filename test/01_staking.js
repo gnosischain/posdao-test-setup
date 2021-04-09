@@ -106,7 +106,7 @@ describe('Candidates place stakes on themselves', () => {
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining, poolName, poolDescription),
                     gasPrice: '1000000000',
-                    gasLimit: '600000',
+                    gasLimit: '700000',
                 });
             });
             pp.tx(tx);
@@ -132,7 +132,7 @@ describe('Candidates place stakes on themselves', () => {
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
                     gasPrice: '1000000000',
-                    gasLimit: '300000',
+                    gasLimit: '400000',
                 });
             });
             pp.tx(tx);
@@ -218,7 +218,7 @@ describe('Candidates place stakes on themselves', () => {
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.stake(candidate, minDelegatorStakeBN.toString()),
                 gasPrice: '1000000000',
-                gasLimit: '300000'
+                gasLimit: '400000'
             });
             promises.push(prm);
         }
