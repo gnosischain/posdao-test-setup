@@ -61,6 +61,7 @@ async function main() {
 
     console.log(`**** Deploying StakingToken. netId = ${netId}`);
     const contract = new web3.eth.Contract(abi);
+
     // Deploy using eth_sendTransaction
     const data = await contract
         .deploy({
@@ -68,12 +69,27 @@ async function main() {
             arguments: [tokenName, tokenSymbol, tokenDecimals, netId],
         })
         .encodeABI();
-    const txParams = {
-        from: OWNER,
-        gasPrice: web3.utils.numberToHex('0'),
-        gas: web3.utils.numberToHex('4700000'),
-        data
-    };
+    let txParams;
+    const latestBlock = await sendRequest(`curl --data '{"method":"eth_getBlockByNumber","params":["latest",false],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
+    if (latestBlock.baseFee) { // EIP-1559 is activated, so we can use a new type of transactions
+        txParams = {
+            from: OWNER,
+            type: '0x2',
+            chainId: web3.utils.numberToHex(netId),
+            maxPriorityFeePerGas: web3.utils.numberToHex('0'),
+            maxFeePerGas: web3.utils.numberToHex('0'),
+            gas: web3.utils.numberToHex('4700000'),
+            data,
+            accessList: []
+        };
+    } else { // EIP-1559 is not activated. Use a legacy transaction
+        txParams = {
+            from: OWNER,
+            gasPrice: web3.utils.numberToHex('0'),
+            gas: web3.utils.numberToHex('4700000'),
+            data
+        };
+    }
     const txHash = await sendRequest(`curl --data '{"method":"eth_sendTransaction","params":[${JSON.stringify(txParams)}],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
     let stakingTokenDeployTxReceipt;
     while(!(stakingTokenDeployTxReceipt = await sendRequest(`curl --data '{"method":"eth_getTransactionReceipt","params":["${txHash}"],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`))) {
