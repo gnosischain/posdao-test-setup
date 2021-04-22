@@ -2,6 +2,7 @@
 const EthereumTx = require('ethereumjs-tx');
 const fs = require('fs');
 const path = require('path');
+const sign1559Transaction = require('./sign1559Tx.js');
 /*
  * Expects the following structure for tx_details:
   {
@@ -34,7 +35,7 @@ function getPrivateKey(web3, address) {
   return pkBuff;
 }
 
-module.exports = async function (web3, tx_details, privateKey) {
+module.exports = async function (web3, tx_details, privateKey, eip1559BaseFee) {
   let from = tx_details.from;
   let to = tx_details.to;
   let value = web3.utils.toHex(tx_details.value || 0);
@@ -89,11 +90,31 @@ module.exports = async function (web3, tx_details, privateKey) {
     nonce:     web3.utils.toHex(nonce),
     chainId:   chainId,
   };
-  dbg('  **** _tx =', _tx);
-  let tx = new EthereumTx(_tx);
-  dbg('  **** tx =', tx);
-  tx.sign(privateKey);
-  let serializedTx = tx.serialize();
 
-  return web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
+  if (eip1559BaseFee) { // EIP-1559 is active
+    _tx.maxFeePerGas = web3.utils.toBN(eip1559BaseFee).add(web3.utils.toBN(gasPrice)).toString(); // maxFeePerGas = baseFee + maxPriorityFeePerGas
+    _tx.maxPriorityFeePerGas = gasPrice;
+    _tx.gas = _tx.gasLimit;
+    _tx.accessList = [];
+  }
+
+  dbg('  **** _tx =', _tx);
+  
+  if (eip1559BaseFee) { // EIP-1559 is active
+    const signedTx = sign1559Transaction(_tx, privateKey);
+    const serializedTx = signedTx.rawTransaction;
+    //console.log(`_tx:`);
+    //console.log(_tx);
+    //console.log('serializedTx:');
+    //console.log(serializedTx);
+    //console.log('signedTx:');
+    //console.log(signedTx);
+    return web3.eth.sendSignedTransaction(serializedTx);
+  } else {
+    let tx = new EthereumTx(_tx);
+    dbg('  **** tx =', tx);
+    tx.sign(privateKey);
+    let serializedTx = tx.serialize();
+    return web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
+  }
 }
