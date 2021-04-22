@@ -92,6 +92,7 @@ describe('Candidates place stakes on themselves', () => {
     it('Candidates add pools for themselves', async () => {
         let stakeBN = minCandidateStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
+        const latestBlock = await web3.eth.getBlock('latest');
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let poolId = (await ValidatorSetAuRa.instance.methods.lastPoolId().call()) - 0 + 1;
@@ -105,9 +106,9 @@ describe('Candidates place stakes on themselves', () => {
                     from: candidate.staking,
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining, poolName, poolDescription),
-                    gasPrice: '1000000000',
+                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFee + maxPriorityFeePerGas
                     gasLimit: '700000',
-                });
+                }, null, latestBlock.baseFee);
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
