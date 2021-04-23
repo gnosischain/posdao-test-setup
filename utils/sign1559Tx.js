@@ -76,8 +76,9 @@ function signTransaction(txMessage, isEIP1559, privateKey) {
 
   const rawTransaction = '0x' + (isEIP1559 ? '02' : '') + rlp.encode(txMessageSigned).toString('hex');
   const transactionHash = web3.utils.keccak256(rawTransaction);
+  const rawTransactionRLP = isEIP1559 ? '0x' + rlp.encode(rawTransaction).toString('hex') : rawTransaction;
 
-  return { messageHash, v, r, s, rawTransaction, transactionHash };
+  return { messageHash, v, r, s, rawTransaction: rawTransactionRLP, transactionHash };
 }
 
 module.exports = function (transaction, privateKey) {
