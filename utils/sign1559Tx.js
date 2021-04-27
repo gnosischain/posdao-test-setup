@@ -52,7 +52,7 @@ function prepareTxToField(to) {
 }
 
 function signTransaction(txMessage, isEIP1559, privateKey) {
-  const messageHash = web3.utils.keccak256('0x' + rlp.encode(txMessage).toString('hex'));
+  const messageHash = web3.utils.keccak256('0x' + (isEIP1559 ? '02' : '') + rlp.encode(txMessage).toString('hex'));
 
   let privateKeyBuffer;
   if (Buffer.isBuffer(privateKey)) {
