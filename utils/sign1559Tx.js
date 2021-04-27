@@ -19,23 +19,13 @@ function prepareTxIntegerField(value, name) {
   if (value === undefined) {
     throw `${name} is not defined`;
   }
-  if (web3.utils.isHexStrict(value)) {
-    return new BN(web3.utils.hexToNumberString(value));
+  if (!web3.utils.isHexStrict(value)) {
+    value = web3.utils.toHex(value);
   }
-  return new BN(value);
-}
-
-function prepareTxNonceField(nonce) {
-  if (nonce === undefined) {
-    throw "Nonce is not defined";
+  if ((new BN(web3.utils.stripHexPrefix(value), 16)).isZero()) {
+    return '';
   }
-  if (!web3.utils.isHexStrict(nonce)) {
-    nonce = web3.utils.toHex(nonce);
-  }
-  if ((new BN(web3.utils.stripHexPrefix(nonce), 16)).isZero()) {
-    nonce = '';
-  }
-  return nonce;
+  return new BN(web3.utils.hexToNumberString(value));
 }
 
 function prepareTxToField(to) {
@@ -65,7 +55,12 @@ function signTransaction(txMessage, isEIP1559, privateKey) {
   const signature = Buffer.from(sigObj.signature).toString('hex');
 
   const chainId = isEIP1559 ? txMessage[0] : txMessage[6];
-  const v = web3.utils.toHex(sigObj.recid + (isEIP1559 ? 0 : 27 + chainId * 2 + 8));
+  let v;
+  if (isEIP1559) {
+    v = (sigObj.recid != 0) ? web3.utils.toHex(sigObj.recid) : '';
+  } else {
+    v = web3.utils.toHex(sigObj.recid + 27 + chainId * 2 + 8);
+  }
   const r = '0x' + signature.slice(0, 64);
   const s = '0x' + signature.slice(64, 128);
 
@@ -83,7 +78,7 @@ function signTransaction(txMessage, isEIP1559, privateKey) {
 
 module.exports = function (transaction, privateKey) {
   const chainId = prepareTxIntegerField(transaction.chainId, 'Chain id');
-  const nonce = prepareTxNonceField(transaction.nonce);
+  const nonce = prepareTxIntegerField(transaction.nonce, 'Nonce');
   const maxPriorityFeePerGas = prepareTxIntegerField(transaction.maxPriorityFeePerGas, 'maxPriorityFeePerGas');
   const maxFeePerGas = prepareTxIntegerField(transaction.maxFeePerGas, 'maxFeePerGas');
   const gas = prepareTxIntegerField(transaction.gas, 'Gas limit');
