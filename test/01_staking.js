@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
+const sendRequest = require('../utils/sendRequest.js');
 const web3 = new Web3('http://localhost:8541');
 web3.eth.transactionConfirmationBlocks = 1;
 const BN = web3.utils.BN;
@@ -52,14 +53,39 @@ describe('Candidates place stakes on themselves', () => {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
-            let tx = await SnS(web3, {
-                from: OWNER,
-                to: StakingTokenContract.address,
-                method: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()),
-                gasPrice: '0',
-            });
-            pp.tx(tx);
-            expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+            const latestBlock = await web3.eth.getBlock('latest');
+
+            if (latestBlock.baseFee) {
+                const netId = await web3.eth.net.getId();
+                const txParams = {
+                    from: OWNER,
+                    to: StakingTokenContract.address,
+                    type: '0x2',
+                    chainId: web3.utils.numberToHex(netId),
+                    maxPriorityFeePerGas: web3.utils.numberToHex('1000000000'),
+                    //maxPriorityFeePerGas: web3.utils.numberToHex('0'),
+                    maxFeePerGas: web3.utils.numberToHex('0'),
+                    gas: web3.utils.numberToHex('1000000'),
+                    data: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()).encodeABI(),
+                    accessList: []
+                };
+                const txHash = await sendRequest(`curl --data '{"method":"eth_sendTransaction","params":[${JSON.stringify(txParams)}],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
+                let txReceipt;
+                while(!(txReceipt = await web3.eth.getTransactionReceipt(txHash))) {
+                    await sleep(500);
+                }
+                expect(txReceipt.status, `Failed tx: ${txReceipt.transactionHash}`).to.equal(true);
+            } else {
+                let tx = await SnS(web3, {
+                    from: OWNER,
+                    to: StakingTokenContract.address,
+                    method: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()),
+                    gasPrice: '0',
+                });
+                pp.tx(tx);
+                expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+            }
+
             let fTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let fTokenBalanceBN = new BN(fTokenBalance.toString());
             expect(fTokenBalanceBN, `Amount of minted staking tokens is incorrect for ${candidate.staking}`).to.be.bignumber.equal(iTokenBalanceBN.add(candidateTokensBN));
@@ -403,3 +429,7 @@ describe('Candidates place stakes on themselves', () => {
                 ).to.be.bignumber.equal(new BN(0));
     });
 });
+
+function sleep(millis) {
+  return new Promise(resolve => setTimeout(resolve, millis));
+}

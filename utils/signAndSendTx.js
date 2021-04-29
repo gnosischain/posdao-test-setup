@@ -103,12 +103,6 @@ module.exports = async function (web3, tx_details, privateKey, eip1559BaseFee) {
   if (eip1559BaseFee) { // EIP-1559 is active
     const signedTx = sign1559Transaction(_tx, privateKey);
     const serializedTx = signedTx.rawTransaction;
-    //console.log(`_tx:`);
-    //console.log(_tx);
-    //console.log('serializedTx:');
-    //console.log(serializedTx);
-    //console.log('signedTx:');
-    //console.log(signedTx);
     return web3.eth.sendSignedTransaction(serializedTx);
   } else {
     let tx = new EthereumTx(_tx);
