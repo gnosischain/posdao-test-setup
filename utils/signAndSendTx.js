@@ -92,7 +92,11 @@ module.exports = async function (web3, tx_details, privateKey, eip1559BaseFee) {
   };
 
   if (eip1559BaseFee) { // EIP-1559 is active
-    _tx.maxFeePerGas = web3.utils.toBN(eip1559BaseFee).add(web3.utils.toBN(gasPrice)).toString(); // maxFeePerGas = baseFee + maxPriorityFeePerGas
+    if (gasPrice == 0) {
+      _tx.maxFeePerGas = '0';
+    } else {
+      _tx.maxFeePerGas = web3.utils.toBN(eip1559BaseFee).add(web3.utils.toBN(gasPrice)).toString(); // maxFeePerGas = baseFee + maxPriorityFeePerGas
+    }
     _tx.maxPriorityFeePerGas = gasPrice;
     _tx.gas = _tx.gasLimit;
     _tx.accessList = [];
