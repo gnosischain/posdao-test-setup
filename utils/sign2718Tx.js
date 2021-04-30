@@ -41,8 +41,8 @@ function prepareTxToField(to) {
   return to;
 }
 
-function signTransaction(txMessage, isEIP1559, privateKey) {
-  const messageHash = web3.utils.keccak256('0x' + (isEIP1559 ? '02' : '') + rlp.encode(txMessage).toString('hex'));
+function signTransaction(txMessage, txType, privateKey) {
+  const messageHash = web3.utils.keccak256('0x' + (txType > 0 ? `0${txType}` : '') + rlp.encode(txMessage).toString('hex'));
 
   let privateKeyBuffer;
   if (Buffer.isBuffer(privateKey)) {
@@ -54,9 +54,9 @@ function signTransaction(txMessage, isEIP1559, privateKey) {
   const sigObj = secp256k1.ecdsaSign(Buffer.from(messageHash.slice(2), "hex"), privateKeyBuffer);
   const signature = Buffer.from(sigObj.signature).toString('hex');
 
-  const chainId = isEIP1559 ? txMessage[0] : txMessage[6];
+  const chainId = txType > 0 ? txMessage[0] : txMessage[6];
   let v;
-  if (isEIP1559) {
+  if (txType > 0) {
     v = (sigObj.recid != 0) ? web3.utils.toHex(sigObj.recid) : '';
   } else {
     v = web3.utils.toHex(sigObj.recid + 27 + chainId * 2 + 8);
@@ -64,39 +64,44 @@ function signTransaction(txMessage, isEIP1559, privateKey) {
   const r = '0x' + signature.slice(0, 64);
   const s = '0x' + signature.slice(64, 128);
 
-  const txMessageSigned = isEIP1559 ? txMessage : txMessage.slice(0, 6);
+  const txMessageSigned = txType > 0 ? txMessage : txMessage.slice(0, 6);
   txMessageSigned.push(v);
   txMessageSigned.push(r);
   txMessageSigned.push(s);
 
-  const rawTransaction = '0x' + (isEIP1559 ? '02' : '') + rlp.encode(txMessageSigned).toString('hex');
+  const rawTransaction = '0x' + (txType > 0 ? `0${txType}` : '') + rlp.encode(txMessageSigned).toString('hex');
   const transactionHash = web3.utils.keccak256(rawTransaction);
-  const rawTransactionRLP = isEIP1559 ? '0x' + rlp.encode(rawTransaction).toString('hex') : rawTransaction;
+  const rawTransactionRLP = txType > 0 ? '0x' + rlp.encode(rawTransaction).toString('hex') : rawTransaction;
 
   return { messageHash, v, r, s, rawTransaction: rawTransactionRLP, transactionHash };
 }
 
-module.exports = function (transaction, privateKey) {
+module.exports = function (transaction, privateKey, txType) {
   const chainId = prepareTxIntegerField(transaction.chainId, 'Chain id');
   const nonce = prepareTxIntegerField(transaction.nonce, 'Nonce');
-  const maxPriorityFeePerGas = prepareTxIntegerField(transaction.maxPriorityFeePerGas, 'maxPriorityFeePerGas');
-  const maxFeePerGas = prepareTxIntegerField(transaction.maxFeePerGas, 'maxFeePerGas');
   const gas = prepareTxIntegerField(transaction.gas, 'Gas limit');
   const to = prepareTxToField(transaction.to);
   const value = prepareTxIntegerField(transaction.value, 'Value');
   const data = prepareTxDataField(transaction.data);
 
-  const txMessage = [
-    chainId,
-    nonce,
-    maxPriorityFeePerGas,
-    maxFeePerGas,
+  let txMessage = [chainId, nonce];
+
+  if (txType == 2) { // EIP-1559
+    txMessage.push(prepareTxIntegerField(transaction.maxPriorityFeePerGas, 'maxPriorityFeePerGas'));
+    txMessage.push(prepareTxIntegerField(transaction.maxFeePerGas, 'maxFeePerGas'));
+  } else if (txType == 1) { // EIP-2930
+    txMessage.push(prepareTxIntegerField(transaction.gasPrice, 'Gas price'));
+  } else {
+    throw "Unsupported transaction type";
+  }
+
+  txMessage = txMessage.concat([
     gas,
     to,
     value,
     data,
     transaction.accessList
-  ];
+  ]);
 
-  return signTransaction(txMessage, true, privateKey);
+  return signTransaction(txMessage, txType, privateKey);
 }

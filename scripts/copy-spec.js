@@ -22,6 +22,14 @@ async function main() {
   console.log();
   console.log();
 
+  // Explicitly activate EIP-2565
+  if (process.env.CLIENT == 'openethereum') {
+    specFile.accounts["0000000000000000000000000000000000000005"].builtin.pricing["0"].price = { modexp2565: {} };
+  } else if (process.env.CLIENT == 'nethermind') {
+    specFile.params.eip2565Transition = "0x0";
+    specFile.params.eip2718Transition = "0x0";
+  }
+
   await promisify(fs.writeFile)(__dirname + '/../data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 
