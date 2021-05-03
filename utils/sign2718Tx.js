@@ -71,9 +71,8 @@ function signTransaction(txMessage, txType, privateKey) {
 
   const rawTransaction = '0x' + (txType > 0 ? `0${txType}` : '') + rlp.encode(txMessageSigned).toString('hex');
   const transactionHash = web3.utils.keccak256(rawTransaction);
-  const rawTransactionRLP = txType > 0 ? '0x' + rlp.encode(rawTransaction).toString('hex') : rawTransaction;
 
-  return { messageHash, v, r, s, rawTransaction: rawTransactionRLP, transactionHash };
+  return { messageHash, v, r, s, rawTransaction, transactionHash };
 }
 
 module.exports = function (transaction, privateKey, txType) {
