@@ -161,7 +161,20 @@ describe('Candidates place stakes on themselves', () => {
                     method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
                     gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFee + maxPriorityFeePerGas
                     gasLimit: '400000',
-                }, null, latestBlock.baseFee, []); // Use EIP-2930 here (and EIP-1559 if supported)
+                }, null, latestBlock.baseFee, [
+                    [
+                        ValidatorSetAuRa.address,
+                        ["0x0000000000000000000000000000000000000000000000000000000000000016"]
+                    ],
+                    [
+                        StakingAuRa.address,
+                        [
+                            "0x0000000000000000000000000000000000000000000000000000000000000005",
+                            "0x0000000000000000000000000000000000000000000000000000000000000024",
+                            "0x000000000000000000000000000000000000000000000000000000000000003A",
+                        ]
+                    ]
+                ]); // Use EIP-2930 here (and EIP-1559 if supported)
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -194,7 +207,7 @@ describe('Candidates place stakes on themselves', () => {
                 method: StakingTokenContract.instance.methods.mint(delegator, delegatorTokensBN.toString()),
                 gasPrice: '0',
                 nonce: nonce++
-            }, null, latestBlock.baseFee);
+            }, null, null, []); // EIP-2930 only
             promises.push(prm);
         }
         txs = await Promise.all(promises);
