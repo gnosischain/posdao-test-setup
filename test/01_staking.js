@@ -55,7 +55,8 @@ describe('Candidates place stakes on themselves', () => {
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
             const latestBlock = await web3.eth.getBlock('latest');
 
-            if (latestBlock.baseFee) {
+            if (latestBlock.baseFeePerGas) {
+                console.log(`latestBlock.baseFeePerGas = ${latestBlock.baseFeePerGas}`);
                 const netId = await web3.eth.net.getId();
                 const txParams = {
                     from: OWNER,
@@ -132,9 +133,9 @@ describe('Candidates place stakes on themselves', () => {
                     from: candidate.staking,
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining, poolName, poolDescription),
-                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFee + maxPriorityFeePerGas
+                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                     gasLimit: '700000',
-                }, null, latestBlock.baseFee);
+                }, null, latestBlock.baseFeePerGas);
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -159,9 +160,9 @@ describe('Candidates place stakes on themselves', () => {
                     from: candidate.staking,
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
-                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFee + maxPriorityFeePerGas
+                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                     gasLimit: '400000',
-                }, null, latestBlock.baseFee, [
+                }, null, latestBlock.baseFeePerGas, [
                     [
                         ValidatorSetAuRa.address,
                         ["0x0000000000000000000000000000000000000000000000000000000000000016"]
@@ -238,7 +239,7 @@ describe('Candidates place stakes on themselves', () => {
                 method: BlockRewardAuRa.instance.methods.addExtraReceiver(newNativeBalance, delegator),
                 gasPrice: '0',
                 nonce: nonce++
-            }, null, latestBlock.baseFee);
+            }, null, latestBlock.baseFeePerGas);
             promises.push(prm);
         }
         txs = await Promise.all(promises);
@@ -263,9 +264,9 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.stake(candidate, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFee + maxPriorityFeePerGas
+                gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                 gasLimit: '400000'
-            }, null, latestBlock.baseFee);
+            }, null, latestBlock.baseFeePerGas);
             promises.push(prm);
         }
         txs = await Promise.all(promises);
