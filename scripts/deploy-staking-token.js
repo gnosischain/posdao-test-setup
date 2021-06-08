@@ -6,6 +6,7 @@ const path = require('path');
 const solc = require('solc');
 const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
+const sendRequest = require('../utils/sendRequest.js');
 const web3 = new Web3('http://localhost:8541');
 web3.eth.transactionConfirmationBlocks = 1;
 web3.eth.transactionPollingTimeout = 30;
@@ -76,7 +77,8 @@ async function main() {
             from: OWNER,
             type: '0x2',
             chainId: web3.utils.numberToHex(netId),
-            maxPriorityFeePerGas: web3.utils.numberToHex('0'),
+            maxPriorityFeePerGas: web3.utils.numberToHex('1000000000'),
+            //maxPriorityFeePerGas: web3.utils.numberToHex('0'),
             maxFeePerGas: web3.utils.numberToHex('0'),
             gas: web3.utils.numberToHex('4700000'),
             data,
@@ -165,28 +167,6 @@ async function main() {
 
     console.log('**** Mint initial coins to candidates and unremovable validator');
     await mintCoinsToCandidates();
-}
-
-function sendRequest(cmd) {
-  return new Promise((resolve, reject) => {
-    var exec = require('child_process').exec;
-    exec(cmd, function (error, stdout, stderr) {
-      if (error !== null) {
-        reject(error);
-      }
-      let resp;
-      try {
-        resp = JSON.parse(stdout);
-      } catch(e) {
-        reject(e);
-      }
-      if (resp.hasOwnProperty('result')) {
-        resolve(resp.result);
-      } else {
-        reject(new Error('result is undefined'));
-      }
-    });
-  })
 }
 
 function sleep(millis) {

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
+const sendRequest = require('../utils/sendRequest.js');
 const web3 = new Web3('http://localhost:8541');
 web3.eth.transactionConfirmationBlocks = 1;
 const BN = web3.utils.BN;
@@ -52,14 +53,40 @@ describe('Candidates place stakes on themselves', () => {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
-            let tx = await SnS(web3, {
-                from: OWNER,
-                to: StakingTokenContract.address,
-                method: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()),
-                gasPrice: '0',
-            });
-            pp.tx(tx);
-            expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+            const latestBlock = await web3.eth.getBlock('latest');
+
+            if (latestBlock.baseFeePerGas) {
+                console.log(`latestBlock.baseFeePerGas = ${latestBlock.baseFeePerGas}`);
+                const netId = await web3.eth.net.getId();
+                const txParams = {
+                    from: OWNER,
+                    to: StakingTokenContract.address,
+                    type: '0x2',
+                    chainId: web3.utils.numberToHex(netId),
+                    maxPriorityFeePerGas: web3.utils.numberToHex('1000000000'),
+                    //maxPriorityFeePerGas: web3.utils.numberToHex('0'),
+                    maxFeePerGas: web3.utils.numberToHex('0'),
+                    gas: web3.utils.numberToHex('1000000'),
+                    data: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()).encodeABI(),
+                    accessList: []
+                };
+                const txHash = await sendRequest(`curl --data '{"method":"eth_sendTransaction","params":[${JSON.stringify(txParams)}],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
+                let txReceipt;
+                while(!(txReceipt = await web3.eth.getTransactionReceipt(txHash))) {
+                    await sleep(500);
+                }
+                expect(txReceipt.status, `Failed tx: ${txReceipt.transactionHash}`).to.equal(true);
+            } else {
+                let tx = await SnS(web3, {
+                    from: OWNER,
+                    to: StakingTokenContract.address,
+                    method: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()),
+                    gasPrice: '0',
+                });
+                pp.tx(tx);
+                expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
+            }
+
             let fTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let fTokenBalanceBN = new BN(fTokenBalance.toString());
             expect(fTokenBalanceBN, `Amount of minted staking tokens is incorrect for ${candidate.staking}`).to.be.bignumber.equal(iTokenBalanceBN.add(candidateTokensBN));
@@ -92,7 +119,6 @@ describe('Candidates place stakes on themselves', () => {
     it('Candidates add pools for themselves', async () => {
         let stakeBN = minCandidateStakeBN.clone();
         console.log('**** stake = ' + stakeBN.toString());
-        const latestBlock = await web3.eth.getBlock('latest');
         for (candidate of constants.CANDIDATES) {
             console.log('**** candidate =', JSON.stringify(candidate));
             let poolId = (await ValidatorSetAuRa.instance.methods.lastPoolId().call()) - 0 + 1;
@@ -102,13 +128,14 @@ describe('Candidates place stakes on themselves', () => {
             let poolName = `Pool ${poolId}`;
             let poolDescription = `Pool ${poolId} description`;
             let tx = await sendInStakingWindow(web3, async () => {
+                const latestBlock = await web3.eth.getBlock('latest');
                 return SnS(web3, {
                     from: candidate.staking,
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining, poolName, poolDescription),
-                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFee + maxPriorityFeePerGas
+                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                     gasLimit: '700000',
-                }, null, latestBlock.baseFee);
+                }, null, latestBlock.baseFeePerGas);
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -128,13 +155,27 @@ describe('Candidates place stakes on themselves', () => {
             let iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
+                const latestBlock = await web3.eth.getBlock('latest');
                 return SnS(web3, {
                     from: candidate.staking,
                     to: StakingAuRa.address,
                     method: StakingAuRa.instance.methods.stake(candidate.staking, stakeBN.toString()),
-                    gasPrice: '1000000000',
+                    gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                     gasLimit: '400000',
-                });
+                }, null, latestBlock.baseFeePerGas, [
+                    [
+                        ValidatorSetAuRa.address,
+                        ["0x0000000000000000000000000000000000000000000000000000000000000016"]
+                    ],
+                    [
+                        StakingAuRa.address,
+                        [
+                            "0x0000000000000000000000000000000000000000000000000000000000000005",
+                            "0x0000000000000000000000000000000000000000000000000000000000000024",
+                            "0x000000000000000000000000000000000000000000000000000000000000003A",
+                        ]
+                    ]
+                ]); // Use EIP-2930 here (and EIP-1559 if supported)
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
@@ -155,6 +196,7 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** Owner mints (3x minStake) tokens to delegators');
 
         const delegatorTokensBN = minDelegatorStakeBN.mul(new BN('3'));
+        let latestBlock = await web3.eth.getBlock('latest');
 
         promises = [];
         nonce = await web3.eth.getTransactionCount(OWNER);
@@ -166,7 +208,7 @@ describe('Candidates place stakes on themselves', () => {
                 method: StakingTokenContract.instance.methods.mint(delegator, delegatorTokensBN.toString()),
                 gasPrice: '0',
                 nonce: nonce++
-            });
+            }, null, null, []); // EIP-2930 only
             promises.push(prm);
         }
         txs = await Promise.all(promises);
@@ -185,6 +227,8 @@ describe('Candidates place stakes on themselves', () => {
             gasPrice: '0'
         });
 
+        latestBlock = await web3.eth.getBlock('latest');
+
         promises = [];
         nonce = await web3.eth.getTransactionCount(OWNER);
         for (let i = 0; i < delegatorsNumber; i++) {
@@ -195,7 +239,7 @@ describe('Candidates place stakes on themselves', () => {
                 method: BlockRewardAuRa.instance.methods.addExtraReceiver(newNativeBalance, delegator),
                 gasPrice: '0',
                 nonce: nonce++
-            });
+            }, null, latestBlock.baseFeePerGas);
             promises.push(prm);
         }
         txs = await Promise.all(promises);
@@ -211,6 +255,8 @@ describe('Candidates place stakes on themselves', () => {
 
         console.log('**** Delegators place stakes on the candidate');
 
+        latestBlock = await web3.eth.getBlock('latest');
+
         promises = [];
         for (let i = 0; i < delegatorsNumber; i++) {
             const delegator = delegators[i];
@@ -218,9 +264,9 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.stake(candidate, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000',
+                gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                 gasLimit: '400000'
-            });
+            }, null, latestBlock.baseFeePerGas);
             promises.push(prm);
         }
         txs = await Promise.all(promises);
@@ -403,3 +449,7 @@ describe('Candidates place stakes on themselves', () => {
                 ).to.be.bignumber.equal(new BN(0));
     });
 });
+
+function sleep(millis) {
+  return new Promise(resolve => setTimeout(resolve, millis));
+}

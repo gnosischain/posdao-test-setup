@@ -7,7 +7,7 @@ This is an integration test of AuRa POSDAO with seven OpenEthereum (or Nethermin
 
 ### OpenEthereum
 
-To integrate with [OpenEthereum](https://github.com/openethereum/openethereum/tree/dev), the following structure of folders is assumed:
+To integrate with [OpenEthereum](https://github.com/openethereum/openethereum), the following structure of folders is assumed:
 ```
 .
 ├── openethereum
@@ -19,7 +19,7 @@ If you want to compile a specific branch/version of `OpenEthereum`, you can clon
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
-$ git clone -b dev https://github.com/openethereum/openethereum
+$ git clone https://github.com/openethereum/openethereum
 $ cd openethereum
 #
 # Next step assumes you have Rust and required dependencies installed,
@@ -32,13 +32,13 @@ $ cd openethereum
 $ cargo build --release --features final
 ```
 
-To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/openethereum/releases) (versions above v3.2.1 are supported). But you still need to maintain directory structure and naming conventions:
+To save time, you can download a pre-compiled binary from the [releases page](https://github.com/openethereum/openethereum/releases) (versions >= v3.2.5 are supported). But you still need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
 $ mkdir -p openethereum/target/release/
 # an example for macOS binary
-$ curl -SfL 'https://github.com/openethereum/openethereum/releases/download/v3.2.2/openethereum-macos-v3.2.2.zip' -o openethereum/target/release/openethereum.zip
+$ curl -SfL 'https://github.com/openethereum/openethereum/releases/download/v3.2.5/openethereum-macos-v3.2.5.zip' -o openethereum/target/release/openethereum.zip
 $ unzip openethereum/target/release/openethereum.zip -d openethereum/target/release
 $ chmod +x openethereum/target/release/openethereum
 # check that it works and the version is correct (compare the version from the binary with version on the release page)
@@ -55,13 +55,13 @@ To integrate with [Nethermind](https://github.com/NethermindEth/nethermind), the
 ```
 So there should be two folders on the same level and `posdao-test-setup` will use a binary from the `nethermind` folder, namely the binary is assumed to be at `../nethermind/bin/Nethermind.Runner` relative to `posdao-test-setup` root.
 
-A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.10.48 is supported). You need to maintain directory structure and naming conventions:
+A pre-compiled binary can be downloaded from the [releases page](https://github.com/NethermindEth/nethermind/releases) (>= v1.10.72 is supported). You need to maintain directory structure and naming conventions:
 ```bash
 # move up from posdao-test-setup root
 $ cd ..
 $ mkdir -p nethermind/bin
 # an example for Linux binary
-$ curl -SfL 'https://nethdev.blob.core.windows.net/builds/nethermind-linux-amd64-1.10.48-589bce9.zip' -o nethermind/bin/nethermind.zip
+$ curl -SfL 'https://nethdev.blob.core.windows.net/builds/nethermind-linux-amd64-1.10.72-e63bcb9.zip' -o nethermind/bin/nethermind.zip
 $ unzip nethermind/bin/nethermind.zip -d nethermind/bin
 $ chmod +x nethermind/bin/Nethermind.Runner
 # check that it works and version is correct (compare the version from the binary with version on the release page)

@@ -2,7 +2,7 @@
 const EthereumTx = require('ethereumjs-tx');
 const fs = require('fs');
 const path = require('path');
-const sign1559Transaction = require('./sign1559Tx.js');
+const sign2718Transaction = require('./sign2718Tx.js');
 /*
  * Expects the following structure for tx_details:
   {
@@ -35,7 +35,7 @@ function getPrivateKey(web3, address) {
   return pkBuff;
 }
 
-module.exports = async function (web3, tx_details, privateKey, eip1559BaseFee) {
+module.exports = async function (web3, tx_details, privateKey, eip1559BaseFee, eip2930AccessList) {
   let from = tx_details.from;
   let to = tx_details.to;
   let value = web3.utils.toHex(tx_details.value || 0);
@@ -92,23 +92,28 @@ module.exports = async function (web3, tx_details, privateKey, eip1559BaseFee) {
   };
 
   if (eip1559BaseFee) { // EIP-1559 is active
-    _tx.maxFeePerGas = web3.utils.toBN(eip1559BaseFee).add(web3.utils.toBN(gasPrice)).toString(); // maxFeePerGas = baseFee + maxPriorityFeePerGas
+    if (gasPrice == 0) {
+      _tx.maxFeePerGas = '0';
+    } else {
+      _tx.maxFeePerGas = web3.utils.toBN(eip1559BaseFee).add(web3.utils.toBN(gasPrice)).toString(); // maxFeePerGas = baseFee + maxPriorityFeePerGas
+    }
     _tx.maxPriorityFeePerGas = gasPrice;
+  }
+
+  if (eip1559BaseFee || eip2930AccessList) {
     _tx.gas = _tx.gasLimit;
-    _tx.accessList = [];
+    _tx.accessList = eip2930AccessList || [];
   }
 
   dbg('  **** _tx =', _tx);
   
   if (eip1559BaseFee) { // EIP-1559 is active
-    const signedTx = sign1559Transaction(_tx, privateKey);
+    const signedTx = sign2718Transaction(_tx, privateKey, 2); // EIP-1559
     const serializedTx = signedTx.rawTransaction;
-    //console.log(`_tx:`);
-    //console.log(_tx);
-    //console.log('serializedTx:');
-    //console.log(serializedTx);
-    //console.log('signedTx:');
-    //console.log(signedTx);
+    return web3.eth.sendSignedTransaction(serializedTx);
+  } else if (eip2930AccessList) {
+    const signedTx = sign2718Transaction(_tx, privateKey, 1); // EIP-2930
+    const serializedTx = signedTx.rawTransaction;
     return web3.eth.sendSignedTransaction(serializedTx);
   } else {
     let tx = new EthereumTx(_tx);
