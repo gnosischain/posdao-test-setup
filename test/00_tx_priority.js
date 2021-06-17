@@ -415,7 +415,7 @@ describe('TxPriority tests', () => {
           // with the same gas price and nonce
           method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
           arguments: [[OWNER]],
-          params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
+          params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce } // 2 GWei
         }, {
           // 3. Call a prioritized StakingAuRa.setDelegatorMinStake
           // with the same gas price and nonce
