@@ -409,13 +409,13 @@ describe('TxPriority tests', () => {
           // with the same gas price
           method: StakingAuRa.instance.methods.setCandidateMinStake,
           arguments: [candidateMinStake],
-          params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
+          params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce } // 2 GWei
         }, {
           // 2. Call a prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
           // with the same gas price and nonce
           method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
           arguments: [[OWNER]],
-          params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce } // 2 GWei
+          params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
         }, {
           // 3. Call a prioritized StakingAuRa.setDelegatorMinStake
           // with the same gas price and nonce
@@ -425,12 +425,12 @@ describe('TxPriority tests', () => {
         }];
       }, 2);
 
-      // Here we expect that the most weighted transaction will be picked up
-      // when the nonce is the same, and the arbitrary prioritized transaction
-      // from another account will be the last
+      // Here we expect that the transaction with the higher gas price will be picked up
+      // regardless of its weight (when sender/nonce are the same). The arbitrary prioritized
+      // transaction from another account will be the first because it has greater weight.
       checkTransactionOrder([
-        2, // BlockRewardAuRa.setErcToNativeBridgesAllowed
         0, // arbitrary transaction
+        1, // StakingAuRa.setCandidateMinStake
       ], receipts);
     });
 
@@ -2181,7 +2181,7 @@ describe('TxPriority tests', () => {
         // There must be emitInitiateChange and/or randomness transaction
         // at the beginning of the block
         const block = await web3.eth.getBlock(blockNumber, true);
-        expect(block, `Block ${blockNumber} is null`).not.to.eql(null);
+        expect(block, `eth_getBlockByNumber returned null for block ${blockNumber}`).not.to.eql(null);
         expect(block.transactions.length).to.be.at.least(maxTransactionIndex + 1);
         for (let i = 0; i < block.transactions.length; i++) {
           const superiorTx = block.transactions[i];
