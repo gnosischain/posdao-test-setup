@@ -1,9 +1,12 @@
 'use strict';
 
+const getLatestBlock = require('./getLatestBlock');
+
 const RETRY_INTERVAL_MS = 2499;
 
 async function getCurrentBlockNumber(web3) {
-    return parseInt((await web3.eth.getBlock('latest')).number);
+    const latestBlock = await getLatestBlock(web3);
+    return parseInt(latestBlock.number);
 }
 
 module.exports = async function (web3, sendTx) {

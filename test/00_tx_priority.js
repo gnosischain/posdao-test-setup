@@ -406,13 +406,13 @@ describe('TxPriority tests', () => {
           })).rawTransaction
         }, {
           // 1. Call a prioritized StakingAuRa.setCandidateMinStake
-          // with the same gas price
+          // with higher gas price
           method: StakingAuRa.instance.methods.setCandidateMinStake,
           arguments: [candidateMinStake],
           params: { from: OWNER, gasPrice: gasPrice2, nonce: ownerNonce } // 2 GWei
         }, {
           // 2. Call a prioritized BlockRewardAuRa.setErcToNativeBridgesAllowed
-          // with the same gas price and nonce
+          // with lower gas price and the same nonce
           method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
           arguments: [[OWNER]],
           params: { from: OWNER, gasPrice: gasPrice1, nonce: ownerNonce } // 1 GWei
@@ -2344,7 +2344,9 @@ describe('TxPriority tests', () => {
       }
       promises.push(new Promise((resolve, reject) => {
         batch.add(send.request(item.params, async (err, txHash) => {
-          if (err) {
+          if (err && (err.message == 'Returned error: Filtered' || err.message == 'Returned error: AlreadyKnown')) {
+            resolve(null);
+          } else if (err) {
             reject(err);
           } else {
             let attempts = 0;

@@ -14,6 +14,7 @@ const expect = require('chai')
 const ValidatorSetAuRa = require('../utils/getContract')('ValidatorSetAuRa', web3);
 const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
+const calcMinGasPrice = require('../utils/calcMinGasPrice');
 const pp = require('../utils/prettyPrint');
 
 describe('Pool removal and validator set change', () => {
@@ -33,7 +34,7 @@ describe('Pool removal and validator set change', () => {
             from: tiredValidator.staking,
             to: StakingAuRa.address,
             method: StakingAuRa.instance.methods.removeMyPool(),
-            gasPrice: '1000000000',
+            gasPrice: await calcMinGasPrice(web3),
             gasLimit: '300000',
         });
         pp.tx(tx);
@@ -96,7 +97,7 @@ describe('Unremovable validator removes his pool', () => {
             from: unremovableValidator.staking,
             to: StakingAuRa.address,
             method: StakingAuRa.instance.methods.removeMyPool(),
-            gasPrice: '1000000000',
+            gasPrice: await calcMinGasPrice(web3),
             gasLimit: '300000',
         });
         pp.tx(tx);
