@@ -18,10 +18,12 @@ const StakingAuRa = require('../utils/getContract')('StakingAuRa', web3);
 const StakingTokenContract = require('../utils/getContract')('StakingToken', web3);
 const sendInStakingWindow = require('../utils/sendInStakingWindow');
 const waitForValidatorSetChange = require('../utils/waitForValidatorSetChange');
+const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
+const calcMinGasPrice = require('../utils/calcMinGasPrice');
+const getLatestBlock = require('../utils/getLatestBlock');
 const pp = require('../utils/prettyPrint');
 const FAILED_EXCEPTION_MSG = 'The execution failed due to an exception';
 const REVERT_EXCEPTION_MSG = 'revert';
-const waitForNextStakingEpoch = require('../utils/waitForNextStakingEpoch');
 
 describe('Candidates place stakes on themselves', () => {
     var minCandidateStake;
@@ -53,7 +55,7 @@ describe('Candidates place stakes on themselves', () => {
             console.log('**** candidate =', JSON.stringify(candidate));
             let iTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
-            const latestBlock = await web3.eth.getBlock('latest');
+            const latestBlock = await getLatestBlock(web3);
 
             if (latestBlock.baseFeePerGas) {
                 console.log(`latestBlock.baseFeePerGas = ${latestBlock.baseFeePerGas}`);
@@ -63,8 +65,7 @@ describe('Candidates place stakes on themselves', () => {
                     to: StakingTokenContract.address,
                     type: '0x2',
                     chainId: web3.utils.numberToHex(netId),
-                    maxPriorityFeePerGas: web3.utils.numberToHex('1000000000'),
-                    //maxPriorityFeePerGas: web3.utils.numberToHex('0'),
+                    maxPriorityFeePerGas: web3.utils.numberToHex('0'),
                     maxFeePerGas: web3.utils.numberToHex('0'),
                     gas: web3.utils.numberToHex('1000000'),
                     data: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()).encodeABI(),
@@ -128,7 +129,7 @@ describe('Candidates place stakes on themselves', () => {
             let poolName = `Pool ${poolId}`;
             let poolDescription = `Pool ${poolId} description`;
             let tx = await sendInStakingWindow(web3, async () => {
-                const latestBlock = await web3.eth.getBlock('latest');
+                const latestBlock = await getLatestBlock(web3);
                 return SnS(web3, {
                     from: candidate.staking,
                     to: StakingAuRa.address,
@@ -155,7 +156,7 @@ describe('Candidates place stakes on themselves', () => {
             let iStake = await StakingAuRa.instance.methods.stakeAmount(candidatePoolId, '0x0000000000000000000000000000000000000000').call();
             let iStakeBN = new BN(iStake.toString());
             let tx = await sendInStakingWindow(web3, async () => {
-                const latestBlock = await web3.eth.getBlock('latest');
+                const latestBlock = await getLatestBlock(web3);
                 return SnS(web3, {
                     from: candidate.staking,
                     to: StakingAuRa.address,
@@ -196,7 +197,7 @@ describe('Candidates place stakes on themselves', () => {
         console.log('**** Owner mints (3x minStake) tokens to delegators');
 
         const delegatorTokensBN = minDelegatorStakeBN.mul(new BN('3'));
-        let latestBlock = await web3.eth.getBlock('latest');
+        let latestBlock = await getLatestBlock(web3);
 
         promises = [];
         nonce = await web3.eth.getTransactionCount(OWNER);
@@ -227,7 +228,7 @@ describe('Candidates place stakes on themselves', () => {
             gasPrice: '0'
         });
 
-        latestBlock = await web3.eth.getBlock('latest');
+        latestBlock = await getLatestBlock(web3);
 
         promises = [];
         nonce = await web3.eth.getTransactionCount(OWNER);
@@ -255,7 +256,7 @@ describe('Candidates place stakes on themselves', () => {
 
         console.log('**** Delegators place stakes on the candidate');
 
-        latestBlock = await web3.eth.getBlock('latest');
+        latestBlock = await getLatestBlock(web3);
 
         promises = [];
         for (let i = 0; i < delegatorsNumber; i++) {
@@ -298,7 +299,7 @@ describe('Candidates place stakes on themselves', () => {
             from: delegator,
             to: StakingAuRa.address,
             method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minDelegatorStakeBN.toString()),
-            gasPrice: '1000000000',
+            gasPrice: await calcMinGasPrice(web3),
             gasLimit: '500000',
         });
         expect(tx.status, `Tx to move stake failed: ${tx.transactionHash}`).to.equal(true);
@@ -321,7 +322,7 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.moveStake(candidate_rec, candidate_rec, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000',
+                gasPrice: await calcMinGasPrice(web3),
                 gasLimit: '500000',
             });
             expect(false, `Tx didn't throw an exception: ${tx2.transactionHash}. Tx status: ${tx2.status}`).to.equal(true);
@@ -337,7 +338,7 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.moveStake(candidate, candidate_rec, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000',
+                gasPrice: await calcMinGasPrice(web3),
                 gasLimit: '500000',
             });
             expect(false, `Tx didn't throw an exception: ${tx3.transactionHash}. Tx status: ${tx3.status}`).to.equal(true);
@@ -394,7 +395,7 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.orderWithdraw(candidate, minDelegatorStakeBN.toString()),
-                gasPrice: '1000000000'
+                gasPrice: await calcMinGasPrice(web3)
             });
         });
         pp.tx(tx);
@@ -432,7 +433,7 @@ describe('Candidates place stakes on themselves', () => {
                 from: delegator,
                 to: StakingAuRa.address,
                 method: StakingAuRa.instance.methods.claimOrderedWithdraw(candidate),
-                gasPrice: '1000000000'
+                gasPrice: await calcMinGasPrice(web3)
             });
         });
         pp.tx(tx2);
