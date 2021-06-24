@@ -1,8 +1,13 @@
 const getLatestBlock = require('./getLatestBlock');
 
-module.exports = async function (web3) {
-  const config = require('../config/node1.nethermind.json');
-  const minGasPrice = new web3.utils.BN(config.Mining.MinGasPrice);
+module.exports = async function (web3, configMinGasPrice) {
+  let minGasPrice;
+  if (configMinGasPrice !== undefined) {
+    minGasPrice = new web3.utils.BN(configMinGasPrice);
+  } else {
+    const config = require('../config/node1.nethermind.json');
+    minGasPrice = new web3.utils.BN(config.Mining.MinGasPrice);
+  }
   let gasPrice = minGasPrice;
   const latestBlock = await getLatestBlock(web3);
   if (latestBlock.baseFeePerGas) {
