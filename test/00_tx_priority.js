@@ -1623,7 +1623,7 @@ describe('TxPriority tests', () => {
       results = await batchSendTransactions([{
         method: StakingAuRa.instance.methods.setDelegatorMinStake,
         arguments: [delegatorMinStake],
-        params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice * 2)), nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice * 2 + 1)), nonce: ownerNonce++ }
       }]);
       receipt = results.receipts[0];
       expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
@@ -1651,7 +1651,7 @@ describe('TxPriority tests', () => {
       results = await batchSendTransactions([{
         method: StakingAuRa.instance.methods.setCandidateMinStake,
         arguments: [candidateMinStake],
-        params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice)), nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice - 0 + 1)), nonce: ownerNonce++ }
       }]);
       receipt = results.receipts[0];
       expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice1} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
@@ -1685,7 +1685,7 @@ describe('TxPriority tests', () => {
       results = await batchSendTransactions([{
         method: StakingAuRa.instance.methods.setCandidateMinStake,
         arguments: [candidateMinStake],
-        params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice * 2)), nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice * 2 + 1)), nonce: ownerNonce++ }
       }]);
       receipt = results.receipts[0];
       expect(receipt.status, `The owner failed when using allowed gas price of ${gasPrice2} wei. Tx hash: ${receipt ? receipt.transactionHash : 'undefined'}`).to.equal(true);
@@ -2379,7 +2379,7 @@ describe('TxPriority tests', () => {
       }
       promises.push(new Promise((resolve, reject) => {
         batch.add(send.request(item.params, async (err, txHash) => {
-          if (err && (err.message == 'Returned error: Filtered' || err.message == 'Returned error: AlreadyKnown')) {
+          if (err && (err.message == 'Returned error: Filtered' || err.message == 'Returned error: AlreadyKnown' || err.message == 'Returned error: FeeTooLowToCompete')) {
             resolve(null);
           } else if (err) {
             reject(err);
