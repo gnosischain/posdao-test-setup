@@ -72,13 +72,12 @@ async function main() {
         .encodeABI();
     let txParams;
     const latestBlock = await sendRequest(`curl --data '{"method":"eth_getBlockByNumber","params":["latest",false],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
-    if (latestBlock.baseFee) { // EIP-1559 is activated, so we can use a new type of transactions
+    if (latestBlock.baseFeePerGas) { // EIP-1559 is activated, so we can use a new type of transactions
         txParams = {
             from: OWNER,
             type: '0x2',
             chainId: web3.utils.numberToHex(netId),
-            maxPriorityFeePerGas: web3.utils.numberToHex('1000000000'),
-            //maxPriorityFeePerGas: web3.utils.numberToHex('0'),
+            maxPriorityFeePerGas: web3.utils.numberToHex('0'),
             maxFeePerGas: web3.utils.numberToHex('0'),
             gas: web3.utils.numberToHex('4700000'),
             data,
