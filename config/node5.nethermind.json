@@ -3,7 +3,7 @@
     "WebSocketsEnabled": true,
     "StoreReceipts" : true,
     "IsMining": true,
-    "ChainSpecPath": "./data/spec.json",
+    "ChainSpecPath": "./data/spec-ne.json",
     "BaseDbPath": "./data/node5",
     "LogDirectory": "./data/node5",
     "LogFileName": "nethermind.logs.txt",

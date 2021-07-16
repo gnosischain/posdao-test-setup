@@ -22,7 +22,15 @@ async function main() {
   console.log();
   console.log();
 
-  await promisify(fs.writeFile)(__dirname + '/../data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
+  specFile.engine.authorityRound.params.blockRewardContractTransition = "1000000";
+  specFile.engine.authorityRound.params.posdaoTransition = "1000000";
+  specFile.engine.authorityRound.params.blockGasLimitContractTransitions = { "1000000" : "0x4000000000000000000000000000000000000001" };
+  specFile.engine.authorityRound.params.randomnessContractAddress[1000000] = specFile.engine.authorityRound.params.randomnessContractAddress[0];
+  specFile.params.transactionPermissionContractTransition = "1000000";
+  delete specFile.engine.authorityRound.params.randomnessContractAddress[0];
+
+  await promisify(fs.writeFile)(__dirname + '/../data/spec-ne.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
+  await promisify(fs.writeFile)(__dirname + '/../data/spec-oe.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 
 main();

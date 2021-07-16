@@ -1,5 +1,5 @@
 [parity]
-chain = "./data/spec.json"
+chain = "./data/spec-oe.json"
 base_path = "data/node6"
 
 [network]
