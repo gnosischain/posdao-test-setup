@@ -17,22 +17,26 @@ set -x
 # done
 
 "../nethermind-bin/bin/Nethermind.Runner" --config "./config/node0.nethermind.json" >> "./data/node0/log" 2>&1 &
+#"../openethereum/target/release/openethereum" --config "./config/node0.openethereum.toml" >> "./data/node0/log" 2>&1 &
 node ./scripts/getReservedPeer.js "0"
 
 "../openethereum/target/release/openethereum" --config "./config/node1.openethereum.toml" >> "./data/node1/log" 2>&1 &
 node ./scripts/getReservedPeer.js "1"
 
 "../nethermind-bin/bin/Nethermind.Runner" --config "./config/node2.nethermind.json" >> "./data/node2/log" 2>&1 &
+#"../openethereum/target/release/openethereum" --config "./config/node2.openethereum.toml" >> "./data/node2/log" 2>&1 &
 node ./scripts/getReservedPeer.js "2"
 
 "../openethereum/target/release/openethereum" --config "./config/node3.openethereum.toml" >> "./data/node3/log" 2>&1 &
 node ./scripts/getReservedPeer.js "3"
 
 "../nethermind-bin/bin/Nethermind.Runner" --config "./config/node4.nethermind.json" >> "./data/node4/log" 2>&1 &
+#"../openethereum/target/release/openethereum" --config "./config/node4.openethereum.toml" >> "./data/node4/log" 2>&1 &
 node ./scripts/getReservedPeer.js "4"
 
 "../openethereum/target/release/openethereum" --config "./config/node5.openethereum.toml" >> "./data/node5/log" 2>&1 &
 node ./scripts/getReservedPeer.js "5"
 
 "../nethermind-bin/bin/Nethermind.Runner" --config "./config/node6.nethermind.json" >> "./data/node6/log" 2>&1 &
+#"../openethereum/target/release/openethereum" --config "./config/node6.openethereum.toml" >> "./data/node6/log" 2>&1 &
 node ./scripts/getReservedPeer.js "6"
