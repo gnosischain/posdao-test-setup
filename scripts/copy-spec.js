@@ -33,6 +33,8 @@ async function main() {
   specFile.params.eip3529Transition = "10";
   specFile.params.eip3541Transition = "10";
 
+  specFile.accounts["0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24"] = { balance: "100000000000000000000" };
+
   await promisify(fs.writeFile)(__dirname + '/../data/spec-ne.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 
   specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";

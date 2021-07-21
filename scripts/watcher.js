@@ -4,6 +4,7 @@ console.log('');
 const Web3 = require('web3');
 const providerUrl = 'ws://localhost:9541';
 const web3 = new Web3(new Web3.providers.WebsocketProvider(providerUrl));
+const sendRequest = require('../utils/sendRequest.js');
 
 const artifactsPath = '../posdao-contracts/build/contracts/';
 const blockRewardContract = new web3.eth.Contract(
@@ -180,6 +181,43 @@ async function onNewBlock(blockNumber) {
     console.log('');
   }
 
+  //////////////////////////
+  if (blockNumber == 12) {
+    /*
+    const txParams = {
+      from: '0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24',
+      to: '0xf67cc5231c5858ad6cc87b105217426e17b824bb',
+      value: web3.utils.numberToHex('100'),
+      gasPrice: '0x3b9aca00',
+      gas: web3.utils.numberToHex('21000')
+    };
+    const txHash = await sendRequest(`curl --data '{"method":"eth_sendTransaction","params":[${JSON.stringify(txParams)}],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
+    let txReceipt;
+    while(!(txReceipt = await sendRequest(`curl --data '{"method":"eth_getTransactionReceipt","params":["${txHash}"],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`))) {
+        await sleep(500);
+    }
+    console.log(txReceipt);
+    */
+    // Legacy send to EOA
+    web3.eth.sendTransaction({
+      from: '0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24',
+      to: '0xf67cc5231c5858ad6cc87b105217426e17b824bb',
+      value: web3.utils.numberToHex('100'),
+      gasPrice: web3.utils.numberToHex('2000000000'),
+      gas: web3.utils.numberToHex('21000')
+    });
+  } else if (blockNumber == 15) {
+    // Legacy send to contract
+    web3.eth.sendTransaction({
+      from: '0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24',
+      to: stakingContract.options.address,
+      gasPrice: web3.utils.numberToHex('2000000000'),
+      gas: web3.utils.numberToHex('100000'),
+      data: stakingContract.methods.setDelegatorMinStake('1000000000000000000000').encodeABI()
+    });
+  }
+  //////////////////////////
+
   console.log('');
   console.log('=======================================================');
   console.log('');
@@ -208,4 +246,8 @@ async function scanForNewBlock() {
   } else {
     prevBlock = null;
   }
+}
+
+function sleep(millis) {
+  return new Promise(resolve => setTimeout(resolve, millis));
 }
