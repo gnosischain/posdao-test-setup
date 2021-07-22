@@ -238,6 +238,22 @@ async function onNewBlock(blockNumber) {
       data: stakingContract.methods.setDelegatorMinStake('1000000000000000000000').encodeABI(),
       type: '0x2'
     });
+  } else if (blockNumber == 24) {
+    // Legacy EIP-3198
+    web3.eth.sendTransaction({
+      from: '0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24',
+      gasPrice: web3.utils.numberToHex('2000000000'),
+      gas: web3.utils.numberToHex('1000000'),
+      data: '0x6080604052348015600f57600080fd5b5048600055603e8060216000396000f3fe6080604052600080fdfea265627a7a723058200aed9dd22e8ad3510c5ac4ec4252ada68bc2eb4ed687b4f37ac0964e5853206f64736f6c634300050a0032'
+    });
+  } else if (blockNumber == 27) {
+    // Legacy EIP-3541
+    web3.eth.sendTransaction({
+      from: '0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24',
+      gasPrice: web3.utils.numberToHex('2000000000'),
+      gas: web3.utils.numberToHex('1000000'),
+      data: '0x60ef60005360206000f3'
+    });
   }
   //////////////////////////
 
