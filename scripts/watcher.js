@@ -2,7 +2,7 @@ console.log('');
 console.log('');
 
 const Web3 = require('web3');
-const providerUrl = 'ws://localhost:9541';
+const providerUrl = 'ws://localhost:9540';
 const web3 = new Web3(new Web3.providers.WebsocketProvider(providerUrl));
 const sendRequest = require('../utils/sendRequest.js');
 
@@ -215,6 +215,18 @@ async function onNewBlock(blockNumber) {
       gas: web3.utils.numberToHex('100000'),
       data: stakingContract.methods.setDelegatorMinStake('1000000000000000000000').encodeABI()
     });
+  } else if (blockNumber == 18) {
+    // Send to EOA
+    const receipt = await web3.eth.sendTransaction({
+      from: '0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24',
+      to: '0xf67cc5231c5858ad6cc87b105217426e17b824bb',
+      value: web3.utils.numberToHex('100'),
+      maxPriorityFeePerGas: web3.utils.numberToHex('2000000000'),
+      maxFeePerGas: web3.utils.numberToHex('2000000000'),
+      gas: web3.utils.numberToHex('21000'),
+      type: '0x2'
+    });
+    console.log(receipt);
   }
   //////////////////////////
 
