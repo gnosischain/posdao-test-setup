@@ -22,6 +22,12 @@ async function main() {
   console.log();
   console.log();
 
+  // specFile.params.eip1559Transition = "10";
+  // specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
+  // specFile.params.eip1559ElasticityMultiplier = "0x2";
+  // specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
+  // specFile.genesis.baseFeePerGas = "0x3b9aca00";
+
   await promisify(fs.writeFile)(__dirname + '/../data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 
