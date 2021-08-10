@@ -35,13 +35,12 @@ async function main() {
 
   specFile.accounts["0x32e4e4c7c5d1cea5db5f9202a9e4d99e56c91a24"] = { balance: "100000000000000000000" };
 
-  await promisify(fs.writeFile)(__dirname + '/../data/spec-ne.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
-
   specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
   specFile.params.eip1559ElasticityMultiplier = "0x2";
   specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
   //specFile.genesis.baseFeePerGas = "0x3b9aca00";
 
+  await promisify(fs.writeFile)(__dirname + '/../data/spec-ne.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
   await promisify(fs.writeFile)(__dirname + '/../data/spec-oe.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
 

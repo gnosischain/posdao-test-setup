@@ -193,6 +193,13 @@ async function onNewBlock(blockNumber) {
       gasPrice: web3.utils.numberToHex('2000000000'),
       gas: web3.utils.numberToHex('21000')
     });
+  } else if (blockNumber == 14) {
+    // curl --data '{"method":"eth_gasPrice","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:8541
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    // curl --data '{"method":"eth_gasPrice","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:8540
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 16) {
     // Legacy send to contract
     web3.eth.sendTransaction({
@@ -202,6 +209,11 @@ async function onNewBlock(blockNumber) {
       gas: web3.utils.numberToHex('100000'),
       data: stakingContract.methods.setDelegatorMinStake('1000000000000000000000').encodeABI()
     });
+  } else if (blockNumber == 18) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 20) {
     // Send to EOA
     web3.eth.sendTransaction({
@@ -213,6 +225,11 @@ async function onNewBlock(blockNumber) {
       gas: web3.utils.numberToHex('21000'),
       type: '0x2'
     });
+  } else if (blockNumber == 22) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 24) {
     // Send to contract
     web3.eth.sendTransaction({
@@ -224,6 +241,11 @@ async function onNewBlock(blockNumber) {
       data: stakingContract.methods.setDelegatorMinStake('1000000000000000000000').encodeABI(),
       type: '0x2'
     });
+  } else if (blockNumber == 26) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 28) {
     // Legacy EIP-3198
     web3.eth.sendTransaction({
@@ -232,6 +254,11 @@ async function onNewBlock(blockNumber) {
       gas: web3.utils.numberToHex('1000000'),
       data: '0x6080604052348015600f57600080fd5b5048600055603e8060216000396000f3fe6080604052600080fdfea265627a7a723058200aed9dd22e8ad3510c5ac4ec4252ada68bc2eb4ed687b4f37ac0964e5853206f64736f6c634300050a0032'
     });
+  } else if (blockNumber == 30) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 32) {
     // Legacy EIP-3541
     web3.eth.sendTransaction({
@@ -240,6 +267,11 @@ async function onNewBlock(blockNumber) {
       gas: web3.utils.numberToHex('1000000'),
       data: '0x60ef60005360206000f3'
     });
+  } else if (blockNumber == 34) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 36) {
     // eth_sendRawTransaction (legacy send to EOA)
     SnS(web3_0, {
@@ -249,6 +281,11 @@ async function onNewBlock(blockNumber) {
       gasPrice: '2000000000',
       gasLimit: '21000'
     });
+  } else if (blockNumber == 38) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 40) {
     // eth_sendRawTransaction (legacy send to contract)
     SnS(web3_0, {
@@ -258,6 +295,11 @@ async function onNewBlock(blockNumber) {
       gasLimit: web3.utils.numberToHex('100000'),
       method: stakingContract.methods.setDelegatorMinStake('1000000000000000000000')
     });
+  } else if (blockNumber == 42) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 44) {
     // eth_sendRawTransaction (send to EOA)
     const latestBlock = await getLatestBlock(web3);
@@ -268,6 +310,11 @@ async function onNewBlock(blockNumber) {
       gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
       gasLimit: web3.utils.numberToHex('21000')
     }, null, latestBlock.baseFeePerGas);
+  } else if (blockNumber == 46) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   } else if (blockNumber == 48) {
     // eth_sendRawTransaction (send to contract)
     const latestBlock = await getLatestBlock(web3);
@@ -278,6 +325,11 @@ async function onNewBlock(blockNumber) {
       gasLimit: web3.utils.numberToHex('100000'),
       method: stakingContract.methods.setDelegatorMinStake('1000000000000000000000')
     }, null, latestBlock.baseFeePerGas);
+  } else if (blockNumber >= 50) {
+    let gasPrice = await web3.eth.getGasPrice();
+    console.log(`gasPrice (ne): ${gasPrice}`);
+    gasPrice = await web3_0.eth.getGasPrice();
+    console.log(`gasPrice (oe): ${gasPrice}`);
   }
   //////////////////////////////////////////////////////////////////////////////
 
