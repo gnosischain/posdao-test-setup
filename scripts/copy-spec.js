@@ -13,7 +13,7 @@ async function main() {
   specFile.engine.authorityRound.params.stepDuration = {
     "0": 5
   };
-  // switch to another duration in 120 seconds
+  // Switch to another duration in 120 seconds
   const newStepDurationTimestamp = Math.round((Date.now() / 1000 + 120) / 10) * 10;
   specFile.engine.authorityRound.params.stepDuration[newStepDurationTimestamp] = 4;
   console.log();
@@ -22,11 +22,15 @@ async function main() {
   console.log();
   console.log();
 
-  // specFile.params.eip1559Transition = "10";
-  // specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
-  // specFile.params.eip1559ElasticityMultiplier = "0x2";
-  // specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
-  // specFile.genesis.baseFeePerGas = "0x3b9aca00";
+  // Activate London hard fork
+  specFile.params.eip3198Transition = "0";
+  specFile.params.eip3529Transition = "0";
+  specFile.params.eip3541Transition = "0";
+  specFile.params.eip1559Transition = "8";
+  specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
+  specFile.params.eip1559ElasticityMultiplier = "0x2";
+  specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
+  specFile.genesis.baseFeePerGas = "0x3b9aca00";
 
   await promisify(fs.writeFile)(__dirname + '/../data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }

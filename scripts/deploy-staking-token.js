@@ -83,6 +83,10 @@ async function main() {
             data,
             accessList: []
         };
+        const nodeInfo = await web3.eth.getNodeInfo();
+        if (nodeInfo.indexOf('OpenEthereum') >= 0) {
+            delete txParams.chainId;
+        }
     } else { // EIP-1559 is not activated. Use a legacy transaction
         txParams = {
             from: OWNER,

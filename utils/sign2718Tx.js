@@ -61,8 +61,8 @@ function signTransaction(txMessage, txType, privateKey) {
   } else {
     v = web3.utils.toHex(sigObj.recid + 27 + chainId * 2 + 8);
   }
-  const r = '0x' + signature.slice(0, 64);
-  const s = '0x' + signature.slice(64, 128);
+  const r = '0x' + signature.slice(0, 64).replace(/^0+/, '');
+  const s = '0x' + signature.slice(64, 128).replace(/^0+/, '');
 
   const txMessageSigned = txType > 0 ? txMessage : txMessage.slice(0, 6);
   txMessageSigned.push(v);

@@ -58,8 +58,8 @@ describe('Candidates place stakes on themselves', () => {
             const latestBlock = await getLatestBlock(web3);
 
             if (latestBlock.baseFeePerGas) {
-                console.log(`latestBlock.baseFeePerGas = ${latestBlock.baseFeePerGas}`);
                 const netId = await web3.eth.net.getId();
+                const nodeInfo = await web3.eth.getNodeInfo();
                 const txParams = {
                     from: OWNER,
                     to: StakingTokenContract.address,
@@ -71,6 +71,9 @@ describe('Candidates place stakes on themselves', () => {
                     data: StakingTokenContract.instance.methods.mint(candidate.staking, candidateTokensBN.toString()).encodeABI(),
                     accessList: []
                 };
+                if (nodeInfo.indexOf('OpenEthereum') >= 0) {
+                    delete txParams.chainId;
+                }
                 const txHash = await sendRequest(`curl --data '{"method":"eth_sendTransaction","params":[${JSON.stringify(txParams)}],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST ${web3.currentProvider.host} 2>/dev/null`);
                 let txReceipt;
                 while(!(txReceipt = await web3.eth.getTransactionReceipt(txHash))) {
