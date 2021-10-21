@@ -30,9 +30,9 @@ async function main() {
   specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
   specFile.params.eip1559ElasticityMultiplier = "0x2";
   specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
-  //specFile.params.eip1559FeeCollector = "0x1559000000000000000000000000000000000000";
-  //specFile.params.eip1559FeeCollectorTransition = "8";
-  specFile.genesis.baseFeePerGas = "0x3b9aca00";
+  specFile.params.eip1559FeeCollector = "0x1559000000000000000000000000000000000000";
+  specFile.params.eip1559FeeCollectorTransition = specFile.params.eip1559Transition;
+  specFile.genesis.baseFeePerGas = specFile.params.eip1559BaseFeeInitialValue;
 
   await promisify(fs.writeFile)(__dirname + '/../data/spec.json', JSON.stringify(specFile, null, '  '), 'UTF-8');
 }
