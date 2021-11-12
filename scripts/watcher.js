@@ -146,7 +146,7 @@ async function onNewBlock(blockNumber) {
   for (let i = 0; i < block.transactions.length; i++) {
     const tx = block.transactions[i];
     const txReceipt = await web3.eth.getTransactionReceipt(tx.hash);
-    const txObject = {from: tx.from, to: tx.to, gasPrice: tx.gasPrice, gasLimit: tx.gas, nonce: tx.nonce, receipt: txReceipt};
+    const txObject = {from: tx.from, to: tx.to, gasPrice: tx.gasPrice, gasLimit: tx.gas, nonce: tx.nonce, receipt: txReceipt, hash: tx.hash};
     if (txReceipt.status) {
       txSuccess.push(txObject);
     } else {
@@ -163,6 +163,7 @@ async function onNewBlock(blockNumber) {
       }
       console.log(`  ${tx.from} => ${contractName}`);
       console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}, index: ${tx.receipt.transactionIndex}`);
+      console.log(`    hash: ${tx.hash}`);
     });
     console.log('');
   }
@@ -176,6 +177,7 @@ async function onNewBlock(blockNumber) {
       }
       console.log(`  ${tx.from} => ${contractName}`);
       console.log(`    gas used: ${tx.receipt.gasUsed}/${tx.gasLimit}, gas price: ${tx.gasPrice}, nonce: ${tx.nonce}, index: ${tx.receipt.transactionIndex}`);
+      console.log(`    hash: ${tx.hash}`);
     });
     console.log('');
   }
