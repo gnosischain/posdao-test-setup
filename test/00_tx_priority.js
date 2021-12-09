@@ -2379,7 +2379,7 @@ describe('TxPriority tests', () => {
       }
       promises.push(new Promise((resolve, reject) => {
         batch.add(send.request(item.params, async (err, txHash) => {
-          if (err && (err.message == 'Returned error: Filtered' || err.message == 'Returned error: AlreadyKnown' || err.message == 'Returned error: FeeTooLowToCompete')) {
+          if (err && (err.message.includes('Returned error: Filtered') || err.message.includes('Returned error: AlreadyKnown') || err.message.includes('Returned error: FeeTooLow'))) {
             resolve(null);
           } else if (err) {
             reject(err);
