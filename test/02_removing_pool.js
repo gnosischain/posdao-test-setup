@@ -73,7 +73,7 @@ describe('Unremovable validator removes his pool', () => {
         const tx = await SnS(web3, {
             from: OWNER,
             to: ValidatorSetAuRa.address,
-            method: ValidatorSetAuRa.instance.methods.clearUnremovableValidator(),
+            method: ValidatorSetAuRa.instance.methods.clearUnremovableValidator(unremovableValidator.poolId),
             gasPrice: '0',
             gasLimit: '300000',
         });
