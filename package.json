@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "after-start": "npm run checkers && npm run test && npm run watcher && npm run stop-test-setup",
+    "after-start": "npm run checkers && npm run bc-deploy && npm run test && npm run watcher && npm run stop-test-setup",
     "after-start-no-watcher": "npm run checkers && npm run test && npm run stop-test-setup",
     "all": "CLIENT=openethereum npm run before-start && npm run start-test-setup-openethereum && npm run after-start",
     "all-nethermind": "CLIENT=nethermind npm run before-start && npm run start-test-setup-nethermind && npm run after-start",
     "all-nethermind-no-watcher": "CLIENT=nethermind npm run before-start && npm run start-test-setup-nethermind && npm run after-start-no-watcher",
+    "bc-deploy": "cd ./bc/contracts && npm i && npm run deploy && cd .. && rm -rf ./nodes && git checkout ./keys && git clone https://github.com/gnosischain/lighthouse-launch.git nodes && mv keys nodes",
     "before-start": "npm i && npm run get-all-submodules && npm run cleanup && npm run compile-posdao-contracts && npm run make-spec",
     "checkers": "(node scripts/watchOrdinaryNode.js &) && node scripts/deploy-staking-token.js && (node scripts/watchRandomSeed &)",
     "cleanup": "bash scripts/stop-test-setup && rm -rf ./accounts ./config ./data && git checkout ./accounts && git checkout ./config && git checkout ./data",
