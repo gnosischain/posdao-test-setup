@@ -1,15 +1,11 @@
 {
-  "name": "posdao-test-setup",
+  "name": "bc-contracts",
   "version": "0.0.1",
   "description": "",
   "scripts": {
     "deploy": "node ./deploy.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/poanetwork/posdao-test-setup.git"
-  },
-  "author": "poa.network",
+  "author": "xdaichain.com",
   "license": "ISC",
   "dependencies": {
     "solc": "0.8.9",
