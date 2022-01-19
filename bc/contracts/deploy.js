@@ -36,13 +36,13 @@ async function main() {
 
     const MGNO_AMOUNT = 32;
     const NUMBER_OF_VALIDATORS = 2048;
-    const mintAmount = web3.utils.toWei(MGNO_AMOUNT).mul(new BN(NUMBER_OF_VALIDATORS));
+    const mintAmount = web3.utils.toWei(new BN(MGNO_AMOUNT)).mul(new BN(NUMBER_OF_VALIDATORS));
 
     console.log(`** Deploying SBCToken`);
     const contract = new web3.eth.Contract(abi);
 
     // Deploy using eth_sendTransaction
-    let data = await contract.deploy({ data: '0x' + bytecode, arguments: [mintAmount] }).encodeABI();
+    let data = await contract.deploy({ data: '0x' + bytecode, arguments: [mintAmount.toString()] }).encodeABI();
     let receipt = await web3.eth.sendTransaction({
         from: OWNER,
         gasPrice: web3.utils.numberToHex('0'),
