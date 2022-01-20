@@ -5,11 +5,9 @@ async function main() {
   const dockerComposeYmlPath = `${nodesDir}/docker-compose.yml`;
 
   let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
-  dockerComposeYmlContent = dockerComposeYmlContent.replace('validator-import:', `
-  validator-import:
+  dockerComposeYmlContent = dockerComposeYmlContent.replace('validator-import:', `validator-import:
     extra_hosts:
-      - "host.docker.internal:host-gateway"
-  `);
+      - "host.docker.internal:host-gateway"`);
   fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
 
   const dotEnvContent = `

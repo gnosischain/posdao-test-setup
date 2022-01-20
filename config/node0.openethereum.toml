@@ -9,6 +9,8 @@ nat = "none"
 interface = "local"
 
 [rpc]
+cors = ["all"]
+hosts = ["all"]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
 port = 8540
 
