@@ -21,7 +21,10 @@ LOG_LEVEL=info
   fs.writeFileSync(`${launcherDir}/.env`, dotEnvContent.trim(), 'utf8');
 
   // Clear config/boot_enr.yaml
-  fs.writeFileSync(`${launcherDir}/config/boot_enr.yaml`, '', 'utf8');
+  // fs.writeFileSync(`${launcherDir}/config/boot_enr.yaml`, '', 'utf8');
+
+  // Remove default config/boot_enr.yaml
+  fs.unlinkSync(`${launcherDir}/config/boot_enr.yaml`);
 
   // Rewrite config/deploy_block.txt
   const deployBlock = fs.readFileSync(`${contractsDir}/deploy_block.txt`, 'utf8');

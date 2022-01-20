@@ -45,6 +45,7 @@ accounts/keystore/*
 node_modules
 
 build
+bc/contracts/deploy_block.txt
 
 #Mac OS specific
 .DS_Store
