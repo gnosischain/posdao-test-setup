@@ -30,18 +30,16 @@ function compileContract(contractName) {
 }
 
 async function main() {
-    let compiledContract = compileContract('SBCToken');
-    let abi = compiledContract.abi;
-    let bytecode = compiledContract.evm.bytecode.object;
-
     const MGNO_AMOUNT = 32;
     const NUMBER_OF_VALIDATORS = 2048;
     const mintAmount = web3.utils.toWei(new BN(MGNO_AMOUNT)).mul(new BN(NUMBER_OF_VALIDATORS));
 
     console.log(`** Deploying SBCToken`);
-    const contract = new web3.eth.Contract(abi);
+    let compiledContract = compileContract('SBCToken');
+    let abi = compiledContract.abi;
+    let bytecode = compiledContract.evm.bytecode.object;
+    let contract = new web3.eth.Contract(abi);
 
-    // Deploy using eth_sendTransaction
     let data = await contract.deploy({ data: '0x' + bytecode, arguments: [mintAmount.toString()] }).encodeABI();
     let receipt = await web3.eth.sendTransaction({
         from: OWNER,
@@ -58,6 +56,28 @@ async function main() {
     console.log('**** Check that owner\'s balance is correct');
     const ownerBalance = await sbcTokenInstance.methods.balanceOf(OWNER).call();
     assert(ownerBalance === mintAmount.toString());
+
+    console.log(`** Deploying SBCDepositContract`);
+    compiledContract = compileContract('SBCDepositContract');
+    abi = compiledContract.abi;
+    bytecode = compiledContract.evm.bytecode.object;
+    contract = new web3.eth.Contract(abi);
+
+    data = await contract.deploy({ data: '0x' + bytecode, arguments: [address] }).encodeABI();
+    receipt = await web3.eth.sendTransaction({
+        from: OWNER,
+        gasPrice: web3.utils.numberToHex('0'),
+        gas: web3.utils.numberToHex('4700000'),
+        data
+    });
+
+    const sbcDepositContractInstance = new web3.eth.Contract(abi, receipt.contractAddress);
+
+    address = sbcDepositContractInstance.options.address;
+    console.log('**** SBCDepositContract deployed at:', address);
+
+    console.log('**** Check that stake_token address is correct');
+    assert(await sbcDepositContractInstance.methods.stake_token().call() === sbcTokenInstance.options.address);
 }
 
 main();
