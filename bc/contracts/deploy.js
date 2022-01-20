@@ -78,6 +78,8 @@ async function main() {
 
     console.log('**** Check that stake_token address is correct');
     assert(await sbcDepositContractInstance.methods.stake_token().call() === sbcTokenInstance.options.address);
+
+    fs.writeFileSync(`${__dirname}/deploy_block.txt`, receipt.blockNumber, 'utf8');
 }
 
 main();
