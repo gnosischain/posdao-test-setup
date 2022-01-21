@@ -46,6 +46,7 @@ node_modules
 
 build
 bc/contracts/deploy_block.txt
+bc/contracts/deposit_contract_address.txt
 
 #Mac OS specific
 .DS_Store
