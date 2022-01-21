@@ -31,6 +31,14 @@ LOG_LEVEL=info
   fs.writeFileSync(`${launcherDir}/config/deploy_block.txt`, deployBlock, 'utf8');
 
   // Modify config/config.yaml
+  const configYamlPath = `${launcherDir}/config/config.yaml`;
+  const depositContractAddress = fs.readFileSync(`${contractsDir}/deposit_contract_address.txt`, 'utf8');
+  let configYamlContent = fs.readFileSync(configYamlPath, 'utf8');
+  configYamlContent = configYamlContent.replace(/DEPOSIT_CONTRACT_ADDRESS: [a-fA-F0-9x]+/, `DEPOSIT_CONTRACT_ADDRESS: ${depositContractAddress}`);
+  configYamlContent = configYamlContent.replace(/DEPOSIT_CHAIN_ID: [a-fA-F0-9x]+/, 'DEPOSIT_CHAIN_ID: 25700');
+  configYamlContent = configYamlContent.replace(/DEPOSIT_NETWORK_ID: [a-fA-F0-9x]+/, 'DEPOSIT_NETWORK_ID: 25700');
+  configYamlContent = configYamlContent.replace(/MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: [a-fA-F0-9x]+/, 'MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: 2048');
+  fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
   // ...
 }
 

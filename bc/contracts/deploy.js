@@ -80,6 +80,7 @@ async function main() {
     assert(await sbcDepositContractInstance.methods.stake_token().call() === sbcTokenInstance.options.address);
 
     fs.writeFileSync(`${__dirname}/deploy_block.txt`, receipt.blockNumber, 'utf8');
+    fs.writeFileSync(`${__dirname}/deposit_contract_address.txt`, address, 'utf8');
 }
 
 main();

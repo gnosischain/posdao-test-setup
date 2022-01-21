@@ -22,6 +22,8 @@ async function main() {
   console.log();
   console.log();
 
+  specFile.params.networkID = "0x6464";
+
   // Activate London hard fork
   specFile.params.eip3198Transition = "0";
   specFile.params.eip3529Transition = "0";
@@ -31,7 +33,7 @@ async function main() {
   specFile.params.eip1559ElasticityMultiplier = "0x2";
   specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
   specFile.params.eip1559BaseFeeMinValue = "0x1dcd6500";
-  specFile.params.eip1559BaseFeeMinValueTransition = "8";
+  specFile.params.eip1559BaseFeeMinValueTransition = specFile.params.eip1559Transition;
   specFile.params.eip1559FeeCollector = "0x1559000000000000000000000000000000000000";
   specFile.params.eip1559FeeCollectorTransition = specFile.params.eip1559Transition;
   //specFile.genesis.baseFeePerGas = specFile.params.eip1559BaseFeeInitialValue
