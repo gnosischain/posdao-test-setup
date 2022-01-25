@@ -12,6 +12,8 @@ function kill_at_port {
 
 if [[ -d ./bc/launcher ]]; then
     cd ./bc/launcher
+    docker-compose stop validator 
+    docker-compose stop node 
     docker-compose down
     cd -
 fi
