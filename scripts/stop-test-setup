@@ -10,6 +10,12 @@ function kill_at_port {
 	fi
 }
 
+if [[ -d ./bc/launcher ]]; then
+    cd ./bc/launcher
+    docker-compose down
+    cd -
+fi
+
 # Kill test nodes.
 for i in $(seq 0 6); do
     kill_at_port 854$i

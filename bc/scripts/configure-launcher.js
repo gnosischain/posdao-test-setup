@@ -10,14 +10,20 @@ async function main() {
 
   // Modify docker-compose.yml
   let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
+  //dockerComposeYmlContent = dockerComposeYmlContent.replace('node:', `node:
+  //  extra_hosts:
+  //    - "host.docker.internal:host-gateway"`);
   dockerComposeYmlContent = dockerComposeYmlContent.replace('validator-import:', `validator-import:
     extra_hosts:
       - "host.docker.internal:host-gateway"`);
+  //dockerComposeYmlContent = dockerComposeYmlContent.replace('validator:', `validator:
+  //  extra_hosts:
+  //    - "host.docker.internal:host-gateway"`);
   fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
 
   // Create .env
   const dotEnvContent = `
-XDAI_RPC_URL=http://host.docker.internal:8540
+XDAI_RPC_URL=http://host.docker.internal:8540,http://host.docker.internal:8541
 PUBLIC_IP=127.0.0.1
 LOG_LEVEL=trace
   `;
