@@ -19,7 +19,7 @@ async function main() {
   const dotEnvContent = `
 XDAI_RPC_URL=http://host.docker.internal:8540
 PUBLIC_IP=127.0.0.1
-LOG_LEVEL=info
+LOG_LEVEL=trace
   `;
   fs.writeFileSync(`${launcherDir}/.env`, dotEnvContent.trim(), 'utf8');
 
@@ -44,8 +44,11 @@ LOG_LEVEL=info
   configYamlContent = configYamlContent.replace(/DEPOSIT_CHAIN_ID: [a-fA-F0-9x]+/, `DEPOSIT_CHAIN_ID: ${chainId}`);
   configYamlContent = configYamlContent.replace(/DEPOSIT_NETWORK_ID: [a-fA-F0-9x]+/, `DEPOSIT_NETWORK_ID: ${netId}`);
   configYamlContent = configYamlContent.replace(/MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: [a-fA-F0-9x]+/, `MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: ${numberOfValidators}`);
+  configYamlContent = configYamlContent.replace(/ETH1_FOLLOW_DISTANCE: [a-fA-F0-9x]+/, 'ETH1_FOLLOW_DISTANCE: 8');
+  configYamlContent = configYamlContent.replace(/SECONDS_PER_ETH1_BLOCK: [a-fA-F0-9x]+/, 'SECONDS_PER_ETH1_BLOCK: 4');
+  configYamlContent = configYamlContent.replace(/GENESIS_DELAY: [a-fA-F0-9x]+/, 'GENESIS_DELAY: 15');
+  configYamlContent = configYamlContent.replace(/GENESIS_FORK_VERSION: [a-fA-F0-9x]+/, `GENESIS_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId), 8)}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
-  // ...
 }
 
 main();
