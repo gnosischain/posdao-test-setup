@@ -1,4 +1,7 @@
 const fs = require('fs');
+const calcNumberOfValidators = require('./calc-validators-number.js');
+const Web3 = require('web3');
+const web3 = new Web3('http://localhost:8541');
 
 async function main() {
   const contractsDir = `${__dirname}/../contracts`;
@@ -32,12 +35,15 @@ LOG_LEVEL=info
 
   // Modify config/config.yaml
   const configYamlPath = `${launcherDir}/config/config.yaml`;
+  const numberOfValidators = calcNumberOfValidators();
+  const chainId = await web3.eth.getChainId();
+  const netId = await web3.eth.net.getId();
   const depositContractAddress = fs.readFileSync(`${contractsDir}/deposit_contract_address.txt`, 'utf8');
   let configYamlContent = fs.readFileSync(configYamlPath, 'utf8');
   configYamlContent = configYamlContent.replace(/DEPOSIT_CONTRACT_ADDRESS: [a-fA-F0-9x]+/, `DEPOSIT_CONTRACT_ADDRESS: ${depositContractAddress}`);
-  configYamlContent = configYamlContent.replace(/DEPOSIT_CHAIN_ID: [a-fA-F0-9x]+/, 'DEPOSIT_CHAIN_ID: 25700');
-  configYamlContent = configYamlContent.replace(/DEPOSIT_NETWORK_ID: [a-fA-F0-9x]+/, 'DEPOSIT_NETWORK_ID: 25700');
-  configYamlContent = configYamlContent.replace(/MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: [a-fA-F0-9x]+/, 'MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: 2048');
+  configYamlContent = configYamlContent.replace(/DEPOSIT_CHAIN_ID: [a-fA-F0-9x]+/, `DEPOSIT_CHAIN_ID: ${chainId}`);
+  configYamlContent = configYamlContent.replace(/DEPOSIT_NETWORK_ID: [a-fA-F0-9x]+/, `DEPOSIT_NETWORK_ID: ${netId}`);
+  configYamlContent = configYamlContent.replace(/MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: [a-fA-F0-9x]+/, `MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: ${numberOfValidators}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
   // ...
 }

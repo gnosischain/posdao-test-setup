@@ -3,6 +3,7 @@ const Web3 = require('web3');
 const fs = require('fs');
 const solc = require('solc');
 const constants = require('../../utils/constants');
+const calcNumberOfValidators = require('../scripts/calc-validators-number.js');
 const web3 = new Web3('http://localhost:8541');
 web3.eth.transactionConfirmationBlocks = 1;
 web3.eth.transactionPollingTimeout = 30;
@@ -31,7 +32,7 @@ function compileContract(contractName) {
 
 async function main() {
     const MGNO_AMOUNT = 32;
-    const NUMBER_OF_VALIDATORS = 2048;
+    const NUMBER_OF_VALIDATORS = calcNumberOfValidators();
     const mintAmount = web3.utils.toWei(new BN(MGNO_AMOUNT)).mul(new BN(NUMBER_OF_VALIDATORS));
 
     console.log(`** Deploying SBCToken`);
