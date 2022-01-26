@@ -3,7 +3,7 @@ chain = "./data/spec.json"
 base_path = "data/node1"
 
 [network]
-port = 30301
+port = 30401
 nat = "none"
 interface = "local"
 reserved_peers="data/reserved-peers"
@@ -12,7 +12,7 @@ reserved_peers="data/reserved-peers"
 cors = ["all"]
 hosts = ["all"]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
-port = 8541
+port = 8641
 
 [websockets]
 interface = "all"

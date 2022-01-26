@@ -4,9 +4,9 @@ const Web3 = require('web3');
 const os = require('os');
 
 // ordinary node
-const web3Ord = new Web3('http://localhost:8540');
+const web3Ord = new Web3('http://localhost:8640');
 // reference validator node
-const web3Val = new Web3('http://localhost:8541');
+const web3Val = new Web3('http://localhost:8641');
 // block time
 const blockTimeMS = 2539;
 

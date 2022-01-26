@@ -7,7 +7,7 @@ const Web3 = require('web3');
 const os = require('os');
 const fs = require('fs');
 
-const web3 = new Web3('http://localhost:8541');
+const web3 = new Web3('http://localhost:8641');
 
 const checkIntervalMS = 2539; // should be less than block time
 

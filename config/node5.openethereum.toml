@@ -3,7 +3,7 @@ chain = "./data/spec.json"
 base_path = "data/node5"
 
 [network]
-port = 30305
+port = 30405
 discovery = true
 reserved_peers="data/reserved-peers"
 nat = "none"
@@ -11,7 +11,7 @@ interface = "local"
 
 [rpc]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
-port = 8545
+port = 8645
 
 [websockets]
 port = 9545

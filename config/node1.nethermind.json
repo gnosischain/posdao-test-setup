@@ -10,13 +10,13 @@
     "StaticNodesPath": "./data/reserved-peers"
   },
   "Network": {
-    "DiscoveryPort": 30301,
-    "P2PPort": 30301
+    "DiscoveryPort": 30401,
+    "P2PPort": 30401
   },
   "JsonRpc": {
     "Enabled": true,
     "Host": "127.0.0.1",
-    "Port": 8541,
+    "Port": 8641,
     "WebSocketsPort": 9541
   },
   "Db": {

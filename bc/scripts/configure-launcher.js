@@ -1,7 +1,7 @@
 const fs = require('fs');
 const calcNumberOfValidators = require('./calc-validators-number.js');
 const Web3 = require('web3');
-const web3 = new Web3('http://localhost:8541');
+const web3 = new Web3('http://localhost:8641');
 
 async function main() {
   const contractsDir = `${__dirname}/../contracts`;
@@ -23,7 +23,7 @@ async function main() {
 
   // Create .env
   const dotEnvContent = `
-XDAI_RPC_URL=http://host.docker.internal:8540,http://host.docker.internal:8541
+XDAI_RPC_URL=http://host.docker.internal:8640,http://host.docker.internal:8641
 PUBLIC_IP=127.0.0.1
 LOG_LEVEL=trace
   `;

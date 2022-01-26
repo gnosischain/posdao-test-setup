@@ -1,7 +1,7 @@
 const Web3 = require('web3');
 const path = require('path');
 const SnS = require('../utils/signAndSendTx.js');
-const web3 = new Web3('http://localhost:8541');
+const web3 = new Web3('http://localhost:8641');
 web3.eth.transactionConfirmationBlocks = 1;
 const BN = web3.utils.BN;
 const ValidatorSetAuRa = require(path.join(__dirname, '../utils/getContract'))('ValidatorSetAuRa', web3);

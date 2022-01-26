@@ -3,7 +3,7 @@ chain = "./data/spec.json"
 base_path = "data/node0"
 
 [network]
-port = 30300
+port = 30400
 discovery = true
 nat = "none"
 interface = "local"
@@ -12,7 +12,7 @@ interface = "local"
 cors = ["all"]
 hosts = ["all"]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
-port = 8540
+port = 8640
 
 [websockets]
 port = 9540

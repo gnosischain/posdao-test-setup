@@ -9,13 +9,13 @@
     "LogFileName": "nethermind.logs.txt"
   },
   "Network": {
-    "DiscoveryPort": 30300,
-    "P2PPort": 30300
+    "DiscoveryPort": 30400,
+    "P2PPort": 30400
   },
   "JsonRpc": {
     "Enabled": true,
     "Host": "127.0.0.1",
-    "Port": 8540,
+    "Port": 8640,
     "WebSocketsPort": 9540
   },
   "Db": {
