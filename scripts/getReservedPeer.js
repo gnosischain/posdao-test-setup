@@ -9,7 +9,7 @@ async function main() {
   const maxAttempts = 50;
   var node_index = process.argv[2].toString();
   console.log("Registering node " + node_index + " as bootnode");
-  const cmd = `curl --data '{"method":"parity_enode","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:854`
+  const cmd = `curl --data '{"method":"parity_enode","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:864`
         + node_index
         + ` 2>/dev/null`;
   console.log(`> ` + cmd);

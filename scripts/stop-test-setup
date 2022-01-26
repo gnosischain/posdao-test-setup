@@ -20,5 +20,5 @@ fi
 
 # Kill test nodes.
 for i in $(seq 0 6); do
-    kill_at_port 854$i
+    kill_at_port 864$i
 done
