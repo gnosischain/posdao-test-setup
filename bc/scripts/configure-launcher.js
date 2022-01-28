@@ -1,14 +1,16 @@
 const fs = require('fs');
 const calcNumberOfValidators = require('./calc-validators-number.js');
+const constants = require('../../utils/constants');
 const Web3 = require('web3');
 const web3 = new Web3('http://localhost:8641');
 
 async function main() {
   const contractsDir = `${__dirname}/../contracts`;
   const launcherDir = `${__dirname}/../launcher`;
-  const dockerComposeYmlPath = `${launcherDir}/docker-compose.yml`;
-
+  const depositScriptDir = `${__dirname}/../deposit-script`;
+  
   // Modify docker-compose.yml
+  //const dockerComposeYmlPath = `${launcherDir}/docker-compose.yml`;
   //let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
   //dockerComposeYmlContent = dockerComposeYmlContent.replace('node:', `node:
   //  extra_hosts:
@@ -21,25 +23,25 @@ async function main() {
   //    - "host.docker.internal:host-gateway"`);
   //fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
 
-  // Create .env
-  const dotEnvContent = `
+  // Create launcher/.env
+  let dotEnvContent = `
 XDAI_RPC_URL=http://localhost:8640,http://localhost:8641
 PUBLIC_IP=127.0.0.1
 LOG_LEVEL=trace
   `;
   fs.writeFileSync(`${launcherDir}/.env`, dotEnvContent.trim(), 'utf8');
 
-  // Clear config/boot_enr.yaml
+  // Clear launcher/config/boot_enr.yaml
   // fs.writeFileSync(`${launcherDir}/config/boot_enr.yaml`, '', 'utf8');
 
-  // Remove default config/boot_enr.yaml
+  // Remove default launcher/config/boot_enr.yaml
   fs.unlinkSync(`${launcherDir}/config/boot_enr.yaml`);
 
-  // Rewrite config/deploy_block.txt
+  // Rewrite launcher/config/deploy_block.txt
   const deployBlock = fs.readFileSync(`${contractsDir}/deploy_block.txt`, 'utf8');
   fs.writeFileSync(`${launcherDir}/config/deploy_block.txt`, deployBlock, 'utf8');
 
-  // Modify config/config.yaml
+  // Modify launcher/config/config.yaml
   const configYamlPath = `${launcherDir}/config/config.yaml`;
   const numberOfValidators = calcNumberOfValidators();
   const chainId = await web3.eth.getChainId();
@@ -54,7 +56,27 @@ LOG_LEVEL=trace
   configYamlContent = configYamlContent.replace(/SECONDS_PER_ETH1_BLOCK: [a-fA-F0-9x]+/, 'SECONDS_PER_ETH1_BLOCK: 4');
   configYamlContent = configYamlContent.replace(/GENESIS_DELAY: [a-fA-F0-9x]+/, 'GENESIS_DELAY: 15');
   configYamlContent = configYamlContent.replace(/GENESIS_FORK_VERSION: [a-fA-F0-9x]+/, `GENESIS_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId), 8)}`);
+  configYamlContent = configYamlContent.replace(/ALTAIR_FORK_VERSION: [a-fA-F0-9x]+/, `ALTAIR_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId + 0x01000000), 8)}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
+
+  // Create deposit-script/.env
+  const ownerKeystoreJson = require(`${__dirname}/../../accounts/keystore/${web3.utils.stripHexPrefix(constants.OWNER)}.json`);
+  const ownerKeystorePassword = fs.readFileSync(`${__dirname}/../../config/password`, 'utf8').trim();
+  const ownerPrivateKey = web3.eth.accounts.decrypt(ownerKeystoreJson, ownerKeystorePassword).privateKey;
+  const tokenContractAddress = fs.readFileSync(`${contractsDir}/token_contract_address.txt`, 'utf8');
+  fs.mkdirSync(depositScriptDir);
+  dotEnvContent = `
+STAKING_ACCOUNT_PRIVATE_KEY=${web3.utils.stripHexPrefix(ownerPrivateKey)}
+RPC_URL=http://localhost:8640
+GAS_PRICE=0
+BATCH_SIZE=128
+N=${numberOfValidators}
+OFFSET=0
+META_TOKEN_ADDRESS=${tokenContractAddress}
+DEPOSIT_CONTRACT_ADDRESS=${depositContractAddress}
+START_BLOCK_NUMBER=${deployBlock}
+  `;
+  fs.writeFileSync(`${depositScriptDir}/.env`, dotEnvContent.trim(), 'utf8');
 }
 
 main();

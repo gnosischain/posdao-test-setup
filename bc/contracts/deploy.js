@@ -82,6 +82,7 @@ async function main() {
 
     fs.writeFileSync(`${__dirname}/deploy_block.txt`, receipt.blockNumber, 'utf8');
     fs.writeFileSync(`${__dirname}/deposit_contract_address.txt`, address, 'utf8');
+    fs.writeFileSync(`${__dirname}/token_contract_address.txt`, sbcTokenInstance.options.address, 'utf8');
 }
 
 main();
