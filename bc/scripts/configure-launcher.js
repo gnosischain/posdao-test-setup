@@ -77,6 +77,14 @@ DEPOSIT_CONTRACT_ADDRESS=${depositContractAddress}
 START_BLOCK_NUMBER=${deployBlock}
   `;
   fs.writeFileSync(`${depositScriptDir}/.env`, dotEnvContent.trim(), 'utf8');
+
+  // Copy deposit_data*.json file
+  const validatorKeysPath = `${launcherDir}/keys/validator_keys`;
+  const validatorKeysList = fs.readdirSync(validatorKeysPath);
+  const depositDataFile = validatorKeysList.find(item => {
+    return item.match(/deposit_data.*\.json/ig);
+  });
+  fs.copyFileSync(`${validatorKeysPath}/${depositDataFile}`, `${depositScriptDir}/deposit_data.json`);
 }
 
 main();
