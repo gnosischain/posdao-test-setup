@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const calcNumberOfValidators = require('./calc-validators-number.js');
 const constants = require('../../utils/constants');
 const Web3 = require('web3');
@@ -60,16 +61,17 @@ LOG_LEVEL=trace
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
 
   // Create deposit-script/.env
+  const localhost = os.platform() === 'darwin' ? 'host.docker.internal' : 'localhost';
   const ownerKeystoreJson = require(`${__dirname}/../../accounts/keystore/${web3.utils.stripHexPrefix(constants.OWNER)}.json`);
   const ownerKeystorePassword = fs.readFileSync(`${__dirname}/../../config/password`, 'utf8').trim();
   const ownerPrivateKey = web3.eth.accounts.decrypt(ownerKeystoreJson, ownerKeystorePassword).privateKey;
   const tokenContractAddress = fs.readFileSync(`${contractsDir}/token_contract_address.txt`, 'utf8');
   fs.mkdirSync(depositScriptDir);
   dotEnvContent = `
-STAKING_ACCOUNT_PRIVATE_KEY=${web3.utils.stripHexPrefix(ownerPrivateKey)}
-RPC_URL=http://localhost:8640
+STAKING_ACCOUNT_PRIVATE_KEY=${ownerPrivateKey}
+RPC_URL=http://${localhost}:8640
 GAS_PRICE=0
-BATCH_SIZE=128
+BATCH_SIZE=64
 N=${numberOfValidators}
 OFFSET=0
 META_TOKEN_ADDRESS=${tokenContractAddress}

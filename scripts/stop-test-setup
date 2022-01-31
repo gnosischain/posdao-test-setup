@@ -16,8 +16,8 @@ if [[ -d ./bc/launcher ]]; then
     docker-compose stop node 
     docker-compose down
     cd -
-    docker image rm ghcr.io/gnosischain/gbc-lighthouse:v2.0.1-gbc
-    docker image rm ghcr.io/gnosischain/deposit-script:latest
+    # docker image rm ghcr.io/gnosischain/gbc-lighthouse:v2.0.1-gbc
+    # docker image rm ghcr.io/gnosischain/deposit-script:latest
 fi
 
 # Kill test nodes.
