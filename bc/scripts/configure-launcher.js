@@ -10,23 +10,19 @@ async function main() {
   const launcherDir = `${__dirname}/../launcher`;
   const depositScriptDir = `${__dirname}/../deposit-script`;
   
-  // Modify docker-compose.yml
-  //const dockerComposeYmlPath = `${launcherDir}/docker-compose.yml`;
-  //let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
-  //dockerComposeYmlContent = dockerComposeYmlContent.replace('node:', `node:
-  //  extra_hosts:
-  //    - "host.docker.internal:host-gateway"`);
-  //dockerComposeYmlContent = dockerComposeYmlContent.replace('validator-import:', `validator-import:
-  //  extra_hosts:
-  //    - "host.docker.internal:host-gateway"`);
-  //dockerComposeYmlContent = dockerComposeYmlContent.replace('validator:', `validator:
-  //  extra_hosts:
-  //    - "host.docker.internal:host-gateway"`);
-  //fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
+  // Modify docker-compose.yml for Linux
+  if (os.platform() === 'linux') {
+    const dockerComposeYmlPath = `${launcherDir}/docker-compose-local-logs.yml`;
+    let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
+    dockerComposeYmlContent = dockerComposeYmlContent.replace('node:', `node:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"`);
+    fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
+  }
 
   // Create launcher/.env
   let dotEnvContent = `
-XDAI_RPC_URL=http://localhost:8640,http://localhost:8641
+XDAI_RPC_URL=http://host.docker.internal:8640,http://host.docker.internal:8641
 PUBLIC_IP=127.0.0.1
 LOG_LEVEL=trace
   `;
