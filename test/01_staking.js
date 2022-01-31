@@ -47,6 +47,8 @@ describe('Candidates place stakes on themselves', () => {
             delegators.push(acc.address);
             fs.writeFileSync(path.join(__dirname, '../accounts/keystore', acc.address.substring(2).toLowerCase() + '.json'), JSON.stringify(keystoreObj), 'utf8');
         }
+
+        await waitForNextStakingEpoch(web3);
     });
 
     it('Owner mints (2x minStake) tokens to candidates', async () => {
