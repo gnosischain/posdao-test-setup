@@ -5,7 +5,7 @@ base_path = "data/node1"
 [network]
 port = 30401
 nat = "none"
-interface = "local"
+interface = "all"
 reserved_peers="data/reserved-peers"
 
 [rpc]

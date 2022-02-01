@@ -6,7 +6,7 @@ base_path = "data/node0"
 port = 30400
 discovery = true
 nat = "none"
-interface = "local"
+interface = "all"
 
 [rpc]
 cors = ["all"]
