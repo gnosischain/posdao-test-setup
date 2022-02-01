@@ -5,10 +5,11 @@ base_path = "data/node1"
 [network]
 port = 30401
 nat = "none"
-interface = "all"
+interface = "local"
 reserved_peers="data/reserved-peers"
 
 [rpc]
+interface = "all"
 cors = ["all"]
 hosts = ["all"]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]

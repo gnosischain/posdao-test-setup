@@ -6,9 +6,10 @@ base_path = "data/node0"
 port = 30400
 discovery = true
 nat = "none"
-interface = "all"
+interface = "local"
 
 [rpc]
+interface = "all"
 cors = ["all"]
 hosts = ["all"]
 apis = ["web3", "eth", "pubsub", "net", "parity", "parity_set", "parity_pubsub", "personal", "traces"]
