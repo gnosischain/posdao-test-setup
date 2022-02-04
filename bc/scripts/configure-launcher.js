@@ -58,7 +58,7 @@ async function main() {
   let dotEnvContent = `
 XDAI_RPC_URL=http://host.docker.internal:8640,http://host.docker.internal:8641
 PUBLIC_IP=172.17.0.1
-LOG_LEVEL=trace
+LOG_LEVEL=info
   `;
   fs.writeFileSync(`${launcherDir}/.env`, dotEnvContent.trim(), 'utf8');
 
