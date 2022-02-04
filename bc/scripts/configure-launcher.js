@@ -23,7 +23,7 @@ async function main() {
   // Create launcher/.env
   let dotEnvContent = `
 XDAI_RPC_URL=http://host.docker.internal:8640,http://host.docker.internal:8641
-PUBLIC_IP=127.0.0.1
+PUBLIC_IP=172.17.0.1
 LOG_LEVEL=trace
   `;
   fs.writeFileSync(`${launcherDir}/.env`, dotEnvContent.trim(), 'utf8');
@@ -55,6 +55,11 @@ LOG_LEVEL=trace
   configYamlContent = configYamlContent.replace(/GENESIS_FORK_VERSION: [a-fA-F0-9x]+/, `GENESIS_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId), 8)}`);
   configYamlContent = configYamlContent.replace(/ALTAIR_FORK_VERSION: [a-fA-F0-9x]+/, `ALTAIR_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId + 0x01000000), 8)}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
+
+  // Create launcher/node_db/beacon/network/key file
+  const node1NetworkDir = `${launcherDir}/node_db/beacon/network`;
+  fs.mkdirSync(node1NetworkDir, { recursive: true });
+  fs.writeFileSync(`${node1NetworkDir}/key`, Buffer.from('a970f0c1' + 'a3ffbcc3' + '8a88e985' + 'f68c3f9e' + 'ff52cfb3' + 'cf876ddc' + 'e5ec65ce' + '22c4d0d3', 'hex'), 'binary');
 
   // Create deposit-script/.env
   const localhost = os.platform() === 'darwin' ? 'host.docker.internal' : 'localhost';
