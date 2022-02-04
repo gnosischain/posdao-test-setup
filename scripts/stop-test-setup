@@ -12,8 +12,9 @@ function kill_at_port {
 
 if [[ -d ./bc/launcher ]]; then
     cd ./bc/launcher
-    docker-compose stop validator 
-    docker-compose stop node 
+    docker-compose stop validator
+    docker-compose stop node2
+    docker-compose stop node
     docker-compose down
     cd -
     # docker image rm ghcr.io/gnosischain/gbc-lighthouse:v2.0.1-gbc
