@@ -51,7 +51,7 @@ async function main() {
       - "host.docker.internal:host-gateway"`);
   }
 
-  //dockerComposeYmlContent = dockerComposeYmlContent.replace('--beacon-nodes http://node:5052', '--beacon-nodes http://node:5052,http://node2:5052');
+  dockerComposeYmlContent = dockerComposeYmlContent.replace('--beacon-nodes http://node:5052', '--beacon-nodes http://node:5052,http://node2:5052');
   fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
 
   // Create launcher/.env
