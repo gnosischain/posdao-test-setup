@@ -12,6 +12,7 @@ else
     extension="nethermind.json"
 fi
 for i in $(seq 0 6); do
+    node ./scripts/updateConfig.js "$i"
     "$CLIENT" --config "./config/node${i}.${extension}" >> "./data/node${i}/log" 2>&1 &
     node ./scripts/getReservedPeer.js "$i"
 done

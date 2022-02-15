@@ -29,9 +29,9 @@ async function main() {
   specFile.params.eip1559Transition = "8";
   specFile.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
   specFile.params.eip1559ElasticityMultiplier = "0x2";
-  specFile.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
-  specFile.params.eip1559BaseFeeMinValue = "0x1dcd6500";
-  specFile.params.eip1559BaseFeeMinValueTransition = "8";
+  specFile.params.eip1559BaseFeeInitialValue = "0x12a05f200"; // 5 GWei
+  //specFile.params.eip1559BaseFeeMinValue = "0x1dcd6500";
+  //specFile.params.eip1559BaseFeeMinValueTransition = "8";
   specFile.params.eip1559FeeCollector = "0x1559000000000000000000000000000000000000";
   specFile.params.eip1559FeeCollectorTransition = specFile.params.eip1559Transition;
   //specFile.genesis.baseFeePerGas = specFile.params.eip1559BaseFeeInitialValue

@@ -4,7 +4,7 @@ const path = require('path');
 const constants = require('../utils/constants');
 const SnS = require('../utils/signAndSendTx.js');
 const sendRequest = require('../utils/sendRequest.js');
-const web3 = new Web3('http://localhost:8541');
+const web3 = new Web3('http://localhost:8540');
 web3.eth.transactionConfirmationBlocks = 1;
 const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
@@ -57,6 +57,7 @@ describe('Candidates place stakes on themselves', () => {
             let iTokenBalanceBN = new BN(iTokenBalance.toString());
             const latestBlock = await getLatestBlock(web3);
 
+            /*
             if (latestBlock.baseFeePerGas) {
                 const netId = await web3.eth.net.getId();
                 const nodeInfo = await web3.eth.getNodeInfo();
@@ -81,6 +82,7 @@ describe('Candidates place stakes on themselves', () => {
                 }
                 expect(txReceipt.status, `Failed tx: ${txReceipt.transactionHash}`).to.equal(true);
             } else {
+            */
                 let tx = await SnS(web3, {
                     from: OWNER,
                     to: StakingTokenContract.address,
@@ -89,7 +91,7 @@ describe('Candidates place stakes on themselves', () => {
                 });
                 pp.tx(tx);
                 expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);
-            }
+            //}
 
             let fTokenBalance = await StakingTokenContract.instance.methods.balanceOf(candidate.staking).call();
             let fTokenBalanceBN = new BN(fTokenBalance.toString());
@@ -139,7 +141,7 @@ describe('Candidates place stakes on themselves', () => {
                     method: StakingAuRa.instance.methods.addPool(stakeBN.toString(), candidate.mining, poolName, poolDescription),
                     gasPrice: '1000000000', // maxPriorityFeePerGas for EIP-1559, maxFeePerGas is calculated as baseFeePerGas + maxPriorityFeePerGas
                     gasLimit: '700000',
-                }, null, latestBlock.baseFeePerGas);
+                }/*, null, latestBlock.baseFeePerGas*/);
             });
             pp.tx(tx);
             expect(tx.status, `Failed tx: ${tx.transactionHash}`).to.equal(true);

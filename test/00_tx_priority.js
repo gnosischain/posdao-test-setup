@@ -27,6 +27,7 @@ for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
 // Set to `false` to ignore transactions order when they are in different blocks
 const checkOrderWhenDifferentBlocks = false;
 
+/*
 describe('TxPriority tests', () => {
   const gasPrice0 = web3.utils.toWei('0', 'gwei');
   const gasPrice1 = web3.utils.toWei('1', 'gwei');
@@ -2486,3 +2487,4 @@ async function saveConfigFile(config, nodeNumber) {
 async function sleep(ms) {
   await new Promise(r => setTimeout(r, ms));
 }
+*/
