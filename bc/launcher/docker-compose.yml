@@ -1,0 +1,74 @@
+version: '3.8'
+services:
+  node:
+    image: sigp/lighthouse:v2.1.2-modern
+    hostname: node
+    command: |
+      lighthouse beacon_node
+      --testnet-dir /root/sbc/config
+      --discovery-port 12000
+      --port 13000
+      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --datadir /home/.eth2/beaconchaindata
+      --http-address 0.0.0.0
+      --http
+      --enr-address 172.17.0.1
+      --enr-udp-port 12000
+      --debug-level info
+    ports:
+      - '12000:12000/udp'
+      - '13000:13000'
+    volumes:
+      - ./config:/root/sbc/config
+      - ./node_db:/home/.eth2/beaconchaindata
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+  node2:
+    image: sigp/lighthouse:v2.1.2-modern
+    hostname: node2
+    command: |
+      lighthouse beacon_node
+      --testnet-dir /root/sbc/config
+      --discovery-port 12001
+      --port 13001
+      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --datadir /home/.eth2/beaconchaindata
+      --http-address 0.0.0.0
+      --http
+      --enr-address 172.17.0.1
+      --enr-udp-port 12001
+      --debug-level info
+    ports:
+      - '12001:12001/udp'
+      - '13001:13001'
+    volumes:
+      - ./config2:/root/sbc/config
+      - ./node2_db:/home/.eth2/beaconchaindata
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+  validator:
+    image: sigp/lighthouse:v2.1.2-modern
+    hostname: validator
+    depends_on:
+      - node
+      - node2
+    command: |
+      lighthouse validator_client
+      --testnet-dir /root/sbc/config
+      --validators-dir /root/sbc/validators
+      --beacon-nodes http://node:5052,http://node2:5052
+      --graffiti-file /root/sbc/config/graffiti.yml
+    volumes:
+      - ./config:/root/sbc/config
+      - ./validators:/root/sbc/validators
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"

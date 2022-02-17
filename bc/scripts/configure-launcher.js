@@ -9,60 +9,21 @@ async function main() {
   const contractsDir = `${__dirname}/../contracts`;
   const launcherDir = `${__dirname}/../launcher`;
   const depositScriptDir = `${__dirname}/../deposit-script`;
-  const dockerComposeYmlPath = `${launcherDir}/docker-compose-local-logs.yml`;
-  let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
 
-  // Add a config for the second beacon node to yml
-  dockerComposeYmlContent = dockerComposeYmlContent.replace('services:', `services:
-  node2:
-    image: ghcr.io/gnosischain/gbc-lighthouse:v2.0.1-gbc
-    hostname: node2
-    command: |
-      lighthouse beacon_node
-      --testnet-dir /root/sbc/config
-      --discovery-port 12001
-      --port 13001
-      --eth1-endpoints $XDAI_RPC_URL
-      --datadir /home/.eth2/beaconchaindata
-      --http-address 0.0.0.0
-      --http
-      --enr-address $PUBLIC_IP
-      --enr-udp-port 12001
-      --debug-level $LOG_LEVEL
-    ports:
-      - '12001:12001/udp'
-      - '13001:13001'
-    volumes:
-      - ./config2:/root/sbc/config
-      - ./node2_db:/home/.eth2/beaconchaindata
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "1"`);
-  
   // Add host.docker.internal to docker-compose.yml for Linux
   if (os.platform() === 'linux') {
+    const dockerComposeYmlPath = `${launcherDir}/docker-compose.yml`;
+    let dockerComposeYmlContent = fs.readFileSync(dockerComposeYmlPath, 'utf8');
     dockerComposeYmlContent = dockerComposeYmlContent.replace('node:', `node:
     extra_hosts:
       - "host.docker.internal:host-gateway"`);
     dockerComposeYmlContent = dockerComposeYmlContent.replace('node2:', `node2:
     extra_hosts:
       - "host.docker.internal:host-gateway"`);
+    fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
   }
 
-  dockerComposeYmlContent = dockerComposeYmlContent.replace('--beacon-nodes http://node:5052', '--beacon-nodes http://node:5052,http://node2:5052');
-  fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
-
-  // Create launcher/.env
-  let dotEnvContent = `
-XDAI_RPC_URL=http://host.docker.internal:8640,http://host.docker.internal:8641
-PUBLIC_IP=172.17.0.1
-LOG_LEVEL=info
-  `;
-  fs.writeFileSync(`${launcherDir}/.env`, dotEnvContent.trim(), 'utf8');
-
-  // Rewrite launcher/config/deploy_block.txt
+  // Create launcher/config/deploy_block.txt, launcher/config2/deploy_block.txt
   const deployBlock = fs.readFileSync(`${contractsDir}/deploy_block.txt`, 'utf8');
   fs.writeFileSync(`${launcherDir}/config/deploy_block.txt`, deployBlock, 'utf8');
   fs.writeFileSync(`${launcherDir}/config2/deploy_block.txt`, deployBlock, 'utf8');
@@ -79,10 +40,6 @@ LOG_LEVEL=info
   configYamlContent = configYamlContent.replace(/DEPOSIT_CHAIN_ID: [a-fA-F0-9x]+/, `DEPOSIT_CHAIN_ID: ${chainId}`);
   configYamlContent = configYamlContent.replace(/DEPOSIT_NETWORK_ID: [a-fA-F0-9x]+/, `DEPOSIT_NETWORK_ID: ${netId}`);
   configYamlContent = configYamlContent.replace(/MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: [a-fA-F0-9x]+/, `MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: ${numberOfValidators}`);
-  configYamlContent = configYamlContent.replace(/ETH1_FOLLOW_DISTANCE: [a-fA-F0-9x]+/, 'ETH1_FOLLOW_DISTANCE: 8');
-  configYamlContent = configYamlContent.replace(/SECONDS_PER_ETH1_BLOCK: [a-fA-F0-9x]+/, 'SECONDS_PER_ETH1_BLOCK: 4');
-  configYamlContent = configYamlContent.replace(/SECONDS_PER_SLOT: [a-fA-F0-9x]+/, 'SECONDS_PER_SLOT: 4');
-  configYamlContent = configYamlContent.replace(/GENESIS_DELAY: [a-fA-F0-9x]+/, 'GENESIS_DELAY: 15');
   configYamlContent = configYamlContent.replace(/GENESIS_FORK_VERSION: [a-fA-F0-9x]+/, `GENESIS_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId), 8)}`);
   configYamlContent = configYamlContent.replace(/ALTAIR_FORK_VERSION: [a-fA-F0-9x]+/, `ALTAIR_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId + 0x01000000), 8)}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
@@ -114,7 +71,7 @@ LOG_LEVEL=info
   // node id: 2e31221cfbc6e3aeba53637eaa94b687d3f9552a453b81b2834ca53778980dc0
   // peer id: 16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
 
-  // Rewrite launcher/config/boot_enr.yaml, launcher/config2/boot_enr.yaml
+  // Create launcher/config/boot_enr.yaml, launcher/config2/boot_enr.yaml
   fs.writeFileSync(`${launcherDir}/config/boot_enr.yaml`, `- "${node2ENR}"`, 'utf8');
   fs.writeFileSync(`${launcherDir}/config2/boot_enr.yaml`, `- "${node1ENR}"`, 'utf8');
 
