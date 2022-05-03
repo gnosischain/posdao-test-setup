@@ -19,7 +19,6 @@ const expect = require('chai')
     .use(require('chai-as-promised'))
     .expect;
 const pp = require('../utils/prettyPrint');
-const mintCoinsToCandidates = require('./mint-coins-to-candidates');
 let tokenName = 'STAKE';
 let tokenSymbol = 'STAKE';
 let tokenDecimals = 18;
@@ -77,8 +76,8 @@ async function main() {
             from: OWNER,
             type: '0x2',
             chainId: web3.utils.numberToHex(netId),
-            maxPriorityFeePerGas: web3.utils.numberToHex('0'),
-            maxFeePerGas: web3.utils.numberToHex('0'),
+            maxPriorityFeePerGas: web3.utils.numberToHex('1000000000'),
+            maxFeePerGas: web3.utils.numberToHex('2000000000'),
             gas: web3.utils.numberToHex('4700000'),
             data,
             accessList: []
@@ -90,7 +89,7 @@ async function main() {
     } else { // EIP-1559 is not activated. Use a legacy transaction
         txParams = {
             from: OWNER,
-            gasPrice: web3.utils.numberToHex('0'),
+            gasPrice: web3.utils.numberToHex('1000000000'),
             gas: web3.utils.numberToHex('4700000'),
             data
         };
@@ -110,7 +109,7 @@ async function main() {
         from: OWNER,
         method: stakingTokenDeploy,
         gasLimit: '4700000',
-        gasPrice: '0'
+        gasPrice: '1000000000'
     });
     */
     const StakingTokenInstance = new web3.eth.Contract(abi, stakingTokenDeployTxReceipt.contractAddress);
@@ -129,7 +128,7 @@ async function main() {
         from: OWNER,
         to: address,
         method: StakingTokenInstance.methods.setStakingContract(StakingAuRa.address),
-        gasPrice: '0',
+        gasPrice: '1000000000',
     });
     pp.tx(tx);
     expect(tx.status).to.equal(true);
@@ -139,7 +138,7 @@ async function main() {
         from: OWNER,
         to: address,
         method: StakingTokenInstance.methods.setBlockRewardContract(BlockRewardAuRa.address),
-        gasPrice: '0',
+        gasPrice: '1000000000',
     });
     pp.tx(tx);
     expect(tx.status).to.equal(true);
@@ -149,7 +148,7 @@ async function main() {
         from: OWNER,
         to: StakingAuRa.address,
         method: StakingAuRa.instance.methods.setErc677TokenContract(address),
-        gasPrice: '0',
+        gasPrice: '1000000000',
     });
     pp.tx(tx);
     expect(tx.status).to.equal(true);
@@ -167,9 +166,6 @@ async function main() {
     console.log('**** Check that StakingToken address in StakingAuRa is correct');
     contractAddress = await StakingAuRa.instance.methods.erc677TokenContract().call();
     expect(contractAddress).to.equal(address);
-
-    console.log('**** Mint initial coins to candidates and unremovable validator');
-    await mintCoinsToCandidates();
 }
 
 function sleep(millis) {

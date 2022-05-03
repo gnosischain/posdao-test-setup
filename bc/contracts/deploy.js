@@ -44,7 +44,7 @@ async function main() {
     let data = await contract.deploy({ data: '0x' + bytecode, arguments: [mintAmount.toString()] }).encodeABI();
     let receipt = await web3.eth.sendTransaction({
         from: OWNER,
-        gasPrice: web3.utils.numberToHex('0'),
+        gasPrice: web3.utils.numberToHex('1000000000'),
         gas: web3.utils.numberToHex('4700000'),
         data
     });
@@ -67,7 +67,7 @@ async function main() {
     data = await contract.deploy({ data: '0x' + bytecode, arguments: [address] }).encodeABI();
     receipt = await web3.eth.sendTransaction({
         from: OWNER,
-        gasPrice: web3.utils.numberToHex('0'),
+        gasPrice: web3.utils.numberToHex('1000000000'),
         gas: web3.utils.numberToHex('4700000'),
         data
     });

@@ -106,9 +106,3 @@ With this done, the node can be added to the list of started nodes in
 
 If the new node has to be an initial validator, the network spec should reflect
 that: add the node's address to `INITIAL_VALIDATORS` and `STAKING_ADDRESSES` in `scripts/network-spec`.
-
-## Simulation
-
-We've created a [NetLogo model](./simulation/README.md) for simulating the
-staking and rewards computation on networks of various sizes and having
-different input parameters.

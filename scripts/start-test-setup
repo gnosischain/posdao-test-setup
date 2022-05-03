@@ -11,7 +11,7 @@ if [[ $CLIENT == *"openethereum"* ]]; then
 else
     extension="nethermind.json"
 fi
-for i in $(seq 0 6); do
+for i in $(seq 0 3); do
     "$CLIENT" --config "./config/node${i}.${extension}" >> "./data/node${i}/log" 2>&1 &
     node ./scripts/getReservedPeer.js "$i"
 done
