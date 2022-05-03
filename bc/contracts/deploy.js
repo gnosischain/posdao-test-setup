@@ -64,7 +64,8 @@ async function main() {
     bytecode = compiledContract.evm.bytecode.object;
     contract = new web3.eth.Contract(abi);
 
-    data = await contract.deploy({ data: '0x' + bytecode, arguments: [address] }).encodeABI();
+    data = (await contract.deploy({ data: '0x' + bytecode, arguments: [address] })).encodeABI();
+
     receipt = await web3.eth.sendTransaction({
         from: OWNER,
         gasPrice: web3.utils.numberToHex('1000000000'),
@@ -80,7 +81,7 @@ async function main() {
     console.log('**** Check that stake_token address is correct');
     assert(await sbcDepositContractInstance.methods.stake_token().call() === sbcTokenInstance.options.address);
 
-    fs.writeFileSync(`${__dirname}/deploy_block.txt`, receipt.blockNumber, 'utf8');
+    fs.writeFileSync(`${__dirname}/deploy_block.txt`, receipt.blockNumber.toString(), 'utf8');
     fs.writeFileSync(`${__dirname}/deposit_contract_address.txt`, address, 'utf8');
     fs.writeFileSync(`${__dirname}/token_contract_address.txt`, sbcTokenInstance.options.address, 'utf8');
 }
