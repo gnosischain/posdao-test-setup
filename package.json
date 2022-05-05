@@ -16,7 +16,7 @@
     "compile-posdao-contracts": "cd ./posdao-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js && node ../scripts/copy-spec.js",
     "start-test-setup-openethereum": "bash scripts/start-test-setup ../openethereum/target/release/openethereum",
-    "start-test-setup-nethermind": "bash scripts/start-test-setup ../nethermind/bin/Nethermind.Runner",
+    "start-test-setup-nethermind": "bash scripts/start-test-setup-nethermind",
     "test": "node_modules/.bin/mocha --bail --timeout 1200000",
     "stop-test-setup": "bash scripts/stop-test-setup",
     "watcher": "node scripts/watcher.js"

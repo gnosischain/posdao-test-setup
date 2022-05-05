@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Exit on undefined variables.
+set -u
+set -e
+set -x
+
+for i in $(seq 0 3); do
+    "../nethermind/bin/Nethermind.Runner" --config "./config/node${i}.nethermind.json" --Merge.Enabled true --Merge.TerminalTotalDifficulty 0 >> "./data/node${i}/log" 2>&1 &
+    node ./scripts/getReservedPeer.js "$i"
+done
