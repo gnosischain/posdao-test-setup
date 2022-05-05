@@ -15,6 +15,7 @@ services:
       --enr-address 172.17.0.1
       --enr-udp-port 12000
       --debug-level info
+      --merge
     ports:
       - '12000:12000/udp'
       - '13000:13000'
@@ -41,6 +42,7 @@ services:
       --enr-address 172.17.0.1
       --enr-udp-port 12001
       --debug-level info
+      --merge
     ports:
       - '12001:12001/udp'
       - '13001:13001'
