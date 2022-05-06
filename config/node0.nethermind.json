@@ -34,5 +34,10 @@
   "KeyStore":
   {
     "KeyStoreDirectory": "./data/node0/keys/DPoSChain"
+  },
+  "Merge":
+  {
+    "Enabled": true,
+    "TerminalTotalDifficulty": 0
   }
 }
