@@ -55,6 +55,6 @@
   "Merge":
   {
     "Enabled": true,
-    "TerminalTotalDifficulty": 0
+    "TerminalTotalDifficulty": 200
   }
 }
