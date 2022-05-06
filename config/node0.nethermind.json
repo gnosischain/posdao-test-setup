@@ -6,7 +6,11 @@
     "ChainSpecPath": "./data/spec.json",  
     "BaseDbPath": "./data/node0",
     "LogDirectory": "./data/node0",
-    "LogFileName": "nethermind.logs.txt"
+    "LogFileName": "nethermind.logs.txt",
+    "LogRules":
+    {
+      "*": "TRACE"
+    },
   },
   "Network": {
     "DiscoveryPort": 30400,
