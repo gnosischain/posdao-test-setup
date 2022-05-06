@@ -18,7 +18,7 @@
     "Host": "127.0.0.1",
     "Port": 8643,
     "WebSocketsPort": 9543,
-    "AdditionalRpcUrls": ["http://localhost:8550|http;ws|net;eth;subscribe;engine;web3;client|no-auth", "http://localhost:8551|http;ws|net;eth;subscribe;engine;web3;client"]
+    "AdditionalRpcUrls": ["http://localhost:8556|http;ws|net;eth;subscribe;engine;web3;client|no-auth"]
   },
   "Db": {
     "WriteBufferSize": 16000000,

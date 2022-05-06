@@ -17,7 +17,7 @@
     "Host": "0.0.0.0",
     "Port": 8640,
     "WebSocketsPort": 9540,
-    "AdditionalRpcUrls": ["http://localhost:8550|http;ws|net;eth;subscribe;engine;web3;client|no-auth", "http://localhost:8551|http;ws|net;eth;subscribe;engine;web3;client"]
+    "AdditionalRpcUrls": ["http://localhost:8550|http;ws|net;eth;subscribe;engine;web3;client|no-auth"]
   },
   "Db": {
     "WriteBufferSize": 16000000,
