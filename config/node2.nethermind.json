@@ -7,7 +7,6 @@
     "BaseDbPath": "./data/node2",
     "LogDirectory": "./data/node2",
     "LogFileName": "nethermind.logs.txt",
-    "LogRules": "*:DEBUG",
     "StaticNodesPath": "./data/reserved-peers"
   },
   "Network": {
