@@ -7,7 +7,7 @@
     "BaseDbPath": "./data/node0",
     "LogDirectory": "./data/node0",
     "LogFileName": "nethermind.logs.txt",
-    "LogRules": "*:TRACE"
+    "LogRules": "*:DEBUG"
   },
   "Network": {
     "DiscoveryPort": 30400,
