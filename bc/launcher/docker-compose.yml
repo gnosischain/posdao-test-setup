@@ -8,7 +8,7 @@ services:
       --testnet-dir /root/sbc/config
       --discovery-port 12000
       --port 13000
-      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --eth1-endpoints http://host.docker.internal:8550,http://host.docker.internal:8552
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
@@ -35,7 +35,7 @@ services:
       --testnet-dir /root/sbc/config
       --discovery-port 12001
       --port 13001
-      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --eth1-endpoints http://host.docker.internal:8550,http://host.docker.internal:8552
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
