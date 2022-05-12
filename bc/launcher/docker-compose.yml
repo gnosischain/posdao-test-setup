@@ -1,14 +1,14 @@
 version: '3.8'
 services:
   node:
-    image: sigp/lighthouse:latest-unstable
+    image: sigp/lighthouse:v2.2.1-modern
     hostname: node
     command: |
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --discovery-port 12000
       --port 13000
-      --eth1-endpoints http://host.docker.internal:8550,http://host.docker.internal:8552
+      --eth1-endpoints http://host.docker.internal:8550,http://host.docker.internal:8552,http://host.docker.internal:8554,http://host.docker.internal:8556
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
@@ -28,14 +28,14 @@ services:
         max-size: "100m"
         max-file: "1"
   node2:
-    image: sigp/lighthouse:latest-unstable
+    image: sigp/lighthouse:v2.2.1-modern
     hostname: node2
     command: |
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --discovery-port 12001
       --port 13001
-      --eth1-endpoints http://host.docker.internal:8550,http://host.docker.internal:8552
+      --eth1-endpoints http://host.docker.internal:8550,http://host.docker.internal:8552,http://host.docker.internal:8554,http://host.docker.internal:8556
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
