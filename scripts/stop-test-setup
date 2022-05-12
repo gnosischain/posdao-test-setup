@@ -17,7 +17,7 @@ if [[ -d ./bc/launcher ]]; then
     docker-compose stop node
     docker-compose down
     cd -
-    # docker image rm sigp/lighthouse:v2.1.2-modern
+    # docker image rm sigp/lighthouse:v2.2.1-modern
     # docker image rm ghcr.io/gnosischain/deposit-script:latest
 fi
 
