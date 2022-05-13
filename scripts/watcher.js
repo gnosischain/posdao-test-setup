@@ -85,6 +85,7 @@ async function onNewBlock(blockNumber) {
   console.log(`  Gas used:  ${block.gasUsed} [${block.transactions.length} txs]`);
   console.log(`  Gas limit: ${block.gasLimit}`);
   console.log(`  Validator: ${block.miner}`);
+  console.log(`  Difficulty: ${block.difficulty}`);
   if (prevBlock) {
     console.log(`  Timestamp delta from prevBlock: ${block.timestamp - prevBlock.timestamp}`);
   }

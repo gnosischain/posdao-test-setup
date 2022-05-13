@@ -6,7 +6,8 @@
     "ChainSpecPath": "./data/spec.json",  
     "BaseDbPath": "./data/node0",
     "LogDirectory": "./data/node0",
-    "LogFileName": "nethermind.logs.txt"
+    "LogFileName": "nethermind.logs.txt",
+    "LogRules": "*:DEBUG"
   },
   "Network": {
     "DiscoveryPort": 30400,
@@ -16,7 +17,8 @@
     "Enabled": true,
     "Host": "0.0.0.0",
     "Port": 8640,
-    "WebSocketsPort": 9540
+    "WebSocketsPort": 9540,
+    "AdditionalRpcUrls": ["http://localhost:8740|http;ws|net;eth;subscribe;engine;web3;client|no-auth"]
   },
   "Db": {
     "WriteBufferSize": 16000000,
@@ -33,5 +35,10 @@
   "KeyStore":
   {
     "KeyStoreDirectory": "./data/node0/keys/DPoSChain"
+  },
+  "Merge":
+  {
+    "Enabled": true,
+    "TerminalTotalDifficulty": "15993271245284107782778606549293105938385"
   }
 }

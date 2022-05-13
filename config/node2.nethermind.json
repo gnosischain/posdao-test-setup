@@ -7,6 +7,7 @@
     "BaseDbPath": "./data/node2",
     "LogDirectory": "./data/node2",
     "LogFileName": "nethermind.logs.txt",
+    "LogRules": "*:DEBUG",
     "StaticNodesPath": "./data/reserved-peers"
   },
   "Network": {
@@ -17,7 +18,8 @@
     "Enabled": true,
     "Host": "127.0.0.1",
     "Port": 8642,
-    "WebSocketsPort": 9542
+    "WebSocketsPort": 9542,
+    "AdditionalRpcUrls": ["http://localhost:8742|http;ws|net;eth;subscribe;engine;web3;client|no-auth"]
   },
   "Db": {
     "WriteBufferSize": 16000000,
@@ -49,5 +51,10 @@
   {
     "MinGasPrice": "1000000000",
     "TargetBlockGasLimit": "12000000"
+  },
+  "Merge":
+  {
+    "Enabled": true,
+    "TerminalTotalDifficulty": "15993271245284107782778606549293105938385"
   }
 }
