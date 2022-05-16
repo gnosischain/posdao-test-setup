@@ -55,6 +55,7 @@
   "Merge":
   {
     "Enabled": true,
+    "Variant": "AuRa",
     "TerminalTotalDifficulty": "44236707699722000250238698966129867489020"
   }
 }
