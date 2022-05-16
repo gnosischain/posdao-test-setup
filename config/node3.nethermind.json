@@ -16,10 +16,10 @@
   },
   "JsonRpc": {
     "Enabled": true,
-    "Host": "127.0.0.1",
+    "Host": "0.0.0.0",
     "Port": 8643,
     "WebSocketsPort": 9543,
-    "AdditionalRpcUrls": ["http://localhost:8556|http;ws|net;eth;subscribe;engine;web3;client|no-auth"]
+    "AdditionalRpcUrls": ["http://0.0.0.0:8743|http;ws|net;eth;subscribe;engine;web3;client|no-auth"]
   },
   "Db": {
     "WriteBufferSize": 16000000,
@@ -55,7 +55,7 @@
   "Merge":
   {
     "Enabled": true,
-    "Variant":"AuRa",
-    "TerminalTotalDifficulty": "15993271245284107782778606549293105938385"
+    "Variant": "AuRa",
+    "TerminalTotalDifficulty": "44236707699722000250238698966129867489020"
   }
 }
