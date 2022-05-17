@@ -17,6 +17,7 @@ services:
       --disable-enr-auto-update
       --debug-level info
       --merge
+      --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
     ports:
       - '12000:12000/udp'
       - '13000:13000'
@@ -45,6 +46,7 @@ services:
       --disable-enr-auto-update
       --debug-level info
       --merge
+      --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
     ports:
       - '12001:12001/udp'
       - '13001:13001'
@@ -68,7 +70,6 @@ services:
       --validators-dir /root/sbc/validators
       --beacon-nodes http://node:5052,http://node2:5052
       --graffiti-file /root/sbc/config/graffiti.yml
-      --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
     volumes:
       - ./config:/root/sbc/config
       - ./validators:/root/sbc/validators
