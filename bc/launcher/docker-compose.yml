@@ -68,6 +68,7 @@ services:
       --validators-dir /root/sbc/validators
       --beacon-nodes http://node:5052,http://node2:5052
       --graffiti-file /root/sbc/config/graffiti.yml
+      --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
     volumes:
       - ./config:/root/sbc/config
       - ./validators:/root/sbc/validators
