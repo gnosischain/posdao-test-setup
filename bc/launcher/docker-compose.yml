@@ -8,17 +8,22 @@ services:
       --testnet-dir /root/sbc/config
       --discovery-port 12000
       --port 13000
-      --eth1-endpoints http://host.docker.internal:8740,http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
+      --eth1-endpoints http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
+      --http-port 5051
       --http
       --enr-address 172.17.0.1
       --enr-udp-port 12000
+      --disable-enr-auto-update
+      --enable-private-discovery
       --debug-level info
       --merge
+      --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
     ports:
       - '12000:12000/udp'
       - '13000:13000'
+      - '5051:5051'
     volumes:
       - ./config:/root/sbc/config
       - ./node_db:/home/.eth2/beaconchaindata
@@ -35,17 +40,22 @@ services:
       --testnet-dir /root/sbc/config
       --discovery-port 12001
       --port 13001
-      --eth1-endpoints http://host.docker.internal:8740,http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
+      --eth1-endpoints http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
+      --http-port 5052
       --http
       --enr-address 172.17.0.1
       --enr-udp-port 12001
+      --disable-enr-auto-update
+      --enable-private-discovery
       --debug-level info
       --merge
+      --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
     ports:
       - '12001:12001/udp'
       - '13001:13001'
+      - '5052:5052'
     volumes:
       - ./config2:/root/sbc/config
       - ./node2_db:/home/.eth2/beaconchaindata
@@ -64,7 +74,7 @@ services:
       lighthouse validator_client
       --testnet-dir /root/sbc/config
       --validators-dir /root/sbc/validators
-      --beacon-nodes http://node:5052,http://node2:5052
+      --beacon-nodes http://node:5051,http://node2:5052
       --graffiti-file /root/sbc/config/graffiti.yml
     volumes:
       - ./config:/root/sbc/config

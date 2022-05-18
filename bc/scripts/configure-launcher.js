@@ -42,6 +42,7 @@ async function main() {
   configYamlContent = configYamlContent.replace(/MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: [a-fA-F0-9x]+/, `MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: ${numberOfValidators}`);
   configYamlContent = configYamlContent.replace(/GENESIS_FORK_VERSION: [a-fA-F0-9x]+/, `GENESIS_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId), 8)}`);
   configYamlContent = configYamlContent.replace(/ALTAIR_FORK_VERSION: [a-fA-F0-9x]+/, `ALTAIR_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId + 0x01000000), 8)}`);
+  configYamlContent = configYamlContent.replace(/BELLATRIX_FORK_VERSION: [a-fA-F0-9x]+/, `BELLATRIX_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId + 0x02000000), 8)}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
   fs.writeFileSync(config2YamlPath, configYamlContent, 'utf8');
 
