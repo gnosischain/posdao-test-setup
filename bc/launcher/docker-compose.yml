@@ -16,6 +16,7 @@ services:
       --enr-address 172.17.0.1
       --enr-udp-port 12000
       --disable-enr-auto-update
+      --disable-upnp
       --enable-private-discovery
       --debug-level info
       --merge
@@ -48,6 +49,7 @@ services:
       --enr-address 172.17.0.1
       --enr-udp-port 12001
       --disable-enr-auto-update
+      --disable-upnp
       --enable-private-discovery
       --debug-level info
       --merge
