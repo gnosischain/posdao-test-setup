@@ -6,15 +6,16 @@ services:
     command: |
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
-      --port 13000
+      --port 13001
       --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
       --debug-level debug
-      --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
+      --libp2p-addresses /dns/host.docker.internal/tcp/13002/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
+      --disable-discovery
     ports:
-      - '13000:13000'
+      - '13001:13001'
     volumes:
       - ./config:/root/sbc/config
       - ./node_db:/home/.eth2/beaconchaindata
@@ -29,15 +30,16 @@ services:
     command: |
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
-      --port 13001
+      --port 13002
       --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
       --debug-level debug
-      --libp2p-addresses /dns/host.docker.internal/tcp/13000/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
+      --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
+      --disable-discovery
     ports:
-      - '13001:13001'
+      - '13002:13002'
     volumes:
       - ./config2:/root/sbc/config
       - ./node2_db:/home/.eth2/beaconchaindata
