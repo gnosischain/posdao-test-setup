@@ -15,7 +15,7 @@ services:
       --enr-address host.docker.internal
       --enr-udp-port 12000
       --debug-level info
-      --libp2p-addresses /ip4/192.168.65.2/udp/12001/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
+      --libp2p-addresses /ip4/192.168.65.2/tcp/13001/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
     ports:
       - '12000:12000/udp'
       - '13000:13000'
@@ -42,7 +42,7 @@ services:
       --enr-address host.docker.internal
       --enr-udp-port 12001
       --debug-level info
-      --libp2p-addresses /ip4/192.168.65.2/udp/12000/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
+      --libp2p-addresses /ip4/192.168.65.2/tcp/13000/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
     ports:
       - '12001:12001/udp'
       - '13001:13001'
