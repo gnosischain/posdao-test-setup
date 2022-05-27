@@ -12,8 +12,6 @@ services:
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
-      --enr-address host.docker.internal
-      --enr-udp-port 12000
       --debug-level info
       --libp2p-addresses /ip4/192.168.65.2/tcp/13001/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
     ports:
@@ -39,8 +37,6 @@ services:
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
-      --enr-address host.docker.internal
-      --enr-udp-port 12001
       --debug-level info
       --libp2p-addresses /ip4/192.168.65.2/tcp/13000/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
     ports:
