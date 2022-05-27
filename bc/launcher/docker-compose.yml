@@ -13,7 +13,7 @@ services:
       --http-address 0.0.0.0
       --http
       --debug-level info
-      --libp2p-addresses /ip4/192.168.65.2/tcp/13001/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
+      --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
     ports:
       - '12000:12000/udp'
       - '13000:13000'
@@ -38,7 +38,7 @@ services:
       --http-address 0.0.0.0
       --http
       --debug-level info
-      --libp2p-addresses /ip4/192.168.65.2/tcp/13000/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
+      --libp2p-addresses /dns/host.docker.internal/tcp/13000/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
     ports:
       - '12001:12001/udp'
       - '13001:13001'
