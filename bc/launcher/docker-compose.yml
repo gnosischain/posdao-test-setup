@@ -6,24 +6,20 @@ services:
     command: |
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
-      --discovery-port 12000
-      --port 13000
+      --port 13001
       --eth1-endpoints http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http-port 5051
       --http
-      --enr-address 172.17.0.1
-      --enr-udp-port 12000
-      --disable-enr-auto-update
       --disable-upnp
-      --enable-private-discovery
-      --debug-level info
+      --disable-discovery
+      --debug-level debug
       --merge
       --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
+      --libp2p-addresses /dns/host.docker.internal/tcp/13002/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
     ports:
-      - '12000:12000/udp'
-      - '13000:13000'
+      - '13001:13001'
       - '5051:5051'
     volumes:
       - ./config:/root/sbc/config
@@ -39,24 +35,20 @@ services:
     command: |
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
-      --discovery-port 12001
-      --port 13001
+      --port 13002
       --eth1-endpoints http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http-port 5052
       --http
-      --enr-address 172.17.0.1
-      --enr-udp-port 12001
-      --disable-enr-auto-update
       --disable-upnp
-      --enable-private-discovery
-      --debug-level info
+      --disable-discovery
+      --debug-level debug
       --merge
       --suggested-fee-recipient 0x0feefeefeefeefeefeefeefeefeefeefeefeefee
+      --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
     ports:
-      - '12001:12001/udp'
-      - '13001:13001'
+      - '13002:13002'
       - '5052:5052'
     volumes:
       - ./config2:/root/sbc/config

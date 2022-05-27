@@ -46,35 +46,17 @@ async function main() {
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
   fs.writeFileSync(config2YamlPath, configYamlContent, 'utf8');
 
-  // Create key and enr.dat files in launcher/node_db/beacon/network directory
+  // Create key file in launcher/node_db/beacon/network directory
   const node1NetworkDir = `${launcherDir}/node_db/beacon/network`;
-  const node1ENR = 'enr:-Ly4QHa-nybnrkWwqvyhviWZGXYpoKIcFDOptvMh9lU44NFXHximNNyU4UYVxe9VM1bR4ueQ9w8mYacWPWQHWQUl3FIBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpDxAPPaAQBkZAACAAAAAAAAgmlkgnY0gmlwhKwRAAGJc2VjcDI1NmsxoQOMGR7bRyjn3WtDVB13geF1AO4tYn3fb3b4zN5LjD31sYhzeW5jbmV0cwCDdGNwgjLIg3VkcIIu4A';
   fs.mkdirSync(node1NetworkDir, { recursive: true });
   fs.writeFileSync(`${node1NetworkDir}/key`, Buffer.from('a970f0c1' + 'a3ffbcc3' + '8a88e985' + 'f68c3f9e' + 'ff52cfb3' + 'cf876ddc' + 'e5ec65ce' + '22c4d0d3', 'hex'), 'binary');
-  fs.writeFileSync(`${node1NetworkDir}/enr.dat`, node1ENR, 'utf8');
-  // ENR details:
-  // ip: 172.17.0.1
-  // tcp: 13000
-  // udp: 12000
-  // node id: 74cc1f1aebfc4b956187b0190b2f5e2f3cbd864eaa2c642e3769c1582361caf6
-  // peer id: 16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
+  // Peer id: 16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
 
-  // Create key and enr.dat files in launcher/node2_db/beacon/network directory
+  // Create key file in launcher/node2_db/beacon/network directory
   const node2NetworkDir = `${launcherDir}/node2_db/beacon/network`;
-  const node2ENR = 'enr:-Ly4QFlxKuaMr8x7s-DYmdEIwCmezmusanK8nXgD3XEitHPLRtxvCNFpTWBL3Z4MnjEVb9cgZL7abu3D_IlFPqV3J5ABh2F0dG5ldHOIAAAAAAAAAACEZXRoMpDxAPPaAQBkZAACAAAAAAAAgmlkgnY0gmlwhKwRAAGJc2VjcDI1NmsxoQNwC21AnKIefXbvJERML-wwByE96eH1xRcPG8kdgeD0AIhzeW5jbmV0cwCDdGNwgjLJg3VkcIIu4Q';
   fs.mkdirSync(node2NetworkDir, { recursive: true });
   fs.writeFileSync(`${node2NetworkDir}/key`, Buffer.from('c00282b9' + '1d8eec3e' + '4dbd7e7f' + '51662f0b' + 'c540dff8' + 'e71ac862' + 'c80aa2c7' + 'f676be82', 'hex'), 'binary');
-  fs.writeFileSync(`${node2NetworkDir}/enr.dat`, node2ENR, 'utf8');
-  // ENR details:
-  // ip: 172.17.0.1
-  // tcp: 13001
-  // udp: 12001
-  // node id: 2e31221cfbc6e3aeba53637eaa94b687d3f9552a453b81b2834ca53778980dc0
-  // peer id: 16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
-
-  // Create launcher/config/boot_enr.yaml, launcher/config2/boot_enr.yaml
-  fs.writeFileSync(`${launcherDir}/config/boot_enr.yaml`, `- "${node2ENR}"`, 'utf8');
-  fs.writeFileSync(`${launcherDir}/config2/boot_enr.yaml`, `- "${node1ENR}"`, 'utf8');
+  // Peer id: 16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
 
   // Create deposit-script/.env
   const localhost = os.platform() === 'darwin' ? 'host.docker.internal' : 'localhost';
