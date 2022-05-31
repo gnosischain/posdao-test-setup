@@ -7,7 +7,7 @@ services:
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --port 13001
-      --eth1-endpoints http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
+      --eth1-endpoints http://host.docker.internal:8740,http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http-port 5051
@@ -36,7 +36,7 @@ services:
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --port 13002
-      --eth1-endpoints http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
+      --eth1-endpoints http://host.docker.internal:8740,http://host.docker.internal:8741,http://host.docker.internal:8742,http://host.docker.internal:8743
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http-port 5052
