@@ -20,17 +20,22 @@ async function main() {
     dockerComposeYmlContent = dockerComposeYmlContent.replace('node2:', `node2:
     extra_hosts:
       - "host.docker.internal:host-gateway"`);
+    dockerComposeYmlContent = dockerComposeYmlContent.replace('node3:', `node3:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"`);
     fs.writeFileSync(dockerComposeYmlPath, dockerComposeYmlContent, 'utf8');
   }
 
-  // Create launcher/config/deploy_block.txt, launcher/config2/deploy_block.txt
+  // Create launcher/config/deploy_block.txt, launcher/config2/deploy_block.txt, launcher/config3/deploy_block.txt
   const deployBlock = fs.readFileSync(`${contractsDir}/deploy_block.txt`, 'utf8');
   fs.writeFileSync(`${launcherDir}/config/deploy_block.txt`, deployBlock, 'utf8');
   fs.writeFileSync(`${launcherDir}/config2/deploy_block.txt`, deployBlock, 'utf8');
+  fs.writeFileSync(`${launcherDir}/config3/deploy_block.txt`, deployBlock, 'utf8');
 
-  // Modify launcher/config/config.yaml, launcher/config2/config.yaml
+  // Modify launcher/config/config.yaml, launcher/config2/config.yaml, launcher/config3/config.yaml
   const configYamlPath = `${launcherDir}/config/config.yaml`;
   const config2YamlPath = `${launcherDir}/config2/config.yaml`;
+  const config3YamlPath = `${launcherDir}/config3/config.yaml`;
   const numberOfValidators = calcNumberOfValidators();
   const chainId = await web3.eth.getChainId();
   const netId = await web3.eth.net.getId();
@@ -45,6 +50,7 @@ async function main() {
   configYamlContent = configYamlContent.replace(/BELLATRIX_FORK_VERSION: [a-fA-F0-9x]+/, `BELLATRIX_FORK_VERSION: ${web3.utils.padLeft(web3.utils.toHex(chainId + 0x02000000), 8)}`);
   fs.writeFileSync(configYamlPath, configYamlContent, 'utf8');
   fs.writeFileSync(config2YamlPath, configYamlContent, 'utf8');
+  fs.writeFileSync(config3YamlPath, configYamlContent, 'utf8');
 
   // Create key file in launcher/node_db/beacon/network directory
   const node1NetworkDir = `${launcherDir}/node_db/beacon/network`;
@@ -57,6 +63,12 @@ async function main() {
   fs.mkdirSync(node2NetworkDir, { recursive: true });
   fs.writeFileSync(`${node2NetworkDir}/key`, Buffer.from('c00282b9' + '1d8eec3e' + '4dbd7e7f' + '51662f0b' + 'c540dff8' + 'e71ac862' + 'c80aa2c7' + 'f676be82', 'hex'), 'binary');
   // Peer id: 16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
+
+  // Create key file in launcher/node3_db/beacon/network directory
+  const node3NetworkDir = `${launcherDir}/node3_db/beacon/network`;
+  fs.mkdirSync(node3NetworkDir, { recursive: true });
+  fs.writeFileSync(`${node3NetworkDir}/key`, Buffer.from('e76212c4' + '028caed5' + 'aaba9f4b' + '4414da19' + '96881858' + 'f9858cf9' + '5df4cfd0' + 'fbf42e55', 'hex'), 'binary');
+  // Peer id: 16Uiu2HAm5xMT8ZbN2az5ozTXqmV1JxNh8CM9CkP9BHkPhGAJZMth
 
   // Create deposit-script/.env
   const localhost = os.platform() === 'darwin' ? 'host.docker.internal' : 'localhost';
