@@ -67,7 +67,7 @@ async function main() {
   const node3NetworkDir = `${launcherDir}/node3_db/beacon/network`;
   fs.mkdirSync(node3NetworkDir, { recursive: true });
   fs.writeFileSync(`${node3NetworkDir}/key`, Buffer.from('e76212c4' + '028caed5' + 'aaba9f4b' + '4414da19' + '96881858' + 'f9858cf9' + '5df4cfd0' + 'fbf42e55', 'hex'), 'binary');
-  // Peer id: ???
+  // Peer id: 16Uiu2HAm5xMT8ZbN2az5ozTXqmV1JxNh8CM9CkP9BHkPhGAJZMth
 
   // Create deposit-script/.env
   const localhost = os.platform() === 'darwin' ? 'host.docker.internal' : 'localhost';

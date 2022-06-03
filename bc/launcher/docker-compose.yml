@@ -12,7 +12,7 @@ services:
       --http-address 0.0.0.0
       --http
       --debug-level debug
-      --libp2p-addresses /dns/host.docker.internal/tcp/13002/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
+      --libp2p-addresses /dns/host.docker.internal/tcp/13002/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9,/dns/host.docker.internal/tcp/13003/p2p/16Uiu2HAm5xMT8ZbN2az5ozTXqmV1JxNh8CM9CkP9BHkPhGAJZMth
       --disable-discovery
     ports:
       - '13001:13001'
@@ -36,7 +36,7 @@ services:
       --http-address 0.0.0.0
       --http
       --debug-level debug
-      --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze
+      --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze,/dns/host.docker.internal/tcp/13003/p2p/16Uiu2HAm5xMT8ZbN2az5ozTXqmV1JxNh8CM9CkP9BHkPhGAJZMth
       --disable-discovery
     ports:
       - '13002:13002'
