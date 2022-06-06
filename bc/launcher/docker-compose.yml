@@ -7,7 +7,7 @@ services:
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --port 13001
-      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --eth1-endpoints http://host.docker.internal:8641,http://host.docker.internal:8642
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
@@ -31,7 +31,7 @@ services:
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --port 13002
-      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --eth1-endpoints http://host.docker.internal:8641,http://host.docker.internal:8642
       --datadir /home/.eth2/beaconchaindata
       --http-address 0.0.0.0
       --http
@@ -55,10 +55,8 @@ services:
       lighthouse beacon_node
       --testnet-dir /root/sbc/config
       --port 13003
-      --eth1-endpoints http://host.docker.internal:8640,http://host.docker.internal:8641
+      --eth1-endpoints http://host.docker.internal:8640
       --datadir /home/.eth2/beaconchaindata
-      --http-address 0.0.0.0
-      --http
       --debug-level debug
       --libp2p-addresses /dns/host.docker.internal/tcp/13001/p2p/16Uiu2HAmN5seNB3AYkTo4qRC3oWsPTEGiR68w5suCcuqG3pSf4Ze,/dns/host.docker.internal/tcp/13002/p2p/16Uiu2HAmLCN7qTEBuknCa6R7thyTdUjALjYTpkSsrHhq3FKEL5q9
       --disable-discovery
@@ -78,12 +76,11 @@ services:
     depends_on:
       - node
       - node2
-      - node3
     command: |
       lighthouse validator_client
       --testnet-dir /root/sbc/config
       --validators-dir /root/sbc/validators
-      --beacon-nodes http://node:5052,http://node2:5052,http://node3:5052
+      --beacon-nodes http://node:5052,http://node2:5052
       --graffiti-file /root/sbc/config/graffiti.yml
     volumes:
       - ./config:/root/sbc/config

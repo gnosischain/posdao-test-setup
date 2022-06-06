@@ -2,7 +2,7 @@
   "Init": {
     "WebSocketsEnabled": true,
     "StoreReceipts" : true,    
-    "IsMining": true,
+    "IsMining": false,
     "ChainSpecPath": "./data/spec.json",  
     "BaseDbPath": "./data/node0",
     "LogDirectory": "./data/node0",
