@@ -14,12 +14,13 @@ const BN = web3.utils.BN;
 const OWNER = constants.OWNER;
 
 describe('BlockReward tests', () => {
-  it('BlockReward works before the merge', async function() {
+  it('BlockReward works fine before the merge', async function() {
     const testAddress = '0x7F57249A03C3d07E4539CFf2E7bcc5b086367001';
     let block = await web3.eth.getBlock('latest');
 
     // Make sure the merge transition hasn't happened yet
     expect(block.step > 0, `Cannot find step field of the block. It seems the merge already happened`).to.equal(true);
+    expect(await web3.eth.getBalance(testAddress) === '0', 'The balance of the test address must be zero').to.equal(true);
 
     // Allow the owner minting native coins
     let minGasPrice = await calcMinGasPrice(web3);
@@ -43,18 +44,20 @@ describe('BlockReward tests', () => {
     expect(await web3.eth.getBalance(testAddress) === oneCoin, 'The balance of the test address did not increase').to.equal(true);
   });
 
-  it('BlockReward works after the merge', async function() {
+  it('BlockReward works fine after the merge', async function() {
     const testAddress = '0x6a040F006F9850E6C9bAF8C71c441c234c2D2AAd';
     let block;
 
-    console.log('Waiting for the merge transition ...');
+    expect(await web3.eth.getBalance(testAddress) === '0', 'The balance of the test address must be zero').to.equal(true);
+
+    console.log('    Waiting for the merge transition ...');
 
     do {
       await sleep(3500);
       block = await web3.eth.getBlock('latest');
     } while (block.step || !block.mixHash);
 
-    console.log('TTD is reached. Checking BlockReward feature ...');
+    console.log('    TTD is reached. Checking BlockReward feature ...');
 
     // Mint one native coin
     const oneCoin = web3.utils.toWei('1', 'ether');
