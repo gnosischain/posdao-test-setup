@@ -128,7 +128,7 @@ async function main() {
         from: OWNER,
         to: address,
         method: StakingTokenInstance.methods.setStakingContract(StakingAuRa.address),
-        gasPrice: '1000000000',
+        gasPrice: '2000000000',
     });
     pp.tx(tx);
     expect(tx.status).to.equal(true);
@@ -138,7 +138,7 @@ async function main() {
         from: OWNER,
         to: address,
         method: StakingTokenInstance.methods.setBlockRewardContract(BlockRewardAuRa.address),
-        gasPrice: '1000000000',
+        gasPrice: '2000000000',
     });
     pp.tx(tx);
     expect(tx.status).to.equal(true);
@@ -148,7 +148,7 @@ async function main() {
         from: OWNER,
         to: StakingAuRa.address,
         method: StakingAuRa.instance.methods.setErc677TokenContract(address),
-        gasPrice: '1000000000',
+        gasPrice: '2000000000',
     });
     pp.tx(tx);
     expect(tx.status).to.equal(true);
