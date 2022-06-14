@@ -42,4 +42,33 @@ describe('BlockReward tests', () => {
 
     expect(await web3.eth.getBalance(testAddress) === oneCoin, 'The balance of the test address did not increase').to.equal(true);
   });
+
+  it('BlockReward works after the merge', async function() {
+    const testAddress = '0x6a040F006F9850E6C9bAF8C71c441c234c2D2AAd';
+    let block;
+
+    console.log('Waiting for the merge transition ...');
+
+    do {
+      await sleep(3500);
+      block = await web3.eth.getBlock('latest');
+    } while (block.step || !block.mixHash);
+
+    console.log('TTD is reached. Checking BlockReward feature ...');
+
+    // Mint one native coin
+    const oneCoin = web3.utils.toWei('1', 'ether');
+    await SnS(web3, {
+      from: OWNER,
+      to: BlockRewardAuRa.address,
+      method: BlockRewardAuRa.instance.methods.addExtraReceiver(oneCoin, testAddress),
+      gasPrice
+    });
+
+    expect(await web3.eth.getBalance(testAddress) === oneCoin, 'The balance of the test address did not increase').to.equal(true);
+  });
 });
+
+async function sleep(ms) {
+  await new Promise(r => setTimeout(r, ms));
+}
