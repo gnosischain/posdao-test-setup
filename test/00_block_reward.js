@@ -60,6 +60,8 @@ describe('BlockReward tests', () => {
     console.log('    TTD is reached. Checking BlockReward feature ...');
 
     // Mint one native coin
+    let minGasPrice = await calcMinGasPrice(web3);
+    let gasPrice = minGasPrice.mul(new BN(2));
     const oneCoin = web3.utils.toWei('1', 'ether');
     await SnS(web3, {
       from: OWNER,
