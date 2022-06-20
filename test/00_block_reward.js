@@ -1,7 +1,5 @@
 const Web3 = require('web3');
 const web3 = new Web3('http://localhost:8641');
-const web3_2 = new Web3('http://localhost:8642');
-const web3_3 = new Web3('http://localhost:8643');
 web3.eth.transactionConfirmationBlocks = 1;
 const constants = require('../utils/constants');
 const calcMinGasPrice = require('../utils/calcMinGasPrice');
