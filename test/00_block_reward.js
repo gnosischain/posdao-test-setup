@@ -21,16 +21,16 @@ describe('BlockReward tests', () => {
     expect(await web3.eth.getBalance(testAddress) === '0', 'The balance of the test address must be zero').to.equal(true);
 
     // Allow the owner minting native coins
-    let minGasPrice = await calcMinGasPrice(web3);
-    let gasPrice = minGasPrice.mul(new BN(2));
     await SnS(web3, {
       from: OWNER,
       to: BlockRewardAuRa.address,
       method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed([OWNER]),
-      gasPrice
+      gasPrice: '0' // service transactions must work before the merge
     });
 
     // Mint one native coin
+    let minGasPrice = await calcMinGasPrice(web3);
+    let gasPrice = minGasPrice.mul(new BN(2));
     const oneCoin = web3.utils.toWei('1', 'ether');
     await SnS(web3, {
       from: OWNER,
