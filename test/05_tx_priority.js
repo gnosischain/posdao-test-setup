@@ -1,4 +1,3 @@
-/*
 const fs = require('fs');
 const Web3 = require('web3');
 const web3 = new Web3('http://localhost:8641');
@@ -29,7 +28,7 @@ for (let nodeNumber = 1; nodeNumber <= NUMBER_OF_VALIDATORS; nodeNumber++) {
 const checkOrderWhenDifferentBlocks = false;
 
 describe('TxPriority tests', () => {
-  const gasPrice0 = web3.utils.toWei('0', 'gwei');
+  //const gasPrice0 = web3.utils.toWei('0', 'gwei');
   const gasPrice1 = web3.utils.toWei('1', 'gwei');
   const gasPrice2 = web3.utils.toWei('2', 'gwei');
   const gasPrice3 = web3.utils.toWei('3', 'gwei');
@@ -55,22 +54,22 @@ describe('TxPriority tests', () => {
         // Set minter address to be able to mint coins through the BlockReward
         method: BlockRewardAuRa.instance.methods.setErcToNativeBridgesAllowed,
         arguments: [[OWNER]],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: gasPrice100, nonce: ownerNonce++ }
       }, {
         // Mint coins for the owner
         method: BlockRewardAuRa.instance.methods.addExtraReceiver,
         arguments: [web3.utils.toWei('100'), OWNER],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: gasPrice100, nonce: ownerNonce++ }
       }, {
         // Mint coins for the arbitrary account
         method: BlockRewardAuRa.instance.methods.addExtraReceiver,
         arguments: [web3.utils.toWei('100'), account.address],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: gasPrice100, nonce: ownerNonce++ }
       }, {
         // Mint coins for the arbitrary account2
         method: BlockRewardAuRa.instance.methods.addExtraReceiver,
         arguments: [web3.utils.toWei('100'), account2.address],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+        params: { from: OWNER, gasPrice: gasPrice100, nonce: ownerNonce++ }
       }];
       const { receipts } = await batchSendTransactions(transactions);
       const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
@@ -1539,6 +1538,7 @@ describe('TxPriority tests', () => {
       // The owner successfully calls StakingAuRa.setDelegatorMinStake and StakingAuRa.setCandidateMinStake
       // with zero gas price because the owner is certified
       let ownerNonce = await web3.eth.getTransactionCount(OWNER);
+      /*
       let results = await batchSendTransactions([{
         method: StakingAuRa.instance.methods.setDelegatorMinStake,
         arguments: [delegatorMinStake],
@@ -1550,11 +1550,12 @@ describe('TxPriority tests', () => {
       }]);
       const allTxSucceeded = results.receipts.reduce((acc, receipt) => acc && receipt.status, true);
       expect(allTxSucceeded, `The owner failed when using zero gas price`).to.equal(true);
+      */
 
       // The owner tries to call StakingAuRa.setDelegatorMinStake with gas price
       // which is less than the MinGasPrice from the config, but fails
       // because the gas price cannot be less than the configured MinGasPrice
-      results = await batchSendTransactions([{
+      let results = await batchSendTransactions([{
         method: StakingAuRa.instance.methods.setDelegatorMinStake,
         arguments: [delegatorMinStake],
         params: { from: OWNER, gasPrice: (await calcMinGasPrice(web3, configMinGasPrice)).div(new BN(2)), nonce: ownerNonce }
@@ -1702,6 +1703,7 @@ describe('TxPriority tests', () => {
     });
   }
 
+  /*
   it('Test zero gas price', async function() {
     // Ensure the account.address is not certified
     expect(await Certifier.instance.methods.certifiedExplicitly(account.address).call()).to.equal(false);
@@ -1729,6 +1731,7 @@ describe('TxPriority tests', () => {
     }]);
     expect(results.receipts[0].status, 'An arbitrary account failed when using a non-zero gas price').to.equal(true);
   });
+  */
 
   it('Test different rules on different validators', async function() {
     const node1 = 1;
@@ -2077,7 +2080,7 @@ describe('TxPriority tests', () => {
         transactions.push({
           method,
           arguments: filteredArguments,
-          params: { from: OWNER, gasPrice: gasPrice0, nonce: ownerNonce++ }
+          params: { from: OWNER, gasPrice: gasPrice100, nonce: ownerNonce++ }
         });
       });
 
@@ -2101,7 +2104,7 @@ describe('TxPriority tests', () => {
       const transactions = [{
         method: TxPriority.instance.methods.setSendersWhitelist,
         arguments: [senders],
-        params: { from: OWNER, gasPrice: gasPrice0, nonce }
+        params: { from: OWNER, gasPrice: gasPrice100, nonce }
       }];
       const { receipts } = await batchSendTransactions(transactions);
       const allTxSucceeded = receipts.reduce((acc, receipt) => acc && receipt.status, true);
@@ -2143,7 +2146,7 @@ describe('TxPriority tests', () => {
       const method = (type == 'set') ? TxPriority.instance.methods.setMinGasPrice : TxPriority.instance.methods.removeMinGasPrice;
 
       if (!gasPrice) {
-        gasPrice = gasPrice0;
+        gasPrice = gasPrice100;
       }
 
       rules.forEach(arguments => {
@@ -2487,4 +2490,3 @@ async function saveConfigFile(config, nodeNumber) {
 async function sleep(ms) {
   await new Promise(r => setTimeout(r, ms));
 }
-*/
