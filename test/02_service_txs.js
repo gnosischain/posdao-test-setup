@@ -26,7 +26,8 @@ describe('Zero gas price transactions test', () => {
         gasPrice: '0'
       });
     } catch (e) {
-      expect(e.message.includes(`Transaction was not mined within ${web3.eth.transactionPollingTimeout} seconds`), e.message).to.equal(true);
+      const rightError = e.message.includes(`Transaction was not mined within ${web3.eth.transactionPollingTimeout} seconds`) || e.message.includes('FeeTooLow');
+      expect(rightError, e.message).to.equal(true);
     }
   });
 });
