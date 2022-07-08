@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "after-start": "npm run checkers && npm run bc-deploy && npm run test && npm run watcher && npm run stop-test-setup",
-    "after-start-no-watcher": "npm run checkers && npm run test && npm run stop-test-setup",
+    "after-start-no-watcher": "npm run checkers && npm run bc-deploy && npm run test && npm run stop-test-setup",
     "all": "CLIENT=openethereum npm run before-start && npm run start-test-setup-openethereum && npm run after-start",
     "all-nethermind": "CLIENT=nethermind npm run before-start && npm run start-test-setup-nethermind && npm run after-start",
     "all-nethermind-no-watcher": "CLIENT=nethermind npm run before-start && npm run start-test-setup-nethermind && npm run after-start-no-watcher",
